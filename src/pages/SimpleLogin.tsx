@@ -57,7 +57,7 @@ const SimpleLogin: React.FC = () => {
             </p>
           </div>
 
-          <div className="hidden lg:grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="text-center p-4 rounded-xl bg-white/50 backdrop-blur-sm">
               <div className="w-8 h-8 bg-blue-600 rounded-full mx-auto mb-2 flex items-center justify-center">
                 <span className="text-white font-bold text-sm">10K+</span>

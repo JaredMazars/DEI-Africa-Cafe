@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navigation from './components/Navigation';
 import { initializeDataStore } from './services/dataStore';
 import Dashboard from './pages/Dashboard';
@@ -67,8 +67,9 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 // App Content Component
 function AppContent() {
   const { isAuthenticated } = useSimpleAuth();
-  const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
-  const isPublicRoute = typeof window !== 'undefined' && ['/login', '/register', '/onboarding', '/verification-pending', '/verify-email'].includes(window.location.pathname);
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  const isPublicRoute = ['/login', '/register', '/onboarding', '/verification-pending', '/verify-email'].includes(location.pathname);
   
   return (
     <div className="min-h-screen bg-gray-50">
