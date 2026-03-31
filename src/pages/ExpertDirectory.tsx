@@ -154,7 +154,12 @@ const ExpertDirectory: React.FC = () => {
   const [selectedWebinar, setSelectedWebinar] = useState<Webinar | null>(null);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [registrationData, setRegistrationData] = useState({ name: '', email: '', phone: '', organization: '' });
-  const [registeredWebinars, setRegisteredWebinars] = useState<string[]>([]);
+  const [registeredWebinars, setRegisteredWebinars] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('registeredWebinarIds');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
   const [loading, setLoading] = useState(true);
   const [experts, setExperts] = useState<Expert[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -891,7 +896,13 @@ const ExpertDirectory: React.FC = () => {
       }
       
       // Add webinar to registered list
-      setRegisteredWebinars([...registeredWebinars, selectedWebinar.id]);
+      const updatedRegisteredIds = [...registeredWebinars, selectedWebinar.id];
+      setRegisteredWebinars(updatedRegisteredIds);
+      // Persist to localStorage so portal can access registered sessions
+      localStorage.setItem('registeredWebinarIds', JSON.stringify(updatedRegisteredIds));
+      const existingData: Webinar[] = JSON.parse(localStorage.getItem('registeredWebinarData') || '[]');
+      const updatedData = [...existingData.filter(w => w.id !== selectedWebinar.id), selectedWebinar];
+      localStorage.setItem('registeredWebinarData', JSON.stringify(updatedData));
       
       // Update attendee count
       setWebinarAttendees({

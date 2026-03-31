@@ -27,7 +27,10 @@ import {
   ArrowRight,
   Activity,
   Zap,
-  Coffee
+  Coffee,
+  ExternalLink,
+  RefreshCw,
+  ChevronDown
 } from 'lucide-react';
 
 interface Connection {
@@ -46,6 +49,21 @@ interface Connection {
   lastActivity: string;
   connectionDate: string;
   matchScore: number;
+}
+
+interface RegisteredWebinar {
+  id: string;
+  title: string;
+  expert: string;
+  expertAvatar?: string;
+  date: string;
+  time: string;
+  topic: string;
+  region: string;
+  attendees: number;
+  maxAttendees: number;
+  teamsLink?: string;
+  description?: string;
 }
 
 interface Session {
@@ -88,6 +106,46 @@ const Home: React.FC = () => {
     averageRating: 0,
     responseRate: 0
   });
+
+  // ---- Your Meeting state ----
+  const [registeredSessions, setRegisteredSessions] = useState<RegisteredWebinar[]>([]);
+  const [selectedSessionId, setSelectedSessionId] = useState<string>('');
+  const [selectedSession, setSelectedSession] = useState<RegisteredWebinar | null>(null);
+
+  const loadRegisteredSessions = (keepId?: string) => {
+    try {
+      const data = localStorage.getItem('registeredWebinarData');
+      const sessions: RegisteredWebinar[] = data ? JSON.parse(data) : [];
+      setRegisteredSessions(sessions);
+      if (sessions.length > 0) {
+        const activeId = keepId || sessions[0].id;
+        setSelectedSessionId(activeId);
+        setSelectedSession(sessions.find(s => s.id === activeId) ?? sessions[0]);
+      } else {
+        setSelectedSessionId('');
+        setSelectedSession(null);
+      }
+    } catch {
+      setRegisteredSessions([]);
+    }
+  };
+
+  useEffect(() => {
+    loadRegisteredSessions();
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'registeredWebinarData') loadRegisteredSessions();
+    };
+    // Re-load when user returns to this tab (e.g. after registering in Expert Directory)
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') loadRegisteredSessions();
+    };
+    window.addEventListener('storage', handleStorage);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, []);
 
   // Dummy connections data
   const dummyConnections: Connection[] = [
@@ -451,6 +509,121 @@ const Home: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ---- Your Meeting ---- */}
+      <div className="bg-white rounded-2xl shadow-lg border border-blue-100 overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-blue-900 to-blue-700">
+          <div className="flex items-center space-x-3">
+            <Video className="w-5 h-5 text-white" />
+            <h3 className="text-lg font-semibold text-white">Your Meeting</h3>
+          </div>
+          <button
+            onClick={() => { loadRegisteredSessions(selectedSessionId); }}
+            className="flex items-center space-x-1.5 text-blue-200 hover:text-white text-sm transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span>Refresh</span>
+          </button>
+        </div>
+
+        {registeredSessions.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+            <div className="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center mb-4">
+              <Calendar className="w-7 h-7 text-blue-400" />
+            </div>
+            <p className="text-gray-700 font-medium mb-1">No sessions registered yet</p>
+            <p className="text-gray-500 text-sm">Register for a session in the <strong>Expert Directory → Webinars</strong> tab and it will appear here.</p>
+          </div>
+        ) : (
+          <div className="p-6 space-y-5">
+            {/* Session Dropdown Selector */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                Switch Session
+              </label>
+              <div className="relative">
+                <select
+                  value={selectedSessionId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setSelectedSessionId(id);
+                    setSelectedSession(registeredSessions.find(s => s.id === id) ?? null);
+                  }}
+                  className="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
+                >
+                  {registeredSessions.map(session => (
+                    <option key={session.id} value={session.id}>
+                      {session.title} — {session.date} at {session.time}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Selected Session Details */}
+            {selectedSession && (
+              <div className="rounded-xl border border-gray-100 bg-gray-50 p-5 space-y-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <h4 className="font-semibold text-gray-900 text-base leading-snug">{selectedSession.title}</h4>
+                    <span className="inline-block mt-1 px-2.5 py-0.5 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">{selectedSession.topic}</span>
+                  </div>
+                  {selectedSession.expertAvatar && (
+                    <img
+                      src={selectedSession.expertAvatar}
+                      alt={selectedSession.expert}
+                      className="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2 border-white shadow"
+                    />
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+                  <div className="flex items-center space-x-2 text-gray-600">
+                    <User className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                    <span className="truncate">{selectedSession.expert}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-gray-600">
+                    <Calendar className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                    <span>{selectedSession.date}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-gray-600">
+                    <Clock className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                    <span>{selectedSession.time}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-gray-600">
+                    <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                    <span>{selectedSession.region}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-gray-600">
+                    <Users className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                    <span>{selectedSession.attendees}/{selectedSession.maxAttendees} attendees</span>
+                  </div>
+                </div>
+
+                {selectedSession.description && (
+                  <p className="text-gray-600 text-sm leading-relaxed">{selectedSession.description}</p>
+                )}
+
+                <button
+                  onClick={() => {
+                    if (selectedSession.teamsLink) {
+                      window.open(selectedSession.teamsLink, '_blank');
+                    } else {
+                      alert('Teams link will be available 15 minutes before the session starts.');
+                    }
+                  }}
+                  className="w-full flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
+                >
+                  <Video className="w-5 h-5" />
+                  <span>Join Meeting</span>
+                  <ExternalLink className="w-4 h-4 opacity-80" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Quick Actions */}
