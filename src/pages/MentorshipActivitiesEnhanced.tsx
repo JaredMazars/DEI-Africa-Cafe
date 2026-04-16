@@ -1930,7 +1930,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                       <span>Back to All Paths</span>
                     </button>
 
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white mb-6">
+                    <div className="bg-gradient-to-r from-blue-600 to-blue-600 rounded-2xl p-8 text-white mb-6">
                       <div className="flex items-start justify-between">
                         <div>
                           <h1 className="text-3xl font-bold mb-2">{selectedLearningPath.title}</h1>
@@ -2276,7 +2276,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
 
             {/* Mentorship Mixer Article */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-              <div className="bg-gradient-to-r from-purple-600 to-purple-700 p-8 rounded-t-xl">
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-8 rounded-t-xl">
                 <div className="flex items-center space-x-4 mb-4">
                   <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
                     <Users className="w-8 h-8 text-white" />
@@ -2297,7 +2297,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                     </p>
                   </div>
 
-                  <div className="bg-blue-50 border-l-4 border-purple-600 p-6 rounded-r-lg">
+                  <div className="bg-blue-50 border-l-4 border-blue-600 p-6 rounded-r-lg">
                     <h5 className="font-bold text-blue-900 mb-3 flex items-center">
                       <span className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center mr-3 text-sm">1</span>
                       Scenario: First Meeting Nerves
@@ -2355,7 +2355,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200 p-6 rounded-lg">
+                  <div className="bg-gradient-to-r from-blue-50 to-blue-50 border-2 border-blue-200 p-6 rounded-lg">
                     <h5 className="font-bold text-gray-900 mb-3">🎯 Key Principles for All Scenarios</h5>
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="bg-white p-4 rounded-lg">
@@ -2539,14 +2539,14 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
 
             {/* Safe Space Article */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-              <div className="bg-gradient-to-r from-indigo-600 to-purple-700 p-8 rounded-t-xl">
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-8 rounded-t-xl">
                 <div className="flex items-center space-x-4 mb-4">
                   <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
                     <Lock className="w-8 h-8 text-white" />
                   </div>
                   <div>
                     <h3 className="text-2xl font-bold text-white">Creating a Safe Space: Psychological Safety Guide</h3>
-                    <p className="text-indigo-100">Building trust and confidentiality in mentorship</p>
+                    <p className="text-blue-100">Building trust and confidentiality in mentorship</p>
                   </div>
                 </div>
               </div>
@@ -2562,8 +2562,8 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                     </p>
                   </div>
 
-                  <div className="bg-indigo-50 border-l-4 border-indigo-600 p-6 rounded-r-lg">
-                    <h5 className="font-bold text-indigo-900 mb-4 text-lg">🛡️ The Pillars of Safe Space</h5>
+                  <div className="bg-blue-50 border-l-4 border-blue-600 p-6 rounded-r-lg">
+                    <h5 className="font-bold text-blue-900 mb-4 text-lg">🛡️ The Pillars of Safe Space</h5>
                     <div className="space-y-4">
                       <div className="bg-white p-5 rounded-lg shadow-sm">
                         <h6 className="font-semibold text-gray-900 mb-2">1. Confidentiality</h6>
@@ -2571,7 +2571,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                           What is shared stays between you, except in cases of harm or legal obligations. Explicitly establish 
                           confidentiality boundaries at the start and honor them absolutely.
                         </p>
-                        <p className="text-sm text-indigo-700 font-medium">Action: "Everything we discuss here is confidential unless you give me permission to share it or there's a safety concern."</p>
+                        <p className="text-sm text-blue-700 font-medium">Action: "Everything we discuss here is confidential unless you give me permission to share it or there's a safety concern."</p>
                       </div>
 
                       <div className="bg-white p-5 rounded-lg shadow-sm">
@@ -2580,7 +2580,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                           Approach all conversations with curiosity rather than criticism. Even when you disagree, focus on 
                           understanding their perspective before sharing yours.
                         </p>
-                        <p className="text-sm text-indigo-700 font-medium">Action: Replace "Why did you do that?" with "Help me understand your thinking..."</p>
+                        <p className="text-sm text-blue-700 font-medium">Action: Replace "Why did you do that?" with "Help me understand your thinking..."</p>
                       </div>
 
                       <div className="bg-white p-5 rounded-lg shadow-sm">
@@ -2589,7 +2589,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                           Demonstrate that you're invested in their success and wellbeing. This means celebrating wins, 
                           supporting through challenges, and being consistently available within agreed boundaries.
                         </p>
-                        <p className="text-sm text-indigo-700 font-medium">Action: "I'm here for you. What kind of support would be most helpful right now?"</p>
+                        <p className="text-sm text-blue-700 font-medium">Action: "I'm here for you. What kind of support would be most helpful right now?"</p>
                       </div>
 
                       <div className="bg-white p-5 rounded-lg shadow-sm">
@@ -2598,7 +2598,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                           Healthy boundaries protect both parties. Be clear about time commitments, communication channels, 
                           and the scope of your mentorship. Respect their autonomy in all decisions.
                         </p>
-                        <p className="text-sm text-indigo-700 font-medium">Action: Co-create a mentorship agreement outlining expectations, boundaries, and goals.</p>
+                        <p className="text-sm text-blue-700 font-medium">Action: Co-create a mentorship agreement outlining expectations, boundaries, and goals.</p>
                       </div>
 
                       <div className="bg-white p-5 rounded-lg shadow-sm">
@@ -2607,7 +2607,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                           Recognize that your mentee's experiences, especially around identity, may be vastly different from yours. 
                           Approach cultural differences with humility and a learning mindset.
                         </p>
-                        <p className="text-sm text-indigo-700 font-medium">Action: "I may not fully understand your experience. Please help me understand how your background influences this situation."</p>
+                        <p className="text-sm text-blue-700 font-medium">Action: "I may not fully understand your experience. Please help me understand how your background influences this situation."</p>
                       </div>
                     </div>
                   </div>
@@ -2637,13 +2637,13 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                     </p>
                   </div>
 
-                  <div className="bg-white border-2 border-indigo-200 rounded-lg p-6">
+                  <div className="bg-white border-2 border-blue-200 rounded-lg p-6">
                     <h5 className="font-bold text-gray-900 mb-4 text-lg">🔑 Support Resources Available</h5>
                     <div className="grid md:grid-cols-2 gap-4">
-                      <div className="bg-indigo-50 p-4 rounded-lg">
-                        <h6 className="font-semibold text-indigo-900 mb-2">Mental Health Resources</h6>
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <h6 className="font-semibold text-blue-900 mb-2">Mental Health Resources</h6>
                         <p className="text-sm text-gray-700 mb-3">Access to counseling services, employee assistance programs, and support groups</p>
-                        <button className="text-indigo-600 font-medium text-sm hover:text-indigo-800">Learn More →</button>
+                        <button className="text-blue-600 font-medium text-sm hover:text-blue-800">Learn More →</button>
                       </div>
 
                       <div className="bg-blue-50 p-4 rounded-lg">
@@ -2666,28 +2666,28 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 p-6 rounded-lg">
+                  <div className="bg-gradient-to-r from-blue-50 to-blue-50 border-2 border-blue-200 p-6 rounded-lg">
                     <h5 className="font-bold text-gray-900 mb-3">💭 Reflection Questions for Mentors</h5>
                     <p className="text-gray-700 mb-4">Regularly assess the psychological safety of your mentorship relationship:</p>
                     <ul className="space-y-2 text-gray-800">
                       <li className="flex items-start">
-                        <span className="text-indigo-600 font-bold mr-2">❓</span>
+                        <span className="text-blue-600 font-bold mr-2">❓</span>
                         <span>Does my mentee feel comfortable admitting when they don't understand something?</span>
                       </li>
                       <li className="flex items-start">
-                        <span className="text-indigo-600 font-bold mr-2">❓</span>
+                        <span className="text-blue-600 font-bold mr-2">❓</span>
                         <span>Can they share failures or mistakes without fear of judgment?</span>
                       </li>
                       <li className="flex items-start">
-                        <span className="text-indigo-600 font-bold mr-2">❓</span>
+                        <span className="text-blue-600 font-bold mr-2">❓</span>
                         <span>Do they bring up difficult topics or only share "safe" information?</span>
                       </li>
                       <li className="flex items-start">
-                        <span className="text-indigo-600 font-bold mr-2">❓</span>
+                        <span className="text-blue-600 font-bold mr-2">❓</span>
                         <span>Have I modeled vulnerability by sharing my own challenges?</span>
                       </li>
                       <li className="flex items-start">
-                        <span className="text-indigo-600 font-bold mr-2">❓</span>
+                        <span className="text-blue-600 font-bold mr-2">❓</span>
                         <span>When was the last time I explicitly checked in on their wellbeing?</span>
                       </li>
                     </ul>
@@ -2727,7 +2727,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                 <div className="text-4xl font-bold text-blue-900 mb-2">{activityResults.reflectionsPosted}</div>
                 <div className="text-sm font-medium text-gray-700">Reflections Posted</div>
               </div>
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border-2 border-purple-200">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border-2 border-blue-200">
                 <div className="text-4xl font-bold text-blue-900 mb-2">{activityResults.sessionsRated}</div>
                 <div className="text-sm font-medium text-gray-700">Sessions Rated</div>
               </div>
@@ -2870,7 +2870,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden ml-12">
                 <div className="p-6">
                   <div className="flex items-start space-x-4 mb-4">
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-white font-bold">M</span>
                     </div>
                     <div className="flex-1">
@@ -3257,7 +3257,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
       {showCreateGoal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-600 to-indigo-600">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-600">
               <div>
                 <h2 className="text-2xl font-bold text-white">Create SMART Goal</h2>
                 <p className="text-blue-100 text-sm">Specific, Measurable, Achievable, Relevant, Time-bound</p>
@@ -3468,7 +3468,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                 </div>
 
                 {/* SMART Goal Summary */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6">
+                <div className="bg-gradient-to-r from-blue-50 to-blue-50 border-2 border-blue-200 rounded-xl p-6">
                   <h3 className="font-bold text-gray-900 mb-3 flex items-center">
                     <Target className="w-5 h-5 text-blue-600 mr-2" />
                     SMART Goal Checklist
@@ -3524,7 +3524,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleCreateGoal}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all"
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all"
                   >
                     Create Goal
                   </button>
@@ -3622,23 +3622,23 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
               <p className="text-gray-600 mb-6">Interactive scenarios to improve your mentorship skills</p>
               
               <div className="space-y-6">
-                <div className="bg-blue-50 rounded-xl p-6 border border-purple-200">
+                <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
                   <div className="flex items-center space-x-2 mb-3">
                     <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">1</div>
                     <h3 className="font-bold text-gray-900">First Meeting Nerves</h3>
                   </div>
                   <p className="text-gray-700 mb-4">Your mentee seems nervous and quiet. What's the best approach?</p>
                   <div className="space-y-2">
-                    <button className="w-full text-left p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-purple-600 transition-all">
+                    <button className="w-full text-left p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-600 transition-all">
                       <div className="font-medium text-gray-900">A) Jump straight into setting goals</div>
                     </button>
-                    <button className="w-full text-left p-4 bg-white border-2 border-purple-600 bg-blue-50 rounded-lg">
+                    <button className="w-full text-left p-4 bg-white border-2 border-blue-600 bg-blue-50 rounded-lg">
                       <div className="font-medium text-blue-900 flex items-center justify-between">
                         <span>B) Share your own experiences to build rapport</span>
                         <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Best Choice</span>
                       </div>
                     </button>
-                    <button className="w-full text-left p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-purple-600 transition-all">
+                    <button className="w-full text-left p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-600 transition-all">
                       <div className="font-medium text-gray-900">C) Ask open-ended questions</div>
                     </button>
                   </div>
@@ -4004,7 +4004,7 @@ How are you feeling about your progress?"
       {showResourceViewer && selectedResource && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-600 to-indigo-600">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-600">
               <div className="flex items-center space-x-3">
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                   selectedResource.type === 'video' ? 'bg-red-500' : 'bg-blue-500'
@@ -4103,7 +4103,7 @@ How are you feeling about your progress?"
                             </p>
                           </div>
 
-                          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 p-6 rounded-r-lg my-6">
+                          <div className="bg-gradient-to-r from-blue-50 to-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg my-6">
                             <h4 className="text-lg font-bold text-blue-900 mb-3 flex items-center">
                               <Lightbulb className="w-5 h-5 mr-2" />
                               Why This Matters
@@ -4302,7 +4302,7 @@ How are you feeling about your progress?"
             {gameState === 'menu' && (
               <div className="p-8">
                 <div className="text-center mb-8">
-                  <div className="w-20 h-20 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-20 h-20 bg-gradient-to-br from-pink-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Trophy className="w-10 h-10 text-white" />
                   </div>
                   <h2 className="text-3xl font-bold text-gray-900 mb-2">Mentorship Challenge</h2>
@@ -4338,7 +4338,7 @@ How are you feeling about your progress?"
 
                   <button
                     onClick={() => startGame('challenge')}
-                    className="bg-gradient-to-br from-pink-50 to-purple-100 border-2 border-pink-300 rounded-xl p-8 hover:shadow-lg transition-all text-left"
+                    className="bg-gradient-to-br from-pink-50 to-blue-100 border-2 border-pink-300 rounded-xl p-8 hover:shadow-lg transition-all text-left"
                   >
                     <div className="flex items-center justify-between mb-4">
                       <Zap className="w-8 h-8 text-pink-600" />
@@ -4412,7 +4412,7 @@ How are you feeling about your progress?"
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-6 mb-6">
+                <div className="bg-gradient-to-r from-blue-100 to-pink-100 rounded-xl p-6 mb-6">
                   <span className="inline-block bg-white px-3 py-1 rounded-full text-xs font-medium text-blue-700 mb-3">
                     {gameQuestions[currentQuestion].category}
                   </span>
@@ -4427,7 +4427,7 @@ How are you feeling about your progress?"
                       disabled={selectedAnswer !== null}
                       className={`w-full p-4 rounded-lg text-left transition-all ${
                         selectedAnswer === null
-                          ? 'bg-white border-2 border-gray-200 hover:border-purple-400 hover:shadow-md'
+                          ? 'bg-white border-2 border-gray-200 hover:border-blue-400 hover:shadow-md'
                           : selectedAnswer === index
                           ? index === gameQuestions[currentQuestion].correctAnswer
                             ? 'bg-green-100 border-2 border-green-500'
@@ -4483,7 +4483,7 @@ How are you feeling about your progress?"
                 {showFeedback && (
                   <button
                     onClick={nextQuestion}
-                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-4 rounded-lg font-bold text-lg transition-all shadow-lg"
+                    className="w-full bg-gradient-to-r from-blue-600 to-pink-600 hover:from-blue-700 hover:to-pink-700 text-white px-6 py-4 rounded-lg font-bold text-lg transition-all shadow-lg"
                   >
                     {currentQuestion < gameQuestions.length - 1 ? 'Next Question →' : 'See Results 🏆'}
                   </button>
@@ -4501,7 +4501,7 @@ How are you feeling about your progress?"
                   <p className="text-xl text-gray-600">{getScoreMessage()}</p>
                 </div>
 
-                <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-8 mb-6">
+                <div className="bg-gradient-to-r from-blue-100 to-pink-100 rounded-xl p-8 mb-6">
                   <div className="grid grid-cols-3 gap-6 text-center">
                     <div>
                       <p className="text-4xl font-bold text-blue-900 mb-1">{score}</p>
@@ -4529,7 +4529,7 @@ How are you feeling about your progress?"
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     onClick={resetGame}
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-lg font-semibold transition-all"
+                    className="bg-gradient-to-r from-blue-600 to-pink-600 hover:from-blue-700 hover:to-pink-700 text-white px-6 py-3 rounded-lg font-semibold transition-all"
                   >
                     Play Again
                   </button>

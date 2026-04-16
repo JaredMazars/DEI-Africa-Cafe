@@ -187,7 +187,7 @@ const AdminContent: React.FC = () => {
             resetModal();
             setShowModal(true);
           }}
-          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
         >
           <Plus className="w-5 h-5" />
           Add {activeTab === 'videos' ? 'Video' : 'Article'}

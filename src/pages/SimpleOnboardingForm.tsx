@@ -140,7 +140,7 @@ export default function SimpleOnboardingForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         <div className="bg-white rounded-2xl shadow-2xl p-8 border border-blue-100">
           {/* Header */}
@@ -420,7 +420,7 @@ export default function SimpleOnboardingForm() {
               <button
                 onClick={handleSubmit}
                 disabled={!canProceed() || loading}
-                className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-600 text-white rounded-lg hover:from-blue-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 {loading ? (
                   <>

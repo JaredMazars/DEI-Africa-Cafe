@@ -147,9 +147,9 @@ const AdminDashboard: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-blue-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-900 to-blue-900 text-white shadow-2xl">
+      <div className="bg-gradient-to-r from-blue-900 to-blue-900 text-white shadow-2xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3 sm:gap-4">
@@ -187,7 +187,7 @@ const AdminDashboard: React.FC = () => {
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`flex items-center gap-2 px-6 py-4 font-medium transition-all border-b-2 ${
                     activeTab === tab.id
-                      ? 'border-purple-600 text-blue-600'
+                      ? 'border-blue-600 text-blue-600'
                       : 'border-transparent text-gray-600 hover:text-gray-900'
                   }`}
                 >
@@ -216,7 +216,7 @@ const AdminDashboard: React.FC = () => {
                   setEditingMentor(null);
                   setNewMentor({ name: '', email: '', phone: '', expertise: '', bio: '', photo: '' });
                 }}
-                className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
               >
                 <Plus className="w-5 h-5" />
                 Add New Mentor
@@ -228,7 +228,7 @@ const AdminDashboard: React.FC = () => {
               {[
                 { label: 'Total Mentors', value: mentors.length, icon: Users, color: 'blue' },
                 { label: 'Active Mentors', value: mentors.filter(m => m.status === 'active').length, icon: Award, color: 'green' },
-                { label: 'Total Sessions', value: mentors.reduce((acc, m) => acc + m.sessionsCompleted, 0), icon: BookOpen, color: 'purple' },
+                { label: 'Total Sessions', value: mentors.reduce((acc, m) => acc + m.sessionsCompleted, 0), icon: BookOpen, color: 'blue' },
                 { label: 'Total Mentees', value: mentors.reduce((acc, m) => acc + m.totalMentees, 0), icon: Users, color: 'orange' }
               ].map((stat, idx) => {
                 const Icon = stat.icon;
@@ -253,14 +253,14 @@ const AdminDashboard: React.FC = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search mentors by name, email, or expertise..."
-                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
             </div>
 
             {/* Add/Edit Mentor Form */}
             {(showAddMentor || editingMentor) && (
-              <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-8 border-2 border-purple-200 shadow-xl">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-50 rounded-2xl p-8 border-2 border-blue-200 shadow-xl">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-2xl font-bold text-gray-900">
                     {editingMentor ? 'Edit Mentor' : 'Add New Mentor'}
@@ -284,7 +284,7 @@ const AdminDashboard: React.FC = () => {
                       type="text"
                       value={newMentor.name}
                       onChange={(e) => setNewMentor({ ...newMentor, name: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Dr. Emily Rodriguez"
                     />
                   </div>
@@ -295,7 +295,7 @@ const AdminDashboard: React.FC = () => {
                       type="email"
                       value={newMentor.email}
                       onChange={(e) => setNewMentor({ ...newMentor, email: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="email@deiafrica.com"
                     />
                   </div>
@@ -306,7 +306,7 @@ const AdminDashboard: React.FC = () => {
                       type="tel"
                       value={newMentor.phone}
                       onChange={(e) => setNewMentor({ ...newMentor, phone: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="+27 11 555 0101"
                     />
                   </div>
@@ -317,7 +317,7 @@ const AdminDashboard: React.FC = () => {
                       type="url"
                       value={newMentor.photo}
                       onChange={(e) => setNewMentor({ ...newMentor, photo: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="https://example.com/photo.jpg (optional)"
                     />
                   </div>
@@ -328,7 +328,7 @@ const AdminDashboard: React.FC = () => {
                       type="text"
                       value={newMentor.expertise}
                       onChange={(e) => setNewMentor({ ...newMentor, expertise: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="Leadership, Strategy, Career Development"
                     />
                   </div>
@@ -338,7 +338,7 @@ const AdminDashboard: React.FC = () => {
                     <textarea
                       value={newMentor.bio}
                       onChange={(e) => setNewMentor({ ...newMentor, bio: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       rows={4}
                       placeholder="Brief professional background and expertise..."
                     />
@@ -358,7 +358,7 @@ const AdminDashboard: React.FC = () => {
                   </button>
                   <button
                     onClick={() => editingMentor ? handleUpdateMentor(editingMentor) : handleAddMentor()}
-                    className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white py-3 rounded-lg font-bold shadow-lg transition-all"
+                    className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white py-3 rounded-lg font-bold shadow-lg transition-all"
                   >
                     <Save className="w-5 h-5" />
                     {editingMentor ? 'Update Mentor' : 'Add Mentor'}
@@ -375,7 +375,7 @@ const AdminDashboard: React.FC = () => {
                     <img
                       src={mentor.photo}
                       alt={mentor.name}
-                      className="w-24 h-24 rounded-xl object-cover border-4 border-purple-100"
+                      className="w-24 h-24 rounded-xl object-cover border-4 border-blue-100"
                     />
                     
                     <div className="flex-1">
@@ -471,7 +471,7 @@ const AdminDashboard: React.FC = () => {
             <p className="text-gray-600 mb-6">Upload videos and create articles for mentees</p>
             <button
               onClick={() => navigate('/admin/content')}
-              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-bold shadow-lg"
+              className="bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-bold shadow-lg"
             >
               Go to Content Manager
             </button>

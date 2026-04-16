@@ -190,8 +190,8 @@ const AdminExperts: React.FC = () => {
           <p className="text-3xl font-bold text-gray-900 mt-1">{webinars.length}</p>
         </div>
         <div className="bg-white rounded-xl p-6 shadow-sm border">
-          <div className="inline-flex p-3 rounded-lg bg-purple-100 mb-3">
-            <MessageCircle className="w-6 h-6 text-purple-600" />
+          <div className="inline-flex p-3 rounded-lg bg-blue-100 mb-3">
+            <MessageCircle className="w-6 h-6 text-blue-600" />
           </div>
           <p className="text-gray-600 text-sm">Questions</p>
           <p className="text-3xl font-bold text-gray-900 mt-1">{questions.length}</p>

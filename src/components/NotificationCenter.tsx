@@ -56,7 +56,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
       case 'webinar':
         return <Video className="w-5 h-5 text-red-600" />;
       case 'request':
-        return <Bell className="w-5 h-5 text-indigo-600" />;
+        return <Bell className="w-5 h-5 text-blue-600" />;
       case 'system':
         return <AlertCircle className="w-5 h-5 text-gray-600" />;
       default:

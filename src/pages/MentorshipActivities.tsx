@@ -226,7 +226,7 @@ const MentorshipActivities: React.FC = () => {
             onClick={() => setShowMentorshipMixer(true)}
             className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 hover:shadow-lg transition-all text-left group"
           >
-            <div className="w-16 h-16 bg-gradient-to-r from-purple-100 to-purple-50 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+            <div className="w-16 h-16 bg-gradient-to-r from-blue-100 to-blue-50 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
               <Coffee className="w-8 h-8 text-blue-900" />
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-3">Mentorship Mixer</h3>
@@ -271,12 +271,12 @@ const MentorshipActivities: React.FC = () => {
             onClick={() => setShowSafeSpace(true)}
             className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 hover:shadow-lg transition-all text-left group"
           >
-            <div className="w-16 h-16 bg-gradient-to-r from-indigo-100 to-indigo-50 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-              <Eye className="w-8 h-8 text-indigo-900" />
+            <div className="w-16 h-16 bg-gradient-to-r from-blue-100 to-blue-50 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <Eye className="w-8 h-8 text-blue-900" />
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-3">Safe Space</h3>
             <p className="text-gray-600 mb-4">Confidential support and resources for sensitive topics</p>
-            <div className="text-indigo-600 font-medium flex items-center">
+            <div className="text-blue-600 font-medium flex items-center">
               Start Activity →
             </div>
           </button>
@@ -305,7 +305,7 @@ const MentorshipActivities: React.FC = () => {
               <div className="text-4xl font-bold text-blue-900 mb-2">12</div>
               <div className="text-sm font-medium text-gray-700">Reflections Posted</div>
             </div>
-            <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl">
+            <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
               <div className="text-4xl font-bold text-blue-900 mb-2">8</div>
               <div className="text-sm font-medium text-gray-700">Sessions Rated</div>
             </div>
@@ -402,25 +402,25 @@ const MentorshipActivities: React.FC = () => {
               
               <div className="space-y-6">
                 {/* Scenario 1 */}
-                <div className="bg-blue-50 rounded-xl p-6 border border-purple-100">
+                <div className="bg-blue-50 rounded-xl p-6 border border-blue-100">
                   <div className="flex items-center space-x-2 mb-3">
                     <div className="w-8 h-8 bg-blue-900 text-white rounded-full flex items-center justify-center font-bold">1</div>
                     <h3 className="font-bold text-gray-900">First Meeting Nerves</h3>
                   </div>
                   <p className="text-gray-700 mb-4">Your mentee seems nervous and quiet in your first meeting. What's the best approach?</p>
                   <div className="space-y-2">
-                    <button className="w-full text-left p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-purple-900 hover:bg-blue-50 transition-all group">
+                    <button className="w-full text-left p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-900 hover:bg-blue-50 transition-all group">
                       <div className="font-medium text-gray-900 group-hover:text-blue-900">A) Jump straight into setting concrete goals</div>
                       <div className="text-sm text-gray-600 mt-1">Get right to business and establish clear objectives</div>
                     </button>
-                    <button className="w-full text-left p-4 bg-white border-2 border-purple-900 bg-blue-50 rounded-lg">
+                    <button className="w-full text-left p-4 bg-white border-2 border-blue-900 bg-blue-50 rounded-lg">
                       <div className="font-medium text-blue-900 flex items-center justify-between">
                         <span>B) Share your own experiences to build rapport</span>
                         <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Best Choice</span>
                       </div>
                       <div className="text-sm text-gray-700 mt-1">Create a comfortable environment by being vulnerable first</div>
                     </button>
-                    <button className="w-full text-left p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-purple-900 hover:bg-blue-50 transition-all group">
+                    <button className="w-full text-left p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-900 hover:bg-blue-50 transition-all group">
                       <div className="font-medium text-gray-900 group-hover:text-blue-900">C) Ask open-ended questions about their interests</div>
                       <div className="text-sm text-gray-600 mt-1">Let them talk about topics they're comfortable with</div>
                     </button>
@@ -453,7 +453,7 @@ const MentorshipActivities: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-6 border border-purple-200">
+                <div className="bg-gradient-to-r from-blue-50 to-blue-50 rounded-xl p-6 border border-blue-200">
                   <h4 className="font-bold text-gray-900 mb-2">💡 Pro Tip</h4>
                   <p className="text-gray-700 text-sm">
                     Great mentors create psychological safety by being authentic, listening actively, and helping mentees reframe challenges as learning opportunities.
@@ -643,9 +643,9 @@ const MentorshipActivities: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
                   <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-700 rounded-full flex items-center justify-center text-white font-bold">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white font-bold">
                       AP
                     </div>
                     <div className="flex-1">
@@ -695,9 +695,9 @@ const MentorshipActivities: React.FC = () => {
               </button>
             </div>
             <div className="p-6">
-              <div className="bg-indigo-50 rounded-xl p-6 border border-indigo-200 mb-6">
+              <div className="bg-blue-50 rounded-xl p-6 border border-blue-200 mb-6">
                 <div className="flex items-start space-x-3">
-                  <Eye className="w-6 h-6 text-indigo-600 mt-1" />
+                  <Eye className="w-6 h-6 text-blue-600 mt-1" />
                   <div>
                     <h3 className="font-bold text-gray-900 mb-2">Confidential Support</h3>
                     <p className="text-gray-700 text-sm">
@@ -713,7 +713,7 @@ const MentorshipActivities: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">What would you like to discuss?</label>
                   <textarea
                     rows={5}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Share your concerns confidentially..."
                   />
                 </div>
@@ -722,11 +722,11 @@ const MentorshipActivities: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Would you like a follow-up?</label>
                   <div className="space-y-2">
                     <label className="flex items-center space-x-3 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input type="radio" name="followup" className="text-indigo-600" />
+                      <input type="radio" name="followup" className="text-blue-600" />
                       <span className="text-gray-700">Yes, please contact me</span>
                     </label>
                     <label className="flex items-center space-x-3 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
-                      <input type="radio" name="followup" className="text-indigo-600" />
+                      <input type="radio" name="followup" className="text-blue-600" />
                       <span className="text-gray-700">No, I just wanted to share</span>
                     </label>
                   </div>
@@ -751,7 +751,7 @@ const MentorshipActivities: React.FC = () => {
                   </div>
                 </div>
 
-                <button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-4 rounded-lg font-semibold transition-colors text-lg">
+                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-lg font-semibold transition-colors text-lg">
                   Submit Confidentially
                 </button>
 

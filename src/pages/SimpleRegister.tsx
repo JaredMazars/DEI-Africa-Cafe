@@ -46,7 +46,7 @@ const SimpleRegister: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 px-4">
       <div className="w-full max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 items-center">
         {/* Left Side - Branding */}
         <div className="text-center lg:text-left space-y-8">
@@ -58,8 +58,8 @@ const SimpleRegister: React.FC = () => {
                 className="h-10"
               />
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">
-              One Africa Hub
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-700 to-blue-700 bg-clip-text text-transparent">
+              DEI Cafe
             </h1>
             <p className="text-xl text-gray-700 max-w-md mx-auto lg:mx-0">
               Join thousands of professionals across Africa. Start your mentorship journey today.
@@ -96,7 +96,7 @@ const SimpleRegister: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-2xl p-8 border border-blue-100">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
-              <p className="text-gray-600">Join the One Africa Hub community</p>
+              <p className="text-gray-600">Join the DEI Cafe community</p>
             </div>
 
             {error && (
@@ -174,7 +174,7 @@ const SimpleRegister: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {loading ? (
                   <>

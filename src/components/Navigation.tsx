@@ -59,7 +59,7 @@ const Navigation = () => {
               />
               <div className="hidden sm:block min-w-0">
                 <h1 className="text-base sm:text-xl font-bold text-gray-900 whitespace-nowrap truncate">
-                  One Africa Hub
+                  DEI Cafe
                 </h1>
                 <p className="text-xs text-gray-500">Forvis Mazars</p>
               </div>

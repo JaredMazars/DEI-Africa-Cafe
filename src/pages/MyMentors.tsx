@@ -134,13 +134,13 @@ const MyMentors: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 pt-20 pb-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-blue-50 pt-20 pb-12 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-600 bg-clip-text text-transparent mb-2">
                 My Mentors
               </h1>
               <p className="text-gray-600">
@@ -175,7 +175,7 @@ const MyMentors: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-purple-100">
+            <div className="bg-white rounded-xl p-6 shadow-lg border border-blue-100">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-600 text-sm mb-1">Active Goals</p>
@@ -267,7 +267,7 @@ const MyMentors: React.FC = () => {
               className="bg-white rounded-2xl shadow-lg border border-gray-200 hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:scale-[1.02] overflow-hidden"
             >
               {/* Card Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
+              <div className="bg-gradient-to-r from-blue-600 to-blue-600 p-6 text-white">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-4">
                     <img
@@ -358,7 +358,7 @@ const MyMentors: React.FC = () => {
                 {/* Action Button */}
                 <button
                   onClick={() => handleMentorClick(mentor.id)}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
                 >
                   View Activities & Progress
                   <ArrowRight className="w-5 h-5" />
@@ -380,7 +380,7 @@ const MyMentors: React.FC = () => {
             </p>
             <button
               onClick={() => navigate('/mentors')}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-200"
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white rounded-xl font-semibold transition-all duration-200"
             >
               Discover Mentors
             </button>

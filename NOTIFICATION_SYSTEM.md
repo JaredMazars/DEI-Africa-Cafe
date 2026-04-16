@@ -74,11 +74,11 @@ function YourComponent() {
 |------|------|-------|----------|
 | `message` | MessageCircle | Blue | New chat messages |
 | `session` | Calendar | Green | Session reminders, scheduling |
-| `connection` | UserPlus | Purple | New connections, friend requests |
+| `connection` | UserPlus | blue | New connections, friend requests |
 | `opportunity` | Briefcase | Orange | New opportunities, job postings |
 | `expert` | Award | Yellow | Expert approvals, updates |
 | `webinar` | Video | Red | Webinar registrations, reminders |
-| `request` | Bell | Indigo | Interest requests, approvals |
+| `request` | Bell | blue | Interest requests, approvals |
 | `system` | AlertCircle | Gray | System updates, maintenance |
 
 ---

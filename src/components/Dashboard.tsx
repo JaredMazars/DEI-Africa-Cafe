@@ -183,13 +183,13 @@ export function Dashboard() {
             <div>
               <p className="text-sm text-gray-600">Completed Sessions</p>
               <p className="text-3xl font-bold text-gray-900">{adminAnalytics.overview.completedSessions.toLocaleString()}</p>
-              <p className="text-sm text-indigo-600 flex items-center mt-1">
+              <p className="text-sm text-blue-600 flex items-center mt-1">
                 <Video className="w-4 h-4 mr-1" />
                 {adminAnalytics.overview.totalSessions - adminAnalytics.overview.completedSessions} scheduled
               </p>
             </div>
-            <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
-              <Video className="w-6 h-6 text-indigo-600" />
+            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+              <Video className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>
@@ -833,12 +833,12 @@ export function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
                 <Building2 className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">
-                  One Africa Hub
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+                  DEI Cafe
                 </h1>
                 <p className="text-xs text-gray-500">Admin Dashboard</p>
               </div>

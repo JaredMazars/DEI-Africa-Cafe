@@ -160,7 +160,7 @@
 │  🟡 YELLOW:  Draft, Medium Priority                                       │
 │  ⚫ GRAY:    Inactive, Closed, Archived, Low Priority                     │
 │  🔵 BLUE:    Scheduled, Filled, Answered                                  │
-│  🟣 PURPLE:  Admin theme, Tags, Categories                                │
+│  🟣 blue:  Admin theme, Tags, Categories                                │
 └──────────────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────────────┐

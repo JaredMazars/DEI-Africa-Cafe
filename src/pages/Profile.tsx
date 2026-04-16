@@ -387,12 +387,12 @@ const Profile: React.FC = () => {
                 <div
                   key={mentee.id}
                   onClick={() => navigate(`/mentor-view/mentee/${mentee.id}`)}
-                  className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:shadow-lg hover:border-purple-300 cursor-pointer transition-all"
+                  className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:shadow-lg hover:border-blue-300 cursor-pointer transition-all"
                 >
                   <img
                     src={mentee.image}
                     alt={mentee.name}
-                    className="w-16 h-16 rounded-full border-2 border-purple-200"
+                    className="w-16 h-16 rounded-full border-2 border-blue-200"
                   />
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900">{mentee.name}</h3>
@@ -428,7 +428,7 @@ const Profile: React.FC = () => {
               </div>
               <p className="text-3xl font-bold text-blue-900">{myMentors.length}</p>
             </div>
-            <div className="bg-gradient-to-br from-blue-50 to-purple-100 rounded-xl p-6 border border-purple-200">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-medium text-blue-900">Total Mentees</h3>
                 <Users className="w-5 h-5 text-blue-600" />

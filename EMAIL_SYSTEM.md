@@ -1,7 +1,7 @@
 # Email Verification & Password Reset System
 
 ## Overview
-Complete email verification and password reset functionality has been implemented for the DEI Cafe One Africa Hub platform.
+Complete email verification and password reset functionality has been implemented for the DEI Cafe DEI Cafe platform.
 
 ---
 

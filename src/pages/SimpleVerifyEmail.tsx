@@ -53,7 +53,7 @@ const VerifyEmail: React.FC = () => {
   }, [searchParams, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 px-4">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-2xl p-8 border border-blue-100 text-center">
           {status === 'verifying' && (
@@ -78,7 +78,7 @@ const VerifyEmail: React.FC = () => {
               </div>
               <button
                 onClick={() => navigate('/login')}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all"
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-700 transition-all"
               >
                 Go to Login Now
               </button>
@@ -99,7 +99,7 @@ const VerifyEmail: React.FC = () => {
               </div>
               <button
                 onClick={() => navigate('/register')}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all"
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-700 transition-all"
               >
                 Register Again
               </button>

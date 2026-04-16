@@ -244,7 +244,7 @@ const ReflectionBoard: React.FC = () => {
               <div className="text-3xl font-bold text-blue-900">{reflections.length}</div>
               <div className="text-sm text-gray-600">Total Reflections</div>
             </div>
-            <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
+            <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
               <div className="text-3xl font-bold text-blue-900">
                 {reflections.filter(r => r.userRole === 'mentee').length}
               </div>
@@ -294,7 +294,7 @@ const ReflectionBoard: React.FC = () => {
                         reflection.isAnonymous 
                           ? 'bg-gray-200' 
                           : reflection.userRole === 'mentor'
-                          ? 'bg-gradient-to-br from-purple-500 to-purple-600'
+                          ? 'bg-gradient-to-br from-blue-500 to-blue-600'
                           : 'bg-gradient-to-br from-blue-500 to-blue-600'
                       }`}>
                         {reflection.isAnonymous ? (

@@ -111,10 +111,10 @@ export default function OnboardingForm() {
         return (
           <div className="space-y-8">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center mx-auto">
                 <Building2 className="w-8 h-8 text-white" />
               </div>
-              <h2 className="text-3xl font-bold text-gray-900">Welcome to One Africa Hub!</h2>
+              <h2 className="text-3xl font-bold text-gray-900">Welcome to DEI Cafe!</h2>
               <p className="text-lg text-gray-600">Let's start by understanding how you'd like to participate</p>
             </div>
 
@@ -168,7 +168,7 @@ export default function OnboardingForm() {
         return (
           <div className="space-y-8">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center mx-auto">
                 <User className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900">Tell us about yourself</h2>
@@ -208,7 +208,7 @@ export default function OnboardingForm() {
         return (
           <div className="space-y-8">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center mx-auto">
                 <Briefcase className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900">Your Expertise</h2>
@@ -242,7 +242,7 @@ export default function OnboardingForm() {
         return (
           <div className="space-y-8">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center mx-auto">
                 <Target className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900">Your Interests</h2>
@@ -275,7 +275,7 @@ export default function OnboardingForm() {
         return (
           <div className="space-y-8">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center mx-auto">
                 <Target className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900">Experience & Goals</h2>
@@ -337,7 +337,7 @@ export default function OnboardingForm() {
         return (
           <div className="space-y-8">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center mx-auto">
                 <Clock className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900">Final Details</h2>
@@ -388,7 +388,7 @@ export default function OnboardingForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 py-8 px-4">
       <div className="max-w-3xl mx-auto">
         {/* Progress Bar */}
         <div className="mb-8">
@@ -398,7 +398,7 @@ export default function OnboardingForm() {
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
-              className="bg-gradient-to-r from-blue-600 to-indigo-700 h-2 rounded-full transition-all duration-500 ease-out"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 h-2 rounded-full transition-all duration-500 ease-out"
               style={{ width: `${(currentStep / totalSteps) * 100}%` }}
             />
           </div>
@@ -423,7 +423,7 @@ export default function OnboardingForm() {
               <button
                 onClick={handleSubmit}
                 disabled={!canProceed()}
-                className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:from-blue-700 hover:to-indigo-800 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
+                className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl shadow-lg hover:from-blue-700 hover:to-blue-800 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
               >
                 <span>Complete Profile</span>
                 <ArrowRight className="w-5 h-5" />
@@ -432,7 +432,7 @@ export default function OnboardingForm() {
               <button
                 onClick={handleNext}
                 disabled={!canProceed()}
-                className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:from-blue-700 hover:to-indigo-800 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
+                className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl shadow-lg hover:from-blue-700 hover:to-blue-800 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
               >
                 <span>Next</span>
                 <ArrowRight className="w-5 h-5" />

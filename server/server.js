@@ -59,7 +59,7 @@ app.use(express.static(distPath));
 app.get('/health', (req, res) => {
     res.json({
         success: true,
-        message: 'One Africa Hub API is running',
+        message: 'DEI Cafe API is running',
         timestamp: new Date().toISOString(),
         version: '1.0.0'
     });
@@ -124,7 +124,7 @@ const startServer = async () => {
         
         // Start server regardless of database connection
         app.listen(PORT, () => {
-            console.log(`\n🚀 One Africa Hub API server running on port ${PORT}`);
+            console.log(`\n🚀 DEI Cafe API server running on port ${PORT}`);
             console.log(`📊 Health check: http://localhost:${PORT}/health`);
             console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
             console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);

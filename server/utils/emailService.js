@@ -38,7 +38,7 @@ const getVerificationEmailTemplate = (userName, verificationUrl) => {
           <tr>
             <td style="background: linear-gradient(135deg, #0072CE 0%, #171C8F 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
               <h1 style="color: #ffffff; font-size: 32px; margin: 0;">✉️ Verify Your Email</h1>
-              <p style="color: #ffffff; font-size: 16px; margin: 10px 0 0 0;">Welcome to One Africa Hub</p>
+              <p style="color: #ffffff; font-size: 16px; margin: 10px 0 0 0;">Welcome to DEI Cafe</p>
             </td>
           </tr>
           <tr>
@@ -47,7 +47,7 @@ const getVerificationEmailTemplate = (userName, verificationUrl) => {
                 Hello <strong>${userName}</strong>,
               </p>
               <p style="color: #333; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
-                Thank you for registering with One Africa Hub! Please verify your email address to activate your account.
+                Thank you for registering with DEI Cafe! Please verify your email address to activate your account.
               </p>
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
@@ -67,7 +67,7 @@ const getVerificationEmailTemplate = (userName, verificationUrl) => {
           </tr>
           <tr>
             <td style="background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 16px 16px;">
-              <p style="color: #999; font-size: 12px; margin: 0;">© 2025 One Africa Hub - Forvis Mazars</p>
+              <p style="color: #999; font-size: 12px; margin: 0;">© 2025 DEI Cafe - Forvis Mazars</p>
             </td>
           </tr>
         </table>
@@ -96,7 +96,7 @@ const getPasswordResetEmailTemplate = (userName, resetUrl) => {
           <tr>
             <td style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
               <h1 style="color: #ffffff; font-size: 32px; margin: 0;">🔐 Reset Password</h1>
-              <p style="color: #ffffff; font-size: 16px; margin: 10px 0 0 0;">One Africa Hub</p>
+              <p style="color: #ffffff; font-size: 16px; margin: 10px 0 0 0;">DEI Cafe</p>
             </td>
           </tr>
           <tr>
@@ -125,7 +125,7 @@ const getPasswordResetEmailTemplate = (userName, resetUrl) => {
           </tr>
           <tr>
             <td style="background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 16px 16px;">
-              <p style="color: #999; font-size: 12px; margin: 0;">© 2025 One Africa Hub - Forvis Mazars</p>
+              <p style="color: #999; font-size: 12px; margin: 0;">© 2025 DEI Cafe - Forvis Mazars</p>
             </td>
           </tr>
         </table>
@@ -144,7 +144,7 @@ const getWelcomeEmailTemplate = (userName) => {
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Welcome to One Africa Hub</title>
+  <title>Welcome to DEI Cafe</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px 0;">
@@ -163,7 +163,7 @@ const getWelcomeEmailTemplate = (userName) => {
                 Hello <strong>${userName}</strong>,
               </p>
               <p style="color: #333; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
-                Welcome to One Africa Hub! Your email has been verified and your account is now active.
+                Welcome to DEI Cafe! Your email has been verified and your account is now active.
               </p>
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
@@ -176,7 +176,7 @@ const getWelcomeEmailTemplate = (userName) => {
           </tr>
           <tr>
             <td style="background-color: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 16px 16px;">
-              <p style="color: #999; font-size: 12px; margin: 0;">© 2025 One Africa Hub - Forvis Mazars</p>
+              <p style="color: #999; font-size: 12px; margin: 0;">© 2025 DEI Cafe - Forvis Mazars</p>
             </td>
           </tr>
         </table>
@@ -197,11 +197,11 @@ export const sendVerificationEmail = async (email, verificationToken, userName =
   try {
     const info = await transporter.sendMail({
       from: {
-        name: 'One Africa Hub',
+        name: 'DEI Cafe',
         address: process.env.EMAIL_USER
       },
       to: email,
-      subject: '✉️ Verify Your Email - One Africa Hub',
+      subject: '✉️ Verify Your Email - DEI Cafe',
       html: getVerificationEmailTemplate(userName, verificationUrl)
     });
     
@@ -222,11 +222,11 @@ export const sendPasswordResetEmail = async (email, resetToken, userName = 'User
   try {
     const info = await transporter.sendMail({
       from: {
-        name: 'One Africa Hub',
+        name: 'DEI Cafe',
         address: process.env.EMAIL_USER
       },
       to: email,
-      subject: '🔐 Reset Your Password - One Africa Hub',
+      subject: '🔐 Reset Your Password - DEI Cafe',
       html: getPasswordResetEmailTemplate(userName, resetUrl)
     });
     
@@ -245,11 +245,11 @@ export const sendWelcomeEmail = async (email, userName = 'User') => {
   try {
     const info = await transporter.sendMail({
       from: {
-        name: 'One Africa Hub',
+        name: 'DEI Cafe',
         address: process.env.EMAIL_USER
       },
       to: email,
-      subject: '🎉 Welcome to One Africa Hub!',
+      subject: '🎉 Welcome to DEI Cafe!',
       html: getWelcomeEmailTemplate(userName)
     });
     

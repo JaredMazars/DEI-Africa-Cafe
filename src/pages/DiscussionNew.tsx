@@ -42,7 +42,7 @@ const Chat: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-blue-50 border-2 border-purple-200 rounded-xl p-6">
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
               <div className="flex items-start space-x-4">
                 <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
                   <Video className="w-6 h-6 text-white" />

@@ -136,13 +136,13 @@ const MyMentees: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 pt-20 pb-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-blue-50 pt-20 pb-12 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-600 bg-clip-text text-transparent mb-2">
                 My Mentees
               </h1>
               <p className="text-gray-600">
@@ -151,7 +151,7 @@ const MyMentees: React.FC = () => {
             </div>
             <button
               onClick={() => navigate('/mentor-content')}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl font-semibold shadow-lg transition-all duration-200 transform hover:scale-105"
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white rounded-xl font-semibold shadow-lg transition-all duration-200 transform hover:scale-105"
             >
               <Plus className="w-5 h-5" />
               Manage Content
@@ -160,7 +160,7 @@ const MyMentees: React.FC = () => {
 
           {/* Stats Overview */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-purple-100">
+            <div className="bg-white rounded-xl p-6 shadow-lg border border-blue-100">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-600 text-sm mb-1">Active Mentees</p>
@@ -218,7 +218,7 @@ const MyMentees: React.FC = () => {
                 placeholder="Search mentees by name or focus area..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -228,7 +228,7 @@ const MyMentees: React.FC = () => {
                 className={`px-4 py-3 rounded-xl font-medium transition-all ${
                   filterStatus === 'all'
                     ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:border-purple-300'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:border-blue-300'
                 }`}
               >
                 All
@@ -276,7 +276,7 @@ const MyMentees: React.FC = () => {
               className="bg-white rounded-2xl shadow-lg border border-gray-200 hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:scale-[1.02] overflow-hidden"
             >
               {/* Card Header */}
-              <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white">
+              <div className="bg-gradient-to-r from-blue-600 to-blue-600 p-6 text-white">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-4">
                     <img
@@ -378,14 +378,14 @@ const MyMentees: React.FC = () => {
                       e.stopPropagation();
                       navigate(`/messages?mentee=${mentee.id}`);
                     }}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-purple-200 hover:bg-blue-50 text-blue-700 rounded-xl font-semibold transition-all duration-200"
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-blue-200 hover:bg-blue-50 text-blue-700 rounded-xl font-semibold transition-all duration-200"
                   >
                     <MessageSquare className="w-4 h-4" />
                     Message
                   </button>
                   <button
                     onClick={() => handleMenteeClick(mentee.id)}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg"
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg"
                   >
                     <BarChart3 className="w-4 h-4" />
                     View Progress

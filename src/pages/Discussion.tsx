@@ -71,7 +71,7 @@ const Chat: React.FC = () => {
             createdAt: '2024-01-01',
             lastMessage: {
               user: 'Community Manager',
-              content: 'Welcome to the One Africa Hub community!',
+              content: 'Welcome to the DEI Cafe community!',
               timestamp: '10:00 AM'
             }
           }

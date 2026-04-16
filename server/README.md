@@ -1,6 +1,6 @@
-# One Africa Hub Backend API
+# DEI Cafe Backend API
 
-A comprehensive Node.js backend for the One Africa Hub mentorship platform using Express.js and Azure SQL Database.
+A comprehensive Node.js backend for the DEI Cafe mentorship platform using Express.js and Azure SQL Database.
 
 ## Features
 

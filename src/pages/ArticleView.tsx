@@ -81,7 +81,7 @@ The journey toward true workplace diversity is ongoing, but the destination—or
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
       {/* Hero Section */}
       <div className="relative h-[500px] bg-gradient-to-r from-blue-900 to-blue-900 overflow-hidden">
         <div className="absolute inset-0">

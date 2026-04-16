@@ -56,7 +56,7 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 px-4">
       <div className="w-full max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 items-center">
         {/* Left Side - Branding */}
         <div className="text-center lg:text-left space-y-8">
@@ -68,8 +68,8 @@ const Register: React.FC = () => {
                 className="h-10"
               />
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">
-              One Africa Hub
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-700 to-blue-700 bg-clip-text text-transparent">
+              DEI Cafe
             </h1>
             <p className="text-xl text-gray-700 max-w-md mx-auto lg:mx-0">
               Join thousands of professionals across Africa in meaningful mentorship connections.
@@ -110,7 +110,7 @@ const Register: React.FC = () => {
                 alt="Forvis Mazars"
                 className="h-8 mx-auto mb-4"
               />
-              <h2 className="text-3xl font-bold text-gray-900">Join One Africa Hub</h2>
+              <h2 className="text-3xl font-bold text-gray-900">Join DEI Cafe</h2>
               <p className="text-gray-600 mt-2">Create your account to get started</p>
             </div>
 
@@ -178,7 +178,7 @@ const Register: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
+                className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
               >
                 {loading ? (
                   <>

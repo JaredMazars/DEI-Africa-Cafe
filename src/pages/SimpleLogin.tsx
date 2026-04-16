@@ -37,7 +37,7 @@ const SimpleLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 px-4">
       <div className="w-full max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 items-center">
         {/* Left Side - Branding */}
         <div className="text-center lg:text-left space-y-8">
@@ -49,8 +49,8 @@ const SimpleLogin: React.FC = () => {
                 className="h-10"
               />
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">
-              One Africa Hub
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-700 to-blue-700 bg-clip-text text-transparent">
+              DEI Cafe
             </h1>
             <p className="text-xl text-gray-700 max-w-md mx-auto lg:mx-0">
               Connecting minds across Africa. Where mentors meet mentees to shape the continent's future.
@@ -137,7 +137,7 @@ const SimpleLogin: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {loading ? (
                   <>
@@ -178,7 +178,7 @@ const SimpleLogin: React.FC = () => {
                     <p>Email: expert@oneafrica.com<br />
                     Password: expert123</p>
                   </div>
-                  <div className="font-mono bg-blue-50 p-2 rounded border border-purple-200">
+                  <div className="font-mono bg-blue-50 p-2 rounded border border-blue-200">
                     <p className="text-blue-700 font-semibold mb-1">Admin Account:</p>
                     <p>Email: admin@deiafrica.com<br />
                     Password: admin123</p>

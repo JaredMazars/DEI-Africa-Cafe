@@ -174,7 +174,7 @@ const AdminMentors: React.FC = () => {
             resetForm();
             setShowModal(true);
           }}
-          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-purple-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
         >
           <Plus className="w-5 h-5" />
           Add New Mentor
@@ -186,7 +186,7 @@ const AdminMentors: React.FC = () => {
         {[
           { label: 'Total Mentors', value: mentors.length, icon: UserCog, color: 'blue' },
           { label: 'Active Mentors', value: mentors.filter(m => m.status === 'active').length, icon: Award, color: 'green' },
-          { label: 'Total Sessions', value: mentors.reduce((acc, m) => acc + m.sessionsCompleted, 0), icon: UserCog, color: 'purple' },
+          { label: 'Total Sessions', value: mentors.reduce((acc, m) => acc + m.sessionsCompleted, 0), icon: UserCog, color: 'blue' },
           { label: 'Total Mentees', value: mentors.reduce((acc, m) => acc + m.totalMentees, 0), icon: Users, color: 'orange' }
         ].map((stat, idx) => {
           const Icon = stat.icon;
@@ -224,7 +224,7 @@ const AdminMentors: React.FC = () => {
               <img
                 src={mentor.photo}
                 alt={mentor.name}
-                className="w-24 h-24 rounded-xl object-cover border-4 border-purple-100"
+                className="w-24 h-24 rounded-xl object-cover border-4 border-blue-100"
               />
               
               <div className="flex-1">
@@ -401,7 +401,7 @@ const AdminMentors: React.FC = () => {
               </button>
               <button
                 onClick={handleSubmit}
-                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-purple-700 hover:to-blue-700 text-white py-3 rounded-lg font-bold shadow-lg transition-all"
+                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-700 text-white py-3 rounded-lg font-bold shadow-lg transition-all"
               >
                 <Save className="w-5 h-5" />
                 {editingId ? 'Update Mentor' : 'Add Mentor'}

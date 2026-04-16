@@ -93,7 +93,7 @@ const VerifyEmail: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
@@ -103,7 +103,7 @@ const VerifyEmail: React.FC = () => {
             className="h-12 mx-auto mb-4"
           />
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Email Verification</h1>
-          <p className="text-gray-600">One Africa Hub</p>
+          <p className="text-gray-600">DEI Cafe</p>
         </div>
 
         {/* Verification Card */}
