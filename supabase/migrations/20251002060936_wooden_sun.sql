@@ -1,4 +1,4 @@
--- One Africa Hub Database Schema for Azure SQL Database
+-- DEI Cafe Database Schema for Azure SQL Database
 -- Run this script in your Azure SQL Database to create the required tables
 
 -- Drop existing tables if they exist (in correct order due to foreign key constraints)
@@ -310,7 +310,7 @@ INSERT INTO Opportunities (title, description, industry, client_sector, regions_
 ('Financial Services Expansion - West Africa', 'Leading Nigerian bank seeking advisory on expansion into Ghana and Côte d''Ivoire', 'Financial Services', 'Banking', 'Ghana, Côte d''Ivoire', '$2M - $5M', '2024-03-15', 'high', @expert_id);
 */
 
-PRINT 'One Africa Hub database schema created successfully!';
+PRINT 'DEI Cafe database schema created successfully!';
 PRINT 'Tables created: Users, UserProfiles, UserExpertise, UserInterests, UserGoals, UserLanguages, Connections, Messages, Sessions, Reviews, Experts, Questions, QuestionAnswers, Opportunities, OpportunityInterests';
 PRINT 'Indexes created for optimal performance';
 PRINT 'Ready for application deployment!';

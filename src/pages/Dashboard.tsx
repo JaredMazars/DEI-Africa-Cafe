@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { adminAPI } from '../services/api';
 import { LogOut, Users, MessageSquare, Calendar, Settings, Building2, TrendingUp, Globe, Search, BookOpen, Briefcase, Target, Award, Clock, MapPin, Languages, ChevronRight, Plus, Filter, Bell, Video, FileText, BarChart3, PieChart, UserCheck, Handshake, Lightbulb, ArrowUpRight, CreditCard as Edit3, Eye, Trash2, CheckCircle, XCircle, AlertTriangle, Download, Upload, RefreshCw, MoreHorizontal, Star, TrendingDown, Activity, DollarSign, Zap, Shield, Database, Mail, Phone, Calendar as CalendarIcon, Flag, Hash, Percent, ArrowUp, ArrowDown, ArrowRight } from 'lucide-react';
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedTimeRange, setSelectedTimeRange] = useState('30d');
   const [showEditModal, setShowEditModal] = useState(false);
@@ -222,7 +220,7 @@ export default function Dashboard() {
                 {adminAnalytics.overview.totalSessions - adminAnalytics.overview.completedSessions} scheduled
               </p>
             </div>
-            <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
               <Video className="w-6 h-6 text-blue-900" />
             </div>
           </div>
@@ -246,7 +244,7 @@ export default function Dashboard() {
             {adminAnalytics.userMetrics.usersByCountry.slice(0, 5).map((country, index) => (
               <div key={country.country} className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className={`w-3 h-3 rounded-full ${index === 0 ? 'bg-blue-600' : index === 1 ? 'bg-green-600' : index === 2 ? 'bg-yellow-600' : index === 3 ? 'bg-purple-600' : 'bg-gray-600'}`}></div>
+                  <div className={`w-3 h-3 rounded-full ${index === 0 ? 'bg-blue-600' : index === 1 ? 'bg-green-600' : index === 2 ? 'bg-yellow-600' : index === 3 ? 'bg-blue-500' : 'bg-gray-600'}`}></div>
                   <span className="text-sm font-medium text-gray-900">{country.country}</span>
                 </div>
                 <div className="flex items-center space-x-4">
@@ -836,7 +834,7 @@ export default function Dashboard() {
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-gray-900">{sector.sector}</h4>
                 <span className={`w-3 h-3 rounded-full ${
-                  index === 0 ? 'bg-blue-600' : index === 1 ? 'bg-green-600' : index === 2 ? 'bg-yellow-600' : 'bg-purple-600'
+                  index === 0 ? 'bg-blue-600' : index === 1 ? 'bg-green-600' : index === 2 ? 'bg-yellow-600' : 'bg-blue-500'
                 }`}></span>
               </div>
               <div className="space-y-1">
@@ -867,12 +865,12 @@ export default function Dashboard() {
         <div className="max-w-[1920px] mx-auto px-8 sm:px-12 lg:px-16">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
                 <Building2 className="w-6 h-6 text-white" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-900 to-blue-800 bg-clip-text text-transparent">
-                  One Africa Hub
+                  DEI Cafe
                 </h1>
                 <p className="text-xs text-gray-500">Admin Dashboard</p>
               </div>

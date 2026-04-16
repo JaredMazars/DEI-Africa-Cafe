@@ -26,6 +26,8 @@ const ResourceLibrary: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [savedResources, setSavedResources] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
   useEffect(() => {
     loadResources();
@@ -66,6 +68,7 @@ const ResourceLibrary: React.FC = () => {
     }
 
     setFilteredResources(filtered);
+    setCurrentPage(1); // Reset to page 1 when filters change
   };
 
   const toggleSaveResource = (resourceId: string) => {
@@ -177,7 +180,7 @@ const ResourceLibrary: React.FC = () => {
         {/* Resources Grid/List */}
         {filteredResources.length > 0 && (
           <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
-            {filteredResources.map((resource) => {
+            {filteredResources.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((resource) => {
               const isSaved = savedResources.has(resource.id);
               
               if (viewMode === 'grid') {
@@ -315,6 +318,49 @@ const ResourceLibrary: React.FC = () => {
                 );
               }
             })}
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {filteredResources.length > 0 && (
+          <div className="flex items-center justify-center space-x-2 mt-8">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                currentPage === 1
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Previous
+            </button>
+            
+            {Array.from({ length: Math.ceil(filteredResources.length / itemsPerPage) }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  currentPage === page
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredResources.length / itemsPerPage), prev + 1))}
+              disabled={currentPage === Math.ceil(filteredResources.length / itemsPerPage)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                currentPage === Math.ceil(filteredResources.length / itemsPerPage)
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Next
+            </button>
           </div>
         )}
 

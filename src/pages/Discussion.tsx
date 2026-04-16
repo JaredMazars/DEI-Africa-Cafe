@@ -71,7 +71,7 @@ const Chat: React.FC = () => {
             createdAt: '2024-01-01',
             lastMessage: {
               user: 'Community Manager',
-              content: 'Welcome to the One Africa Hub community!',
+              content: 'Welcome to the DEI Cafe community!',
               timestamp: '10:00 AM'
             }
           }
@@ -142,9 +142,9 @@ const Chat: React.FC = () => {
         <div className="flex h-full">
 
           {/* Sidebar */}
-          <div className="w-80 border-r border-gray-200 flex flex-col">
+          <div className="w-80 border-r border-gray-200 flex flex-col bg-gray-50">
             {/* Header */}
-            <div className="p-6 border-b border-gray-200">
+            <div className="p-6 border-b border-gray-200 bg-white">
               <div className="flex items-center justify-between mb-4">
                 <h1 className="text-2xl font-bold text-gray-900">Chat Channels</h1>
                 <button
@@ -168,8 +168,9 @@ const Chat: React.FC = () => {
               </div>
             </div>
 
-            {/* Channels List */}
-            <div className="flex-1 overflow-y-auto">
+            {/* Channels List - Scrollable */}
+            <div className="flex-1 overflow-y-auto"
+                 style={{ maxHeight: 'calc(100vh - 250px)' }}>
               {filteredChannels.map((channel) => (
                 <div
                   key={channel.id}

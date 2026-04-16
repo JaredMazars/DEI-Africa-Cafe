@@ -1,4 +1,4 @@
--- One Africa Hub Database Schema for Azure SQL Database
+-- DEI Cafe Database Schema for Azure SQL Database
 -- Run this script in your Azure SQL Database to create the required tables
 
 -- Users table - stores basic authentication information

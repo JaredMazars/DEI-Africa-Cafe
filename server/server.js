@@ -3,6 +3,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { getConnection } from './config/database.js';
 
 // Import routes
@@ -17,8 +19,10 @@ import opportunityRoutes from './routes/opportunities.js';
 import dashboardRoutes from './routes/dashboard.js';
 import preferencesRoutes from './routes/preferences.js';
 
-// Load environment variables
-dotenv.config();
+// Load environment variables from parent directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -47,11 +51,15 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Serve static files from React build
+const distPath = path.join(__dirname, '..', 'dist');
+app.use(express.static(distPath));
+
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.json({
         success: true,
-        message: 'One Africa Hub API is running',
+        message: 'DEI Cafe API is running',
         timestamp: new Date().toISOString(),
         version: '1.0.0'
     });
@@ -69,12 +77,17 @@ app.use('/api/opportunities', opportunityRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/preferences', preferencesRoutes);
 
-// 404 handler
-app.use('*', (req, res) => {
-    res.status(404).json({
-        success: false,
-        message: 'API endpoint not found'
-    });
+// Serve React app for all non-API routes (SPA routing)
+app.get('*', (req, res) => {
+    // Only serve index.html for non-API routes
+    if (!req.path.startsWith('/api')) {
+        res.sendFile(path.join(distPath, 'index.html'));
+    } else {
+        res.status(404).json({
+            success: false,
+            message: 'API endpoint not found'
+        });
+    }
 });
 
 // Global error handler
@@ -91,21 +104,31 @@ app.use((error, req, res, next) => {
 // Database connection test and server start
 const startServer = async () => {
     try {
-        // Test database connection (optional - will run in demo mode if unavailable)
+        // Test database connection (optional - don't block startup if DB fails)
         try {
-            await getConnection();
-            console.log('✅ Database connected successfully');
+            console.log('🔌 Testing database connection...');
+            const pool = await getConnection();
+            console.log('✅ Database connected successfully!');
+            
+            // Simple connection test - just count tables
+            const result = await pool.request().query(`
+                SELECT COUNT(*) as table_count 
+                FROM INFORMATION_SCHEMA.TABLES 
+                WHERE TABLE_TYPE = 'BASE TABLE'
+            `);
+            console.log(`📊 Database has ${result.recordset[0].table_count} tables`);
         } catch (dbError) {
-            console.warn('⚠️  Database connection unavailable - running in DEMO MODE');
-            console.warn('   Use /api/auth/demo-login endpoint to login without database');
+            console.warn('⚠️  Database connection failed (continuing in limited mode):', dbError.message);
+            console.log('💡 App will use demo mode for authentication endpoints');
         }
         
-        // Start server
+        // Start server regardless of database connection
         app.listen(PORT, () => {
-            console.log(`🚀 One Africa Hub API server running on port ${PORT}`);
+            console.log(`\n🚀 DEI Cafe API server running on port ${PORT}`);
             console.log(`📊 Health check: http://localhost:${PORT}/health`);
             console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
             console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
+            console.log(`✉️  Email service ready for testing`);
         });
         
     } catch (error) {

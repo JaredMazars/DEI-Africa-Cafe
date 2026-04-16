@@ -1,35 +1,70 @@
 import sql from 'mssql';
 import dotenv from 'dotenv';
+import { DefaultAzureCredential } from '@azure/identity';
 
 dotenv.config();
+
+// Check if using Managed Identity (Azure production) or SQL Auth (local dev)
+const useManagedIdentity = process.env.USE_MANAGED_IDENTITY === 'true';
 
 // Check if database is configured
 const isDatabaseConfigured = !!(
     process.env.DB_SERVER && 
-    process.env.DB_DATABASE && 
-    process.env.DB_USER && 
-    process.env.DB_PASSWORD
+    process.env.DB_DATABASE
 );
 
-const config = isDatabaseConfigured ? {
-    server: process.env.DB_SERVER,
-    database: process.env.DB_DATABASE,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    port: parseInt(process.env.DB_PORT) || 1433,
-    options: {
-        encrypt: true,
-        trustServerCertificate: false,
-        enableArithAbort: true,
-        requestTimeout: 30000,
-        connectionTimeout: 30000
-    },
-    pool: {
-        max: 10,
-        min: 0,
-        idleTimeoutMillis: 30000
+let config = null;
+
+if (isDatabaseConfigured) {
+    if (useManagedIdentity) {
+        // Azure Managed Identity (passwordless)
+        console.log('🔐 Using Azure Managed Identity for database authentication');
+        config = {
+            server: process.env.DB_SERVER,
+            database: process.env.DB_DATABASE,
+            port: parseInt(process.env.DB_PORT) || 1433,
+            authentication: {
+                type: 'azure-active-directory-default'
+            },
+            options: {
+                encrypt: true,
+                trustServerCertificate: false,
+                enableArithAbort: true,
+                requestTimeout: 30000,
+                connectionTimeout: 30000
+            },
+            pool: {
+                max: 10,
+                min: 0,
+                idleTimeoutMillis: 30000
+            }
+        };
+    } else {
+        // SQL Authentication (local development)
+        console.log('🔑 Using SQL Authentication for database');
+        const hasSqlAuth = !!(process.env.DB_USER && process.env.DB_PASSWORD);
+        
+        config = hasSqlAuth ? {
+            server: process.env.DB_SERVER,
+            database: process.env.DB_DATABASE,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            port: parseInt(process.env.DB_PORT) || 1433,
+            options: {
+                encrypt: true,
+                trustServerCertificate: false,
+                enableArithAbort: true,
+                requestTimeout: 30000,
+                connectionTimeout: 30000
+            },
+            pool: {
+                max: 10,
+                min: 0,
+                idleTimeoutMillis: 30000
+            }
+        } : null;
     }
-} : null;
+}
 
 let poolPromise;
 

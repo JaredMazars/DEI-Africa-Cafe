@@ -4,7 +4,7 @@ import { Building2, Users, Globe, ArrowRight } from 'lucide-react';
 
 const LandingPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100">
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -17,7 +17,7 @@ const LandingPage: React.FC = () => {
               />
               <span className="text-gray-300">|</span>
               <h1 className="text-xl font-bold text-gray-800">
-                One Africa Hub
+                DEI Cafe
               </h1>
             </div>
             <div className="flex items-center space-x-4">
@@ -46,7 +46,7 @@ const LandingPage: React.FC = () => {
             <span className="block text-blue-600">Across Africa.</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Join One Africa Hub, the premier mentorship platform connecting professionals 
+            Join DEI Cafe, the premier mentorship platform connecting professionals 
             across the continent. Share knowledge, build networks, and shape Africa's future together.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

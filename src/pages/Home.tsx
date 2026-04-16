@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { dashboardAPI, connectionsAPI, sessionsAPI, messagesAPI } from '../services/api';
 import { 
   Users, 
@@ -28,7 +27,10 @@ import {
   ArrowRight,
   Activity,
   Zap,
-  Coffee
+  Coffee,
+  ExternalLink,
+  RefreshCw,
+  ChevronDown
 } from 'lucide-react';
 
 interface Connection {
@@ -47,6 +49,21 @@ interface Connection {
   lastActivity: string;
   connectionDate: string;
   matchScore: number;
+}
+
+interface RegisteredWebinar {
+  id: string;
+  title: string;
+  expert: string;
+  expertAvatar?: string;
+  date: string;
+  time: string;
+  topic: string;
+  region: string;
+  attendees: number;
+  maxAttendees: number;
+  teamsLink?: string;
+  description?: string;
 }
 
 interface Session {
@@ -72,12 +89,13 @@ interface Activity {
 }
 
 const Home: React.FC = () => {
-  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
+  const [connectionTab, setConnectionTab] = useState<'all' | 'mentors' | 'mentees' | 'experts'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [connections, setConnections] = useState<Connection[]>([]);
+  const [expertConnections, setExpertConnections] = useState<any[]>([]);
   const [upcomingSessions, setUpcomingSessions] = useState<Session[]>([]);
   const [recentActivity, setRecentActivity] = useState<Activity[]>([]);
   const [stats, setStats] = useState({
@@ -89,66 +107,285 @@ const Home: React.FC = () => {
     responseRate: 0
   });
 
-  // Load data from API
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        setLoading(true);
-        const [dashboardData, connectionsData, sessionsData, activityData] = await Promise.all([
-          dashboardAPI.getDashboardData(),
-          connectionsAPI.getConnections(),
-          sessionsAPI.getUpcomingSessions(),
-          dashboardAPI.getActivity(10)
-        ]);
+  // ---- Your Meeting state ----
+  const [registeredSessions, setRegisteredSessions] = useState<RegisteredWebinar[]>([]);
+  const [selectedSessionId, setSelectedSessionId] = useState<string>('');
+  const [selectedSession, setSelectedSession] = useState<RegisteredWebinar | null>(null);
 
-        // Transform backend data to frontend format
-        const transformedConnections = connectionsData.data.connections.map((conn: any) => ({
-          id: conn.connection_id,
-          name: conn.mentor_id === user?.id ? conn.mentee_name : conn.mentor_name,
-          title: conn.mentor_id === user?.id ? 'Mentee' : conn.mentor_title || 'Mentor',
-          company: 'Forvis Mazars', // Default company
-          avatar: conn.mentor_id === user?.id ? conn.mentee_avatar : conn.mentor_avatar,
-          role: conn.mentor_id === user?.id ? 'mentee' : 'mentor',
-          status: conn.status === 'accepted' ? 'active' : conn.status,
-          expertise: [], // Would need to fetch from expertise table
-          location: conn.mentor_id === user?.id ? conn.mentee_location : conn.mentor_location,
-          rating: conn.average_rating || 4.5,
-          totalSessions: conn.total_sessions || 0,
-          upcomingSessions: conn.upcoming_sessions || 0,
-          lastActivity: new Date(conn.updated_at).toLocaleDateString(),
-          connectionDate: new Date(conn.created_at).toLocaleDateString(),
-          matchScore: 85
-        }));
-
-        const transformedSessions = sessionsData.data.sessions.map((session: any) => ({
-          id: session.session_id,
-          mentorName: session.mentor_name,
-          menteeName: session.mentee_name,
-          title: session.title,
-          date: new Date(session.scheduled_at).toLocaleDateString(),
-          time: new Date(session.scheduled_at).toLocaleTimeString(),
-          duration: `${session.duration_minutes} min`,
-          status: 'upcoming',
-          type: 'video'
-        }));
-
-        setConnections(transformedConnections);
-        setUpcomingSessions(transformedSessions);
-        setRecentActivity(activityData.data.activities || []);
-        setStats(dashboardData.data.stats || stats);
-
-      } catch (error) {
-        console.error('Error loading dashboard data:', error);
-        // Keep mock data as fallback
-      } finally {
-        setLoading(false);
+  const loadRegisteredSessions = (keepId?: string) => {
+    try {
+      const data = localStorage.getItem('registeredWebinarData');
+      const sessions: RegisteredWebinar[] = data ? JSON.parse(data) : [];
+      setRegisteredSessions(sessions);
+      if (sessions.length > 0) {
+        const activeId = keepId || sessions[0].id;
+        setSelectedSessionId(activeId);
+        setSelectedSession(sessions.find(s => s.id === activeId) ?? sessions[0]);
+      } else {
+        setSelectedSessionId('');
+        setSelectedSession(null);
       }
-    };
-
-    if (user && !user.isFirstLogin) {
-      loadDashboardData();
+    } catch {
+      setRegisteredSessions([]);
     }
-  }, [user]);
+  };
+
+  useEffect(() => {
+    loadRegisteredSessions();
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'registeredWebinarData') loadRegisteredSessions();
+    };
+    // Re-load when user returns to this tab (e.g. after registering in Expert Directory)
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') loadRegisteredSessions();
+    };
+    window.addEventListener('storage', handleStorage);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, []);
+
+  // Dummy connections data
+  const dummyConnections: Connection[] = [
+    {
+      id: '1',
+      name: 'Amara Okafor',
+      title: 'Senior Tax Partner',
+      company: 'Forvis Mazars Nigeria',
+      avatar: 'https://images.pexels.com/photos/3778966/pexels-photo-3778966.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+      role: 'mentor',
+      status: 'active',
+      expertise: ['Corporate Tax', 'Transfer Pricing', 'International Tax'],
+      location: 'Lagos, Nigeria',
+      rating: 4.9,
+      totalSessions: 12,
+      upcomingSessions: 2,
+      lastActivity: '2 hours ago',
+      connectionDate: 'Jan 15, 2024',
+      matchScore: 95
+    },
+    {
+      id: '2',
+      name: 'Thabo Mthembu',
+      title: 'ESG & Sustainability Advisor',
+      company: 'Forvis Mazars South Africa',
+      avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+      role: 'mentor',
+      status: 'active',
+      expertise: ['ESG Strategy', 'Climate Risk', 'Sustainability Reporting'],
+      location: 'Johannesburg, South Africa',
+      rating: 4.8,
+      totalSessions: 8,
+      upcomingSessions: 1,
+      lastActivity: '1 day ago',
+      connectionDate: 'Feb 20, 2024',
+      matchScore: 92
+    },
+    {
+      id: '3',
+      name: 'Sarah Mwangi',
+      title: 'Junior Financial Analyst',
+      company: 'Equity Bank Kenya',
+      avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+      role: 'mentee',
+      status: 'active',
+      expertise: ['Financial Analysis', 'Climate Finance', 'ESG Reporting'],
+      location: 'Nairobi, Kenya',
+      rating: 4.7,
+      totalSessions: 6,
+      upcomingSessions: 1,
+      lastActivity: '3 hours ago',
+      connectionDate: 'Mar 10, 2024',
+      matchScore: 88
+    },
+    {
+      id: '4',
+      name: 'David Okonkwo',
+      title: 'Tax Manager',
+      company: 'First Bank Nigeria',
+      avatar: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+      role: 'mentee',
+      status: 'active',
+      expertise: ['Corporate Tax', 'Tax Compliance', 'VAT'],
+      location: 'Lagos, Nigeria',
+      rating: 4.6,
+      totalSessions: 5,
+      upcomingSessions: 1,
+      lastActivity: '5 hours ago',
+      connectionDate: 'Apr 5, 2024',
+      matchScore: 90
+    },
+    {
+      id: '5',
+      name: 'Fatima El-Sayed',
+      title: 'Audit Partner',
+      company: 'Forvis Mazars Egypt',
+      avatar: 'https://images.pexels.com/photos/3776164/pexels-photo-3776164.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+      role: 'mentor',
+      status: 'active',
+      expertise: ['Financial Audit', 'IFRS', 'Internal Controls'],
+      location: 'Cairo, Egypt',
+      rating: 4.9,
+      totalSessions: 15,
+      upcomingSessions: 2,
+      lastActivity: '1 hour ago',
+      connectionDate: 'Jan 28, 2024',
+      matchScore: 93
+    },
+    {
+      id: '6',
+      name: 'Michael Banda',
+      title: 'Accounting Graduate',
+      company: 'University of Zambia',
+      avatar: 'https://images.pexels.com/photos/2380794/pexels-photo-2380794.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+      role: 'mentee',
+      status: 'pending',
+      expertise: ['Financial Accounting', 'Audit Basics', 'IFRS'],
+      location: 'Lusaka, Zambia',
+      rating: 4.5,
+      totalSessions: 2,
+      upcomingSessions: 0,
+      lastActivity: '2 days ago',
+      connectionDate: 'Nov 15, 2024',
+      matchScore: 85
+    }
+  ];
+
+  // Dummy sessions data
+  const dummySessions: Session[] = [
+    {
+      id: '1',
+      mentorName: 'Amara Okafor',
+      menteeName: 'You',
+      title: 'Transfer Pricing Strategy Review',
+      date: 'Dec 15, 2025',
+      time: '14:00',
+      duration: '60 min',
+      status: 'upcoming',
+      type: 'video'
+    },
+    {
+      id: '2',
+      mentorName: 'You',
+      menteeName: 'Sarah Mwangi',
+      title: 'Climate Finance Career Guidance',
+      date: 'Dec 16, 2025',
+      time: '10:00',
+      duration: '45 min',
+      status: 'upcoming',
+      type: 'video'
+    },
+    {
+      id: '3',
+      mentorName: 'Fatima El-Sayed',
+      menteeName: 'You',
+      title: 'IFRS Implementation Discussion',
+      date: 'Dec 18, 2025',
+      time: '15:30',
+      duration: '90 min',
+      status: 'upcoming',
+      type: 'video'
+    }
+  ];
+
+  // Dummy expert connections data
+  const dummyExpertConnections = [
+    {
+      id: 'e1',
+      name: 'Dr. Kwame Mensah',
+      title: 'Tax Policy Expert',
+      company: 'Ghana Revenue Authority',
+      avatar: 'https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+      role: 'expert',
+      status: 'active',
+      expertise: ['Corporate Tax', 'Tax Policy', 'International Taxation'],
+      location: 'Accra, Ghana',
+      rating: 4.9,
+      totalSessions: 0,
+      upcomingSessions: 0,
+      lastActivity: '1 hour ago',
+      connectionDate: 'Dec 1, 2024',
+      matchScore: 96
+    },
+    {
+      id: 'e2',
+      name: 'Zainab Hassan',
+      title: 'ESG Specialist',
+      company: 'African Development Bank',
+      avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+      role: 'expert',
+      status: 'active',
+      expertise: ['Sustainability Reporting', 'Climate Finance', 'Green Bonds'],
+      location: 'Abidjan, Côte d\'Ivoire',
+      rating: 4.8,
+      totalSessions: 0,
+      upcomingSessions: 0,
+      lastActivity: '3 hours ago',
+      connectionDate: 'Nov 28, 2024',
+      matchScore: 94
+    }
+  ];
+
+  // Dummy activity data
+  const dummyActivity: Activity[] = [
+    {
+      id: '1',
+      type: 'message',
+      title: 'New message from Amara Okafor',
+      description: 'Shared resources on West African tax regulations',
+      time: '2 hours ago',
+      user: 'Amara Okafor',
+      avatar: 'https://images.pexels.com/photos/3778966/pexels-photo-3778966.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop'
+    },
+    {
+      id: '2',
+      type: 'session',
+      title: 'Session completed',
+      description: 'Mentoring session with David Okonkwo',
+      time: '5 hours ago',
+      user: 'David Okonkwo',
+      avatar: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop'
+    },
+    {
+      id: '3',
+      type: 'review',
+      title: 'New review received',
+      description: 'Sarah Mwangi left a 5-star review',
+      time: '1 day ago',
+      user: 'Sarah Mwangi',
+      avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop'
+    },
+    {
+      id: '4',
+      type: 'connection',
+      title: 'New connection request',
+      description: 'Michael Banda wants to connect',
+      time: '2 days ago',
+      user: 'Michael Banda',
+      avatar: 'https://images.pexels.com/photos/2380794/pexels-photo-2380794.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop'
+    }
+  ];
+
+  // Load data from API
+  // Load dummy data on mount
+  useEffect(() => {
+    // Always use dummy data - no authentication needed
+    setConnections(dummyConnections);
+    setExpertConnections(dummyExpertConnections);
+    setUpcomingSessions(dummySessions);
+    setRecentActivity(dummyActivity);
+    setStats({
+      totalConnections: dummyConnections.length,
+      activeConnections: dummyConnections.filter(c => c.status === 'active').length,
+      totalSessions: dummyConnections.reduce((sum, c) => sum + c.totalSessions, 0),
+      upcomingSessions: dummySessions.length,
+      averageRating: 4.8,
+      responseRate: 95
+    });
+    setLoading(false);
+  }, []);
 
   const filteredConnections = connections.filter(connection => {
     const matchesSearch = connection.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -192,14 +429,11 @@ const Home: React.FC = () => {
       <div className="bg-gradient-to-r from-blue-900 to-blue-800 rounded-xl p-8 text-white">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">
-              Welcome back, {user?.profile?.name || 'User'}! 👋
+            <h1 className="text-3xl text-white font-bold mb-2">
+              Welcome back, User! 👋
             </h1>
             <p className="text-blue-100 text-lg">
-              {user?.profile?.role === 'mentor' 
-                ? 'Ready to inspire and guide your mentees today?'
-                : 'Continue your learning journey with your mentors'
-              }
+              Continue your learning journey with your mentors
             </p>
           </div>
           <div className="hidden md:block">
@@ -231,11 +465,11 @@ const Home: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-blue-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Active Sessions</p>
+              <p className="text-sm text-gray-600">Upcoming Sessions</p>
               <p className="text-3xl font-bold text-gray-900">{stats.upcomingSessions}</p>
               <p className="text-sm text-blue-600 flex items-center mt-1">
                 <Calendar className="w-4 h-4 mr-1" />
-                This week
+                Next 7 days
               </p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
@@ -247,11 +481,11 @@ const Home: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-blue-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Average Rating</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.averageRating}</p>
+              <p className="text-sm text-gray-600">Peer Rating</p>
+              <p className="text-3xl font-bold text-gray-900">4.8</p>
               <p className="text-sm text-yellow-600 flex items-center mt-1">
                 <Star className="w-4 h-4 mr-1 fill-current" />
-                Excellent
+                Highly rated
               </p>
             </div>
             <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
@@ -263,18 +497,133 @@ const Home: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-blue-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Response Rate</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.responseRate}%</p>
-              <p className="text-sm text-green-600 flex items-center mt-1">
-                <Zap className="w-4 h-4 mr-1" />
-                Fast responder
+              <p className="text-sm text-gray-600">Active Connections</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.activeConnections}</p>
+              <p className="text-sm text-blue-600 flex items-center mt-1">
+                <Users className="w-4 h-4 mr-1" />
+                Engaged network
               </p>
             </div>
-            <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-              <Activity className="w-6 h-6 text-blue-900" />
+            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+              <Users className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ---- Your Meeting ---- */}
+      <div className="bg-white rounded-2xl shadow-lg border border-blue-100 overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-blue-900 to-blue-700">
+          <div className="flex items-center space-x-3">
+            <Video className="w-5 h-5 text-white" />
+            <h3 className="text-lg font-semibold text-white">Your Meeting</h3>
+          </div>
+          <button
+            onClick={() => { loadRegisteredSessions(selectedSessionId); }}
+            className="flex items-center space-x-1.5 text-blue-200 hover:text-white text-sm transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span>Refresh</span>
+          </button>
+        </div>
+
+        {registeredSessions.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+            <div className="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center mb-4">
+              <Calendar className="w-7 h-7 text-blue-400" />
+            </div>
+            <p className="text-gray-700 font-medium mb-1">No sessions registered yet</p>
+            <p className="text-gray-500 text-sm">Register for a session in the <strong>Expert Directory → Webinars</strong> tab and it will appear here.</p>
+          </div>
+        ) : (
+          <div className="p-6 space-y-5">
+            {/* Session Dropdown Selector */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                Switch Session
+              </label>
+              <div className="relative">
+                <select
+                  value={selectedSessionId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setSelectedSessionId(id);
+                    setSelectedSession(registeredSessions.find(s => s.id === id) ?? null);
+                  }}
+                  className="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
+                >
+                  {registeredSessions.map(session => (
+                    <option key={session.id} value={session.id}>
+                      {session.title} — {session.date} at {session.time}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Selected Session Details */}
+            {selectedSession && (
+              <div className="rounded-xl border border-gray-100 bg-gray-50 p-5 space-y-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <h4 className="font-semibold text-gray-900 text-base leading-snug">{selectedSession.title}</h4>
+                    <span className="inline-block mt-1 px-2.5 py-0.5 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">{selectedSession.topic}</span>
+                  </div>
+                  {selectedSession.expertAvatar && (
+                    <img
+                      src={selectedSession.expertAvatar}
+                      alt={selectedSession.expert}
+                      className="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2 border-white shadow"
+                    />
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+                  <div className="flex items-center space-x-2 text-gray-600">
+                    <User className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                    <span className="truncate">{selectedSession.expert}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-gray-600">
+                    <Calendar className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                    <span>{selectedSession.date}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-gray-600">
+                    <Clock className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                    <span>{selectedSession.time}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-gray-600">
+                    <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                    <span>{selectedSession.region}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-gray-600">
+                    <Users className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                    <span>{selectedSession.attendees}/{selectedSession.maxAttendees} attendees</span>
+                  </div>
+                </div>
+
+                {selectedSession.description && (
+                  <p className="text-gray-600 text-sm leading-relaxed">{selectedSession.description}</p>
+                )}
+
+                <button
+                  onClick={() => {
+                    if (selectedSession.teamsLink) {
+                      window.open(selectedSession.teamsLink, '_blank');
+                    } else {
+                      alert('Teams link will be available 15 minutes before the session starts.');
+                    }
+                  }}
+                  className="w-full flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
+                >
+                  <Video className="w-5 h-5" />
+                  <span>Join Meeting</span>
+                  <ExternalLink className="w-4 h-4 opacity-80" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Quick Actions */}
@@ -367,7 +716,8 @@ const Home: React.FC = () => {
                   <img
                     src={activity.avatar}
                     alt={activity.user}
-                    className="w-10 h-10 rounded-full object-cover"
+                    className="w-10 h-12 rounded-md object-cover object-top"
+                    style={{ aspectRatio: '4/5' }}
                   />
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-1">
@@ -386,35 +736,95 @@ const Home: React.FC = () => {
     </div>
   );
 
-  const renderConnections = () => (
-    <div className="space-y-6">
-      {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search connections..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-        <select 
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="all">All Status</option>
-          <option value="active">Active</option>
-          <option value="pending">Pending</option>
-          <option value="completed">Completed</option>
-        </select>
-      </div>
+  const renderConnections = () => {
+    // Filter connections based on selected tab
+    const filteredByTab = connections.filter(conn => {
+      if (connectionTab === 'all') return true;
+      if (connectionTab === 'mentors') return conn.role === 'mentor';
+      if (connectionTab === 'mentees') return conn.role === 'mentee';
+      return true;
+    });
 
-      {/* Connections Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredConnections.map((connection) => (
+    const displayConnections = connectionTab === 'experts' ? expertConnections : filteredByTab;
+
+    return (
+      <div className="space-y-6">
+        {/* Connection Type Tabs */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-1 inline-flex">
+          <button
+            onClick={() => setConnectionTab('all')}
+            className={`px-6 py-2.5 rounded-lg font-medium text-sm transition-all ${
+              connectionTab === 'all'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            All ({connections.length + expertConnections.length})
+          </button>
+          <button
+            onClick={() => setConnectionTab('mentors')}
+            className={`px-6 py-2.5 rounded-lg font-medium text-sm transition-all ${
+              connectionTab === 'mentors'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Mentors ({connections.filter(c => c.role === 'mentor').length})
+          </button>
+          <button
+            onClick={() => setConnectionTab('mentees')}
+            className={`px-6 py-2.5 rounded-lg font-medium text-sm transition-all ${
+              connectionTab === 'mentees'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Mentees ({connections.filter(c => c.role === 'mentee').length})
+          </button>
+          <button
+            onClick={() => setConnectionTab('experts')}
+            className={`px-6 py-2.5 rounded-lg font-medium text-sm transition-all ${
+              connectionTab === 'experts'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Experts ({expertConnections.length})
+          </button>
+        </div>
+
+        {/* Search and Filters */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder={`Search ${connectionTab === 'all' ? 'connections' : connectionTab}...`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          <select 
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="pending">Pending</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+
+        {/* Connections Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {displayConnections.filter(connection => {
+            const matchesSearch = connection.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                 connection.title.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesStatus = filterStatus === 'all' || connection.status === filterStatus;
+            return matchesSearch && matchesStatus;
+          }).map((connection) => (
           <div key={connection.id} className="bg-white rounded-2xl shadow-lg p-6 border border-blue-100 hover:shadow-xl transition-shadow">
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
@@ -422,7 +832,8 @@ const Home: React.FC = () => {
                 <img
                   src={connection.avatar}
                   alt={connection.name}
-                  className="w-16 h-16 rounded-full object-cover"
+                  className="w-20 h-24 rounded-lg object-cover object-top"
+                  style={{ aspectRatio: '4/5' }}
                 />
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">{connection.name}</h3>
@@ -502,17 +913,22 @@ const Home: React.FC = () => {
         ))}
       </div>
 
-      {filteredConnections.length === 0 && (
+      {displayConnections.filter(connection => {
+        const matchesSearch = connection.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                             connection.title.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus = filterStatus === 'all' || connection.status === filterStatus;
+        return matchesSearch && matchesStatus;
+      }).length === 0 && (
         <div className="text-center py-12">
           <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
             <Users className="w-8 h-8 text-gray-400" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No connections found</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No {connectionTab === 'all' ? 'connections' : connectionTab} found</h3>
           <p className="text-gray-600">Try adjusting your search or filters</p>
         </div>
       )}
     </div>
-  );
+  );};
 
   return (
     <div className="min-h-screen bg-gray-50">

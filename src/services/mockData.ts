@@ -448,7 +448,7 @@ export const mockCalendarEvents = [
     duration: 480,
     location: 'Nairobi, Kenya',
     attendees: ['Multiple'],
-    color: 'purple',
+    color: 'blue',
     description: 'Annual business leaders summit'
   },
   {
@@ -476,24 +476,30 @@ export const mockCalendarEvents = [
   }
 ];
 
+// Import data store for persistence
+import { getData, STORAGE_KEYS } from './dataStore';
+
 // Mock API service
 export const mockAPI = {
   // Mentors/Experts
   getMentors: async () => {
     await new Promise(resolve => setTimeout(resolve, 300));
-    return { data: mockMentors, success: true };
+    const mentors = getData(STORAGE_KEYS.MENTORS, mockMentors);
+    return { data: mentors, success: true };
   },
 
   getMentorById: async (id: string) => {
     await new Promise(resolve => setTimeout(resolve, 200));
-    const mentor = mockMentors.find(m => m.id === id);
+    const mentors = getData(STORAGE_KEYS.MENTORS, mockMentors);
+    const mentor = mentors.find((m: any) => m.id === id);
     return { data: mentor, success: true };
   },
 
   // Sessions
   getSessions: async () => {
     await new Promise(resolve => setTimeout(resolve, 300));
-    return { data: mockSessions, success: true };
+    const sessions = getData(STORAGE_KEYS.SESSIONS, mockSessions);
+    return { data: sessions, success: true };
   },
 
   bookSession: async (sessionData: any) => {
@@ -509,7 +515,8 @@ export const mockAPI = {
   // Messages
   getMessages: async () => {
     await new Promise(resolve => setTimeout(resolve, 300));
-    return { data: mockMessages, success: true };
+    const messages = getData(STORAGE_KEYS.MESSAGES, mockMessages);
+    return { data: messages, success: true };
   },
 
   sendMessage: async (messageData: any) => {
@@ -526,19 +533,22 @@ export const mockAPI = {
   // Opportunities
   getOpportunities: async () => {
     await new Promise(resolve => setTimeout(resolve, 300));
-    return { data: mockOpportunities, success: true };
+    const opportunities = getData(STORAGE_KEYS.OPPORTUNITIES, mockOpportunities);
+    return { data: opportunities, success: true };
   },
 
   // Resources
   getResources: async () => {
     await new Promise(resolve => setTimeout(resolve, 300));
-    return { data: mockResources, success: true };
+    const resources = getData(STORAGE_KEYS.RESOURCES, mockResources);
+    return { data: resources, success: true };
   },
 
   // Discussions
   getDiscussions: async () => {
     await new Promise(resolve => setTimeout(resolve, 300));
-    return { data: mockDiscussions, success: true };
+    const discussions = getData(STORAGE_KEYS.DISCUSSIONS, mockDiscussions);
+    return { data: discussions, success: true };
   },
 
   // Dashboard
@@ -550,7 +560,8 @@ export const mockAPI = {
   // Projects
   getProjects: async () => {
     await new Promise(resolve => setTimeout(resolve, 300));
-    return { data: mockProjects, success: true };
+    const projects = getData(STORAGE_KEYS.PROJECTS, mockProjects);
+    return { data: projects, success: true };
   },
 
   // Resources (expanded)

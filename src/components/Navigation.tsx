@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Home, 
@@ -7,58 +7,59 @@ import {
   MessageSquare, 
   Calendar, 
   User, 
-  LogOut, 
-  Building2,
-  Search,
   Bell,
   Settings,
-  ChevronDown,
   Briefcase,
   Target,
-  Award
+  Award,
+  LogOut,
+  Trophy
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../contexts/NotificationContext';
+import { useSimpleAuth } from '../contexts/SimpleAuthContext';
+import NotificationCenter from './NotificationCenter';
 
 const Navigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { logout } = useSimpleAuth();
+  const { unreadCount } = useNotifications();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate('/login');
   };
 
   const navigationItems = [
     { path: '/home', icon: Home, label: 'Home' },
-    { path: '/dashboard', icon: Target, label: 'Dashboard' },
+    // { path: '/dashboard', icon: Target, label: 'Dashboard' },
     { path: '/mentors', icon: Users, label: 'Mentor Discovery' },
     { path: '/experts', icon: Award, label: 'Expert Directory' },
     { path: '/collaboration', icon: Briefcase, label: 'Collaboration Hub' },
     { path: '/resources', icon: BookOpen, label: 'Resource Library' },
     { path: '/discussion', icon: MessageSquare, label: 'Discussion' },
     { path: '/calendar', icon: Calendar, label: 'Calendar' },
-    { path: '/preferences', icon: Settings, label: 'Preferences' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
 
   return (
     <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-[1920px] mx-auto px-6 sm:px-8 lg:px-12">
-        <div className="flex justify-between items-center h-20">
+      <div className="max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-12">
+        <div className="flex justify-between items-center h-16 sm:h-20">
           {/* Logo and Brand */}
-          <div className="flex items-center space-x-6 min-w-[240px]">
-            <Link to="/dashboard" className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-6 min-w-0 flex-shrink">
+            <Link to="/dashboard" className="flex items-center space-x-2 sm:space-x-4 min-w-0">
               <img 
                 src="/assets/forvis-mazars-logo.png.png" 
                 alt="Forvis Mazars"
-                className="h-10 object-contain"
+                className="h-8 sm:h-10 object-contain flex-shrink-0"
               />
-              <div className="hidden sm:block">
-                <h1 className="text-xl font-bold text-gray-900 whitespace-nowrap">
-                  One Africa Hub
+              <div className="hidden sm:block min-w-0">
+                <h1 className="text-base sm:text-xl font-bold text-gray-900 whitespace-nowrap truncate">
+                  DEI Cafe
                 </h1>
                 <p className="text-xs text-gray-500">Forvis Mazars</p>
               </div>
@@ -87,7 +88,7 @@ const Navigation = () => {
           </div>
 
           {/* Right Side - Search, Notifications, Profile */}
-          <div className="flex items-center space-x-6 min-w-[240px] justify-end">
+          <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-6 min-w-0 justify-end">
             {/* Search */}
             {/* <div className="hidden md:block relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -99,36 +100,46 @@ const Navigation = () => {
             </div> */}
 
             {/* Notifications */}
-            <button className="relative p-2.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+            <button 
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative p-2 sm:p-2.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex-shrink-0"
+            >
               <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+              {unreadCount > 0 && (
+                <span className="absolute top-0 right-0 min-w-[18px] h-[18px] bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold px-1">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </button>
 
             {/* Profile Dropdown */}
-            <div className="relative">
+            <div className="relative flex-shrink-0">
               <button
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center space-x-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 transition-colors"
+                className="flex items-center space-x-2 sm:space-x-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg hover:bg-gray-100 transition-colors"
               >
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span className="text-blue-600 font-medium text-sm">
-                    {user?.profile?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
+                <div 
+                  data-profile-icon
+                  className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0"
+                >
+                  <span className="text-blue-600 font-medium text-xs sm:text-sm">
+                    U
                   </span>
                 </div>
-                <div className="hidden sm:block text-left">
-                  <div className="text-sm font-medium text-gray-900">
-                    {user?.profile?.name || 'User'}
+                <div className="hidden md:block text-left min-w-0">
+                  <div className="text-sm font-medium text-gray-900 truncate">
+                    User
                   </div>
-                  <div className="text-xs text-gray-500">
-                    {user?.profile?.role === 'mentor' ? 'Mentor' : 'Mentee'}
+                  <div className="text-xs text-gray-500 truncate">
+                    Mentee
                   </div>
                 </div>
-                <ChevronDown className="w-4 h-4 text-gray-400" />
+                <Settings className="w-4 h-4 text-gray-400 hidden sm:block flex-shrink-0" />
               </button>
 
               {/* Dropdown Menu */}
               {showProfileMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
                   <Link
                     to="/profile"
                     className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -138,16 +149,35 @@ const Navigation = () => {
                     <span>Profile</span>
                   </Link>
                   <Link
-                    to="/settings"
+                    to="/mentorship-activities"
+                    className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    onClick={() => setShowProfileMenu(false)}
+                  >
+                    <Trophy className="w-4 h-4 text-blue-600" />
+                    <span>My Mentors</span>
+                  </Link>
+                  <Link
+                    to="/my-mentees"
+                    className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    onClick={() => setShowProfileMenu(false)}
+                  >
+                    <Users className="w-4 h-4 text-blue-600" />
+                    <span>My Mentees</span>
+                  </Link>
+                  <Link
+                    to="/preferences"
                     className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     onClick={() => setShowProfileMenu(false)}
                   >
                     <Settings className="w-4 h-4" />
-                    <span>Settings</span>
+                    <span>Preferences</span>
                   </Link>
-                  <hr className="my-1" />
+                  <hr className="my-1 border-gray-200" />
                   <button
-                    onClick={handleLogout}
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      handleLogout();
+                    }}
                     className="flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
                   >
                     <LogOut className="w-4 h-4" />
@@ -160,21 +190,21 @@ const Navigation = () => {
         </div>
 
         {/* Mobile Navigation */}
-        <div className="lg:hidden border-t border-gray-200 py-3">
-          <div className="flex items-center space-x-2 overflow-x-auto pb-1">
+        <div className="lg:hidden border-t border-gray-200 py-2 sm:py-3 overflow-x-auto">
+          <div className="flex items-center space-x-1 sm:space-x-2 pb-1 min-w-max px-3 sm:px-6">
             {navigationItems.map((item) => {
               const Icon = item.icon;
               return (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-200 ${
+                  className={`flex items-center space-x-1.5 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-200 ${
                     isActive(item.path)
                       ? 'bg-blue-100 text-blue-700'
                       : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-4 h-4 flex-shrink-0" />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -190,6 +220,12 @@ const Navigation = () => {
           onClick={() => setShowProfileMenu(false)}
         />
       )}
+
+      {/* Notification Center */}
+      <NotificationCenter 
+        isOpen={showNotifications} 
+        onClose={() => setShowNotifications(false)} 
+      />
     </nav>
   );
 };

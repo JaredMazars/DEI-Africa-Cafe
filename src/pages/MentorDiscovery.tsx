@@ -26,6 +26,10 @@ export default function MentorDiscovery() {
   const [selectedLocation, setSelectedLocation] = useState('all');
   const [loading, setLoading] = useState(true);
   const [savedMentors, setSavedMentors] = useState<Set<string>>(new Set());
+  const [connectedMentors, setConnectedMentors] = useState<Set<string>>(new Set());
+  const [animatingMentor, setAnimatingMentor] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
   useEffect(() => {
     loadMentors();
@@ -71,6 +75,7 @@ export default function MentorDiscovery() {
     }
 
     setFilteredMentors(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   const toggleSaveMentor = (mentorId: string) => {
@@ -81,6 +86,74 @@ export default function MentorDiscovery() {
       } else {
         newSet.add(mentorId);
       }
+      return newSet;
+    });
+  };
+
+  const handleConnect = (mentorId: string, event: React.MouseEvent<HTMLButtonElement>) => {
+    const button = event.currentTarget;
+    const rect = button.getBoundingClientRect();
+    
+    // Get profile icon position (top right of screen)
+    const profileIcon = document.querySelector('[data-profile-icon]');
+    if (!profileIcon) return;
+    
+    const profileRect = profileIcon.getBoundingClientRect();
+    
+    // Create flying avatar element
+    const flyingAvatar = document.createElement('div');
+    const mentor = mentors.find(m => m.id === mentorId);
+    if (!mentor) return;
+    
+    flyingAvatar.innerHTML = `
+      <img src="${mentor.image}" alt="${mentor.name}" class="w-full h-full object-cover rounded-full" />
+    `;
+    flyingAvatar.style.cssText = `
+      position: fixed;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      left: ${rect.left + rect.width / 2 - 30}px;
+      top: ${rect.top + rect.height / 2 - 30}px;
+      z-index: 9999;
+      pointer-events: none;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      border: 3px solid white;
+      transition: left 0.8s cubic-bezier(0.2, 0.7, 0.2, 1), top 0.8s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.8s
+
+    `;
+    
+    document.body.appendChild(flyingAvatar);
+    
+    // Trigger animation after a small delay
+    setTimeout(() => {
+      flyingAvatar.style.left = `${profileRect.left + profileRect.width / 2 - 30}px`;
+      flyingAvatar.style.top = `${profileRect.top + profileRect.height / 2 - 30}px`;
+      flyingAvatar.style.transform = 'scale(0.3)';
+      flyingAvatar.style.opacity = '0';
+    }, 50);
+    
+    // Remove element after animation
+    setTimeout(() => {
+      document.body.removeChild(flyingAvatar);
+    }, 900);
+    
+    // Add connection
+    setConnectedMentors(prev => {
+      const newSet = new Set(prev);
+      newSet.add(mentorId);
+      return newSet;
+    });
+    
+    // Set animating state
+    setAnimatingMentor(mentorId);
+    setTimeout(() => setAnimatingMentor(null), 1000);
+  };
+
+  const handleDisconnect = (mentorId: string) => {
+    setConnectedMentors(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(mentorId);
       return newSet;
     });
   };
@@ -208,14 +281,18 @@ export default function MentorDiscovery() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredMentors.map((mentor) => {
+          {filteredMentors.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((mentor) => {
             const matchScore = calculateMatchScore();
             const isSaved = savedMentors.has(mentor.id);
+            const isConnected = connectedMentors.has(mentor.id);
+            const isAnimating = animatingMentor === mentor.id;
 
             return (
               <div
                 key={mentor.id}
-                className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 group hover:scale-[1.02]"
+                className={`bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 group hover:scale-[1.02] ${
+                  isAnimating ? 'ring-4 ring-green-400 ring-opacity-50' : ''
+                }`}
               >
                 <div className="relative h-48 bg-gradient-to-br from-blue-900 to-blue-800">
                   <img
@@ -292,9 +369,22 @@ export default function MentorDiscovery() {
                   </p>
 
                   <div className="flex space-x-2">
-                    <button className="flex-1 bg-blue-900 hover:bg-blue-800 text-white py-2.5 rounded-lg font-semibold transition-all shadow-sm">
-                      Connect
-                    </button>
+                    {isConnected ? (
+                      <button 
+                        onClick={() => handleDisconnect(mentor.id)}
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-lg font-semibold transition-all shadow-sm flex items-center justify-center space-x-2"
+                      >
+                        <CheckCircle className="w-5 h-5" />
+                        <span>Connected</span>
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={(e) => handleConnect(mentor.id, e)}
+                        className="flex-1 bg-blue-900 hover:bg-blue-800 text-white py-2.5 rounded-lg font-semibold transition-all shadow-sm"
+                      >
+                        Connect
+                      </button>
+                    )}
                     <button className="px-4 py-2.5 border-2 border-blue-900 text-blue-900 hover:bg-blue-50 rounded-lg font-semibold transition-all">
                       View
                     </button>
@@ -321,6 +411,39 @@ export default function MentorDiscovery() {
               className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
             >
               Clear Filters
+            </button>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {filteredMentors.length > itemsPerPage && (
+          <div className="mt-8 flex justify-center items-center space-x-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Previous
+            </button>
+            {Array.from({ length: Math.ceil(filteredMentors.length / itemsPerPage) }, (_, i) => i + 1).map(page => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  currentPage === page
+                    ? 'bg-blue-600 text-white'
+                    : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredMentors.length / itemsPerPage)))}
+              disabled={currentPage === Math.ceil(filteredMentors.length / itemsPerPage)}
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Next
             </button>
           </div>
         )}

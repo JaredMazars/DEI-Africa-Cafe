@@ -103,7 +103,7 @@ export function OnboardingForm() {
               <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center mx-auto">
                 <Users className="w-8 h-8 text-white" />
               </div>
-              <h2 className="text-3xl font-bold text-gray-900">Welcome to One Africa Hub!</h2>
+              <h2 className="text-3xl font-bold text-gray-900">Welcome to DEI Cafe!</h2>
               <p className="text-lg text-gray-600">Let's start by understanding how you'd like to participate</p>
             </div>
 
@@ -412,7 +412,7 @@ export function OnboardingForm() {
               <button
                 onClick={handleSubmit}
                 disabled={!canProceed()}
-                className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:from-blue-700 hover:to-indigo-700 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
+                className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:from-blue-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
               >
                 <span>Complete Profile</span>
                 <ArrowRight className="w-5 h-5" />
@@ -421,7 +421,7 @@ export function OnboardingForm() {
               <button
                 onClick={handleNext}
                 disabled={!canProceed()}
-                className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:from-blue-700 hover:to-indigo-700 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
+                className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:from-blue-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
               >
                 <span>Next</span>
                 <ArrowRight className="w-5 h-5" />

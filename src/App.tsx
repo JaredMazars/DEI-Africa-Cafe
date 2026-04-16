@@ -1,91 +1,64 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navigation from './components/Navigation';
-import LandingPage from './pages/LandingPage';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import { initializeDataStore } from './services/dataStore';
 import Dashboard from './pages/Dashboard';
 import MentorDiscovery from './pages/MentorDiscovery';
 import ResourceLibrary from './pages/ResourceLibrary';
 import Calendar from './pages/CalendarNew';
 import Profile from './pages/Profile';
 import Discussion from './pages/DiscussionNew';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import MentorDetails from './pages/MentorDetail';
+import { NotificationProvider } from './contexts/NotificationContext';
+import { SimpleAuthProvider, useSimpleAuth } from './contexts/SimpleAuthContext';
+import SimpleLogin from './pages/SimpleLogin';
+import SimpleRegister from './pages/SimpleRegister';
+import SimpleOnboardingForm from './pages/SimpleOnboardingForm';
+import VerificationPending from './pages/VerificationPending';
+import SimpleVerifyEmail from './pages/SimpleVerifyEmail';
 import ExpertDirectory from './pages/ExpertDirectory';
 import CollaborationHub from './pages/CollaborationHub';
 import MentorMatching from './pages/MentorMatching';
-import OnboardingForm from './pages/OnboardingForm';
 import Home from './pages/Home';
 import Preferences from './pages/Preferences';
-import AdminLogin from './pages/AdminLogin';
-import AdminDashboard from './pages/AdminDashboard';
 import MentorshipActivities from './pages/MentorshipActivities';
+import MentorshipActivitiesEnhanced from './pages/MentorshipActivitiesEnhanced';
+import MyMentors from './pages/MyMentors';
+import MyMentees from './pages/MyMentees';
+import MentorContent from './pages/MentorContent';
+import AdminLogin from './pages/AdminLogin';
+import AdminContentManager from './pages/AdminContentManager';
+import ArticleView from './pages/ArticleView';
+
+// New Admin Console Components
+import AdminLayout from './admin/AdminLayout';
+import AdminOverview from './admin/pages/AdminOverview';
+import AdminUsers from './admin/pages/AdminUsers';
+import AdminMentors from './admin/pages/AdminMentors';
+import AdminExperts from './admin/pages/AdminExperts';
+import AdminContent from './admin/pages/AdminContent';
+import AdminResources from './admin/pages/AdminResources';
+import AdminOpportunities from './admin/pages/AdminOpportunities';
+import AdminCollaboration from './admin/pages/AdminCollaboration';
+import AdminNotifications from './admin/pages/AdminNotifications';
+import AdminAudit from './admin/pages/AdminAudit';
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full flex items-center justify-center mx-auto mb-4">
-            <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          </div>
-          <p className="text-lg text-gray-600">Loading One Africa Hub...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
+  const { isAuthenticated } = useSimpleAuth();
+  
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-
-  // If user hasn't completed onboarding, redirect to onboarding
-  if (user.isFirstLogin) {
-    return <Navigate to="/onboarding" replace />;
-  }
-
+  
   return <>{children}</>;
 }
 
-// Admin Protected Route Component
-function AdminProtectedRoute({ children }: { children: React.ReactNode }) {
-  const adminToken = localStorage.getItem('adminToken');
+// Simple admin route guard using localStorage token from the admin login screen
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const hasAdminToken = typeof window !== 'undefined' && !!localStorage.getItem('adminToken');
 
-  if (!adminToken) {
+  if (!hasAdminToken) {
     return <Navigate to="/admin/login" replace />;
-  }
-
-  return <>{children}</>;
-}
-
-// Public Route Component (only accessible when not logged in)
-function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full flex items-center justify-center mx-auto mb-4">
-            <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          </div>
-          <p className="text-lg text-gray-600">Loading One Africa Hub...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (user) {
-    // If user is logged in but hasn't completed onboarding
-    if (user.isFirstLogin) {
-      return <Navigate to="/onboarding" replace />;
-    }
-    // If user is logged in and has completed onboarding
-    return <Navigate to="/home" replace />;
   }
 
   return <>{children}</>;
@@ -93,90 +66,92 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
 // App Content Component
 function AppContent() {
-  const { user } = useAuth();
-
+  const { isAuthenticated } = useSimpleAuth();
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  const isPublicRoute = ['/login', '/register', '/onboarding', '/verification-pending', '/verify-email'].includes(location.pathname);
+  
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Show Navigation for all authenticated users who have completed onboarding */}
-      {user && !user.isFirstLogin && (
-        <Navigation />
-      )}
+      {/* Show Navigation only when authenticated and not on admin or public routes */}
+      {isAuthenticated && !isAdminRoute && !isPublicRoute && <Navigation />}
       
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<PublicRoute><LandingPage /></PublicRoute>} />
-        <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-        <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-        
-        {/* Onboarding Route - Special case */}
-        <Route path="/onboarding" element={
-          user && user.isFirstLogin ? <OnboardingForm /> : <Navigate to="/login" replace />
-        } />
-        
-        {/* Home Route - Main dashboard after onboarding */}
-        <Route path="/home" element={
-          <ProtectedRoute><Home /></ProtectedRoute>
-        } />
-        
-        {/* Protected Routes - Your existing routes */}
-        <Route path="/dashboard" element={
-          <ProtectedRoute><Dashboard /></ProtectedRoute>
-        } />
-        <Route path="/mentors" element={
-          <ProtectedRoute><MentorDiscovery /></ProtectedRoute>
-        } />
-        <Route path="/mentor-matching" element={
-          <ProtectedRoute><MentorMatching /></ProtectedRoute>
-        } />
-        <Route path="/resources" element={
-          <ProtectedRoute><ResourceLibrary /></ProtectedRoute>
-        } />
-        <Route path="/discussion" element={
-          <ProtectedRoute><Discussion /></ProtectedRoute>
-        } />
-        <Route path="/calendar" element={
-          <ProtectedRoute><Calendar /></ProtectedRoute>
-        } />
-        <Route path="/profile" element={
-          <ProtectedRoute><Profile /></ProtectedRoute>
-        } />
-        <Route path="/mentorship-activities" element={
-          <ProtectedRoute><MentorshipActivities /></ProtectedRoute>
-        } />
-        <Route path="/mentor/:id" element={
-          <ProtectedRoute><MentorDetails /></ProtectedRoute>
-        } />
-        <Route path="/experts" element={
-          <ProtectedRoute><ExpertDirectory /></ProtectedRoute>
-        } />
-        <Route path="/collaboration" element={
-          <ProtectedRoute><CollaborationHub /></ProtectedRoute>
-        } />
-        <Route path="/preferences" element={
-          <ProtectedRoute><Preferences /></ProtectedRoute>
-        } />
-        
-        {/* Admin Routes */}
+        <Route path="/login" element={<SimpleLogin />} />
+        <Route path="/register" element={<SimpleRegister />} />
+        <Route path="/onboarding" element={<SimpleOnboardingForm />} />
+        <Route path="/verification-pending" element={<VerificationPending />} />
+        <Route path="/verify-email" element={<SimpleVerifyEmail />} />
+
+        {/* Admin Public Route */}
         <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin/dashboard" element={
-          <AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>
-        } />
+        
+        {/* Protected Routes */}
+        <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+        <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/mentors" element={<ProtectedRoute><MentorDiscovery /></ProtectedRoute>} />
+        <Route path="/mentor-matching" element={<ProtectedRoute><MentorMatching /></ProtectedRoute>} />
+        <Route path="/resources" element={<ProtectedRoute><ResourceLibrary /></ProtectedRoute>} />
+        <Route path="/discussion" element={<ProtectedRoute><Discussion /></ProtectedRoute>} />
+        <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/mentorship-activities" element={<ProtectedRoute><MyMentors /></ProtectedRoute>} />
+        <Route path="/mentorship-activities/:mentorId" element={<ProtectedRoute><MentorshipActivitiesEnhanced /></ProtectedRoute>} />
+        <Route path="/my-mentees" element={<ProtectedRoute><MyMentees /></ProtectedRoute>} />
+        <Route path="/mentor-content" element={<ProtectedRoute><MentorContent /></ProtectedRoute>} />
+        <Route path="/mentor-view/mentee/:menteeId" element={<ProtectedRoute><MentorshipActivitiesEnhanced /></ProtectedRoute>} />
+        <Route path="/mentorship-activities-legacy" element={<ProtectedRoute><MentorshipActivities /></ProtectedRoute>} />
+        <Route path="/experts" element={<ProtectedRoute><ExpertDirectory /></ProtectedRoute>} />
+        <Route path="/collaboration" element={<ProtectedRoute><CollaborationHub /></ProtectedRoute>} />
+        <Route path="/preferences" element={<ProtectedRoute><Preferences /></ProtectedRoute>} />
+
+        {/* Admin Protected Routes - New Comprehensive Console */}
+        <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+          <Route index element={<Navigate to="/admin/overview" replace />} />
+          <Route path="overview" element={<AdminOverview />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="mentors" element={<AdminMentors />} />
+          <Route path="experts" element={<AdminExperts />} />
+          <Route path="content" element={<AdminContent />} />
+          <Route path="resources" element={<AdminResources />} />
+          <Route path="opportunities" element={<AdminOpportunities />} />
+          <Route path="collaboration" element={<AdminCollaboration />} />
+          <Route path="notifications" element={<AdminNotifications />} />
+          <Route path="audit" element={<AdminAudit />} />
+        </Route>
+
+        {/* Legacy Admin Routes (for backward compatibility) */}
+        <Route path="/admin/dashboard" element={<Navigate to="/admin/overview" replace />} />
+        <Route path="/admin/content-legacy" element={<AdminRoute><AdminContentManager /></AdminRoute>} />
+        
+        {/* Article View (accessible to all authenticated users) */}
+        <Route path="/article/:id" element={<ProtectedRoute><ArticleView /></ProtectedRoute>} />
         
         {/* Catch all route */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to={isAuthenticated ? "/home" : "/login"} replace />} />
       </Routes>
     </div>
   );
 }
 
 function App() {
+  // Initialize data store on app load
+  useEffect(() => {
+    initializeDataStore();
+  }, []);
+
   return (
-    <AuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </AuthProvider>
+    <Router>
+      <SimpleAuthProvider>
+        <NotificationProvider>
+          <AppContent />
+        </NotificationProvider>
+      </SimpleAuthProvider>
+    </Router>
   );
 }
 
 export default App;
+

@@ -2,6 +2,23 @@ import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { Plus, Search, MapPin, Users, Calendar, TrendingUp, FileText, Target, Send, DollarSign, Clock, Filter, BarChart3, Globe } from 'lucide-react';
 import { opportunitiesAPI } from '../services/api';
+import { useNotifications } from '../contexts/NotificationContext';
+
+// Industry to Client Sector mapping
+const industrySectorMap: Record<string, string[]> = {
+  'Financial Services': ['Banking', 'Insurance', 'Investment Management', 'Private Equity', 'Asset Management', 'Wealth Management'],
+  'Energy & Resources': ['Oil & Gas', 'Mining & Metals', 'Renewable Energy', 'Utilities'],
+  'Technology': ['Technology & Software', 'Telecommunications', 'IT Services', 'Cybersecurity'],
+  'Healthcare & Life Sciences': ['Healthcare', 'Pharmaceuticals', 'Biotechnology', 'Medical Devices'],
+  'Consumer & Retail': ['Retail', 'Food & Beverage', 'Consumer Goods', 'E-commerce'],
+  'Infrastructure & Real Estate': ['Real Estate', 'Construction', 'Transportation & Logistics', 'Infrastructure Development'],
+  'Manufacturing & Industrial': ['Manufacturing', 'Automotive', 'Aerospace & Defense', 'Industrial Equipment'],
+  'Public Sector': ['Government & Public Sector', 'Education', 'NGO & Non-Profit', 'Healthcare Services'],
+  'Media & Entertainment': ['Media & Entertainment', 'Hospitality & Tourism', 'Sports & Recreation', 'Arts & Culture'],
+  'Agriculture & Natural Resources': ['Agriculture', 'Forestry', 'Fisheries', 'Water Resources'],
+  'Professional Services': ['Professional Services', 'Legal Services', 'Consulting', 'Accounting & Audit'],
+  'Other': ['Other']
+};
 
 interface Opportunity {
   id: string;
@@ -20,10 +37,35 @@ interface Opportunity {
   createdAt: string;
 }
 
+interface GroupDocument {
+  id: string;
+  name: string;
+  type: 'pdf' | 'doc' | 'xlsx' | 'pptx';
+  uploadedBy: string;
+  uploadedAt: string;
+  size: string;
+  url: string;
+}
+
+interface UserProfile {
+  id: string;
+  name: string;
+  avatar: string;
+  email: string;
+  role: string;
+  organization: string;
+  serviceLine: string;
+  country: string;
+  expertise: string[];
+  yearsOfExperience: number;
+  bio: string;
+}
+
 interface CollaborationGroup {
   id: string;
   name: string;
   description: string;
+  creatorId: string;
   members: Array<{
     id: string;
     name: string;
@@ -33,6 +75,7 @@ interface CollaborationGroup {
   opportunities: string[];
   status: 'active' | 'completed';
   lastActivity: string;
+  documents: GroupDocument[];
 }
 
 interface DealPipeline {
@@ -59,8 +102,32 @@ interface CaseStudy {
   tags: string[];
 }
 
+interface InterestRequest {
+  id: string;
+  opportunityId: string;
+  opportunityTitle: string;
+  applicantName: string;
+  applicantEmail: string;
+  applicantAvatar: string;
+  applicantOrganization: string;
+  applicantRole: string;
+  message: string;
+  timestamp: string;
+  status: 'pending' | 'accepted' | 'rejected';
+}
+
+interface GroupMessage {
+  id: string;
+  sender: string;
+  senderAvatar: string;
+  message: string;
+  timestamp: string;
+  type: 'message' | 'file' | 'knowledge';
+}
+
 const CollaborationHub: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'opportunities' | 'groups' | 'pipeline' | 'knowledge'>('opportunities');
+  const { addNotification } = useNotifications();
+  const [activeTab, setActiveTab] = useState<'opportunities' | 'groups' | 'requests' | 'knowledge'>('opportunities');
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState({
@@ -83,6 +150,111 @@ const CollaborationHub: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+  const [interestRequests, setInterestRequests] = useState<InterestRequest[]>([]);
+  const [selectedRequest, setSelectedRequest] = useState<InterestRequest | null>(null);
+  const [showRequestDetailModal, setShowRequestDetailModal] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState<CollaborationGroup | null>(null);
+  const [groupMessages, setGroupMessages] = useState<GroupMessage[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [showKnowledgePanel, setShowKnowledgePanel] = useState(false);
+  const [showGroupManageModal, setShowGroupManageModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [currentUserId] = useState('1'); // This should come from auth context
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
+
+  // Sample user profiles database
+  const userProfiles: Record<string, UserProfile> = {
+    '1': {
+      id: '1',
+      name: 'Amara Okafor',
+      avatar: 'https://images.pexels.com/photos/3778966/pexels-photo-3778966.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop',
+      email: 'amara.okafor@forvismazars.com',
+      role: 'Senior Partner',
+      organization: 'Forvis Mazars Nigeria',
+      serviceLine: 'Financial Services Advisory',
+      country: 'Nigeria',
+      expertise: ['Banking Regulations', 'Financial Services', 'M&A', 'Market Entry Strategy'],
+      yearsOfExperience: 15,
+      bio: 'Specializing in financial services expansion across West Africa with deep expertise in regulatory compliance and cross-border banking operations.'
+    },
+    '2': {
+      id: '2',
+      name: 'Kwame Asante',
+      avatar: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop',
+      email: 'kwame.asante@forvismazars.com',
+      role: 'Tax Partner',
+      organization: 'Forvis Mazars Ghana',
+      serviceLine: 'Tax Advisory',
+      country: 'Ghana',
+      expertise: ['International Tax', 'Transfer Pricing', 'Tax Compliance', 'M&A Tax'],
+      yearsOfExperience: 12,
+      bio: 'Expert in international tax planning and transfer pricing with extensive experience in cross-border transactions across West Africa.'
+    },
+    '3': {
+      id: '3',
+      name: 'Marie Kouassi',
+      avatar: 'https://images.pexels.com/photos/3776164/pexels-photo-3776164.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop',
+      email: 'marie.kouassi@forvismazars.com',
+      role: 'Audit Director',
+      organization: 'Forvis Mazars Côte d\'Ivoire',
+      serviceLine: 'Audit & Assurance',
+      country: 'Côte d\'Ivoire',
+      expertise: ['Financial Audit', 'IFRS', 'Risk Management', 'Internal Controls'],
+      yearsOfExperience: 10,
+      bio: 'Specialized in financial auditing and IFRS implementation for multinational corporations operating in Francophone Africa.'
+    },
+    '4': {
+      id: '4',
+      name: 'Thabo Mthembu',
+      avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop',
+      email: 'thabo.mthembu@forvismazars.com',
+      role: 'ESG Lead Partner',
+      organization: 'Forvis Mazars South Africa',
+      serviceLine: 'ESG & Sustainability',
+      country: 'South Africa',
+      expertise: ['ESG Strategy', 'Sustainability Reporting', 'Climate Risk', 'Mining Sector'],
+      yearsOfExperience: 14,
+      bio: 'Leading ESG and sustainability consulting for mining and natural resources sectors across Southern Africa.'
+    },
+    '5': {
+      id: '5',
+      name: 'Sarah Mwangi',
+      avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop',
+      email: 'sarah.mwangi@forvismazars.com',
+      role: 'Advisory Partner',
+      organization: 'Forvis Mazars Kenya',
+      serviceLine: 'Business Advisory',
+      country: 'Kenya',
+      expertise: ['Digital Transformation', 'Technology Advisory', 'Process Optimization', 'Change Management'],
+      yearsOfExperience: 11,
+      bio: 'Focused on digital transformation and technology advisory for financial institutions and fintech companies in East Africa.'
+    },
+    '6': {
+      id: '6',
+      name: 'David Chanda',
+      avatar: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop',
+      email: 'david.chanda@forvismazars.com',
+      role: 'Senior Manager',
+      organization: 'Forvis Mazars Zambia',
+      serviceLine: 'Corporate Finance',
+      country: 'Zambia',
+      expertise: ['Valuation', 'Due Diligence', 'Financial Modeling', 'Transaction Support'],
+      yearsOfExperience: 8,
+      bio: 'Specializing in valuations and due diligence for mining and infrastructure transactions in Southern Africa.'
+    }
+  };
+
+  const handleViewProfile = (userId: string) => {
+    const profile = userProfiles[userId];
+    if (profile) {
+      setSelectedProfile(profile);
+      setShowProfileModal(true);
+    }
+  };
 
   // Dummy opportunities data as fallback
   const dummyOpportunities: Opportunity[] = [
@@ -255,11 +427,76 @@ const CollaborationHub: React.FC = () => {
     loadOpportunities();
   }, []);
 
+  // Demo: Add a welcome notification on first load
+  useEffect(() => {
+    const hasSeenWelcome = localStorage.getItem('collaborationWelcomeSeen');
+    if (!hasSeenWelcome) {
+      setTimeout(() => {
+        addNotification({
+          type: 'system',
+          title: 'Welcome to Collaboration Hub! 🎉',
+          message: 'Explore opportunities, join groups, and collaborate with colleagues across Africa.',
+          priority: 'medium'
+        });
+        localStorage.setItem('collaborationWelcomeSeen', 'true');
+      }, 1000);
+    }
+  }, [addNotification]);
+
+  // Sample interest requests
+  const sampleInterestRequests: InterestRequest[] = [
+    {
+      id: '1',
+      opportunityId: '1',
+      opportunityTitle: 'Regional Banking Expansion - West Africa',
+      applicantName: 'David Osei',
+      applicantEmail: 'david.osei@kpmgafrica.com',
+      applicantAvatar: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=50&h=50&fit=crop',
+      applicantOrganization: 'KPMG Ghana',
+      applicantRole: 'Senior Tax Consultant',
+      message: 'I have extensive experience in West African banking regulations and have led similar expansion projects across Ghana and Côte d\'Ivoire. Would love to contribute my expertise in regulatory compliance and market entry strategies.',
+      timestamp: '2 hours ago',
+      status: 'pending'
+    },
+    {
+      id: '2',
+      opportunityId: '2',
+      opportunityTitle: 'ESG Compliance for Mining Operations',
+      applicantName: 'Lindiwe Nkosi',
+      applicantEmail: 'lindiwe.nkosi@pwc.co.za',
+      applicantAvatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=50&h=50&fit=crop',
+      applicantOrganization: 'PwC South Africa',
+      applicantRole: 'ESG & Sustainability Lead',
+      message: 'I specialize in ESG audits for mining companies across Southern Africa. My team has completed comprehensive sustainability assessments for major operations in Zambia and Botswana. I believe we can add significant value to this project.',
+      timestamp: '5 hours ago',
+      status: 'pending'
+    },
+    {
+      id: '3',
+      opportunityId: '3',
+      opportunityTitle: 'Digital Payment Platform Launch - East Africa',
+      applicantName: 'James Kimani',
+      applicantEmail: 'james.kimani@ey.com',
+      applicantAvatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=50&h=50&fit=crop',
+      applicantOrganization: 'EY Kenya',
+      applicantRole: 'Fintech Advisory Manager',
+      message: 'With 8+ years in fintech regulatory compliance across East Africa, I\'ve helped multiple payment platforms navigate the complex regulatory landscape in Kenya, Tanzania, and Rwanda. Happy to discuss how we can support this launch.',
+      timestamp: '1 day ago',
+      status: 'pending'
+    }
+  ];
+
+  // Initialize interest requests
+  useEffect(() => {
+    setInterestRequests(sampleInterestRequests);
+  }, []);
+
   const collaborationGroups: CollaborationGroup[] = [
     {
       id: '1',
       name: 'West Africa Banking Expansion Team',
       description: 'Cross-regional team working on financial services expansion projects',
+      creatorId: '1',
       members: [
         { id: '1', name: 'Amara Okafor', avatar: 'https://images.pexels.com/photos/3778966/pexels-photo-3778966.jpeg?auto=compress&cs=tinysrgb&w=50&h=50&fit=crop', role: 'Lead' },
         { id: '2', name: 'Kwame Asante', avatar: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=50&h=50&fit=crop', role: 'Ghana Expert' },
@@ -267,12 +504,24 @@ const CollaborationHub: React.FC = () => {
       ],
       opportunities: ['1'],
       status: 'active',
-      lastActivity: '2 hours ago'
+      lastActivity: '2 hours ago',
+      documents: [
+        {
+          id: 'd1',
+          name: 'Banking Regulations - West Africa.pdf',
+          type: 'pdf',
+          uploadedBy: 'Amara Okafor',
+          uploadedAt: '2 days ago',
+          size: '2.4 MB',
+          url: '#'
+        }
+      ]
     },
     {
       id: '2',
       name: 'ESG & Sustainability Network',
       description: 'Regional experts focusing on ESG compliance and sustainability reporting',
+      creatorId: '4',
       members: [
         { id: '4', name: 'Thabo Mthembu', avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=50&h=50&fit=crop', role: 'Lead' },
         { id: '5', name: 'Sarah Mwangi', avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=50&h=50&fit=crop', role: 'Kenya Partner' },
@@ -280,7 +529,8 @@ const CollaborationHub: React.FC = () => {
       ],
       opportunities: ['2'],
       status: 'active',
-      lastActivity: '5 hours ago'
+      lastActivity: '5 hours ago',
+      documents: []
     }
   ];
 
@@ -439,11 +689,173 @@ const CollaborationHub: React.FC = () => {
   };
 
   const handleSendInterest = () => {
-    if (interestMessage.trim()) {
-      // Add interest submission logic here
+    if (interestMessage.trim() && selectedOpportunity) {
+      // Create a new interest request
+      const newRequest: InterestRequest = {
+        id: String(interestRequests.length + 1),
+        opportunityId: selectedOpportunity.id,
+        opportunityTitle: selectedOpportunity.title,
+        applicantName: 'Current User', // This should come from auth context
+        applicantEmail: 'user@example.com', // This should come from auth context
+        applicantAvatar: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=50&h=50&fit=crop',
+        applicantOrganization: 'Your Organization', // This should come from user profile
+        applicantRole: 'Your Role', // This should come from user profile
+        message: interestMessage,
+        timestamp: 'Just now',
+        status: 'pending'
+      };
+      
+      setInterestRequests([...interestRequests, newRequest]);
       setShowInterestModal(false);
       setInterestMessage('');
       setSelectedOpportunity(null);
+      
+      // Add notification for the opportunity holder
+      addNotification({
+        type: 'request',
+        title: 'New Interest Request',
+        message: `Someone expressed interest in "${selectedOpportunity.title}"`,
+        avatar: newRequest.applicantAvatar,
+        actionUrl: '/collaboration',
+        priority: 'high'
+      });
+      
+      // Show success message
+      alert('Your interest has been submitted! The opportunity holder will review your request.');
+    }
+  };
+
+  const handleRequestAction = (requestId: string, action: 'accept' | 'reject') => {
+    const request = interestRequests.find(r => r.id === requestId);
+    if (!request) return;
+
+    if (action === 'accept') {
+      // Create a new collaboration group
+      const newGroup: CollaborationGroup = {
+        id: String(collaborationGroups.length + 1),
+        name: `${request.opportunityTitle} - Collaboration`,
+        description: `Collaboration group for ${request.opportunityTitle}`,
+        creatorId: currentUserId,
+        members: [
+          {
+            id: '1',
+            name: request.applicantName,
+            avatar: request.applicantAvatar,
+            role: request.applicantRole
+          }
+        ],
+        opportunities: [request.opportunityId],
+        status: 'active',
+        lastActivity: 'Just now',
+        documents: []
+      };
+      
+      // Update request status
+      setInterestRequests(interestRequests.map(r =>
+        r.id === requestId ? { ...r, status: 'accepted' } : r
+      ));
+      
+      // Notify the applicant that their request was accepted
+      addNotification({
+        type: 'opportunity',
+        title: 'Request Accepted!',
+        message: `Your interest in "${request.opportunityTitle}" has been accepted. A collaboration group has been created.`,
+        avatar: request.applicantAvatar,
+        actionUrl: '/collaboration',
+        priority: 'high'
+      });
+      
+      // Switch to groups tab and select the new group
+      setActiveTab('groups');
+      setSelectedGroup(newGroup);
+      
+      alert(`${request.applicantName} has been accepted! A collaboration group has been created.`);
+    } else {
+      // Reject the request
+      setInterestRequests(interestRequests.map(r =>
+        r.id === requestId ? { ...r, status: 'rejected' } : r
+      ));
+      
+      // Notify the applicant that their request was rejected
+      addNotification({
+        type: 'opportunity',
+        title: 'Request Declined',
+        message: `Your interest in "${request.opportunityTitle}" was not accepted at this time.`,
+        priority: 'low'
+      });
+      
+      alert(`Request from ${request.applicantName} has been declined.`);
+    }
+    
+    setShowRequestDetailModal(false);
+    setSelectedRequest(null);
+  };
+
+  const handleSendMessage = () => {
+    if (newMessage.trim() && selectedGroup) {
+      const message: GroupMessage = {
+        id: String(groupMessages.length + 1),
+        sender: 'You',
+        senderAvatar: 'https://images.pexels.com/photos/3778966/pexels-photo-3778966.jpeg?auto=compress&cs=tinysrgb&w=50&h=50&fit=crop',
+        message: newMessage,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        type: 'message'
+      };
+      
+      setGroupMessages([...groupMessages, message]);
+      setNewMessage('');
+    }
+  };
+
+  const handleUploadDocument = () => {
+    if (uploadFile && selectedGroup) {
+      const newDoc: GroupDocument = {
+        id: `d${selectedGroup.documents.length + 1}`,
+        name: uploadFile.name,
+        type: uploadFile.name.split('.').pop() as 'pdf' | 'doc' | 'xlsx' | 'pptx',
+        uploadedBy: 'You',
+        uploadedAt: 'Just now',
+        size: `${(uploadFile.size / (1024 * 1024)).toFixed(2)} MB`,
+        url: URL.createObjectURL(uploadFile)
+      };
+
+      // Update the selected group's documents
+      selectedGroup.documents.push(newDoc);
+      setSelectedGroup({ ...selectedGroup });
+      
+      // Add a message to the chat about the upload
+      const message: GroupMessage = {
+        id: String(groupMessages.length + 1),
+        sender: 'You',
+        senderAvatar: 'https://images.pexels.com/photos/3778966/pexels-photo-3778966.jpeg?auto=compress&cs=tinysrgb&w=50&h=50&fit=crop',
+        message: `Uploaded document: ${uploadFile.name}`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        type: 'file'
+      };
+      
+      setGroupMessages([...groupMessages, message]);
+      setUploadFile(null);
+      setShowUploadModal(false);
+    }
+  };
+
+  const handleRemoveMember = (memberId: string) => {
+    if (selectedGroup && selectedGroup.creatorId === currentUserId) {
+      const updatedMembers = selectedGroup.members.filter(m => m.id !== memberId);
+      setSelectedGroup({ ...selectedGroup, members: updatedMembers });
+      alert('Member removed from group');
+    }
+  };
+
+  const handleDeleteGroup = () => {
+    if (selectedGroup && selectedGroup.creatorId === currentUserId) {
+      if (window.confirm(`Are you sure you want to delete the group "${selectedGroup.name}"? This action cannot be undone.`)) {
+        // In real app, this would call an API to delete the group
+        setSelectedGroup(null);
+        setShowGroupManageModal(false);
+        alert('Group deleted successfully');
+        // Reload or filter groups list to remove deleted group
+      }
     }
   };
 
@@ -498,17 +910,22 @@ const CollaborationHub: React.FC = () => {
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              Collaboration Groups
+              My Groups
             </button>
             <button
-              onClick={() => setActiveTab('pipeline')}
+              onClick={() => setActiveTab('requests')}
               className={`pb-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === 'pipeline'
+                activeTab === 'requests'
                   ? 'border-blue-600 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              Deal Pipeline
+              Requests
+              {interestRequests.filter(r => r.status === 'pending').length > 0 && (
+                <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
+                  {interestRequests.filter(r => r.status === 'pending').length}
+                </span>
+              )}
             </button>
             <button
               onClick={() => setActiveTab('knowledge')}
@@ -609,7 +1026,7 @@ const CollaborationHub: React.FC = () => {
             {/* Opportunities List */}
             <div className="flex-1 p-6 overflow-y-auto">
               <div className="space-y-6">
-                {opportunities.map((opportunity) => (
+                {opportunities.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((opportunity) => (
                   <div key={opportunity.id} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
@@ -681,143 +1098,383 @@ const CollaborationHub: React.FC = () => {
                   </div>
                 ))}
               </div>
+
+              {/* Pagination Controls */}
+              <div className="flex items-center justify-center space-x-2 mt-6 pb-4">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    currentPage === 1
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  Previous
+                </button>
+                
+                {Array.from({ length: Math.ceil(opportunities.length / itemsPerPage) }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      currentPage === page
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(Math.ceil(opportunities.length / itemsPerPage), prev + 1))}
+                  disabled={currentPage === Math.ceil(opportunities.length / itemsPerPage)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    currentPage === Math.ceil(opportunities.length / itemsPerPage)
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Collaboration Groups Tab */}
+        {/* My Groups Tab - Shows groups user is currently in */}
         {activeTab === 'groups' && (
-          <div className="p-6 overflow-y-auto h-full">
-            <div className="grid gap-6">
-              {collaborationGroups.map((group) => (
-                <div key={group.id} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">{group.name}</h3>
-                      <p className="text-gray-700 mb-3">{group.description}</p>
-                      <div className="flex items-center space-x-4 text-sm text-gray-600">
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          group.status === 'active' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'
-                        }`}>
-                          {group.status}
-                        </span>
-                        <div className="flex items-center space-x-1">
-                          <Clock className="w-4 h-4" />
-                          <span>Last activity: {group.lastActivity}</span>
+          <div className="flex h-[600px]">
+            {!selectedGroup ? (
+              /* Group List View */
+              <div className="flex-1 p-6 overflow-y-auto">
+                <div className="grid gap-4">
+                  {collaborationGroups.map((group) => (
+                    <div 
+                      key={group.id} 
+                      onClick={() => {
+                        setSelectedGroup(group);
+                        // Initialize sample messages for the group
+                        setGroupMessages([
+                          {
+                            id: '1',
+                            sender: group.members[0].name,
+                            senderAvatar: group.members[0].avatar,
+                            message: 'Welcome to the collaboration group! Let\'s discuss our strategy for this opportunity.',
+                            timestamp: '10:30 AM',
+                            type: 'message'
+                          }
+                        ]);
+                      }}
+                      className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md transition-all cursor-pointer hover:border-blue-300"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-1">{group.name}</h3>
+                          <p className="text-gray-600 text-sm mb-3">{group.description}</p>
+                          <div className="flex items-center space-x-3 text-sm text-gray-600">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              group.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+                            }`}>
+                              {group.status}
+                            </span>
+                            <div className="flex items-center space-x-1">
+                              <Clock className="w-4 h-4" />
+                              <span>{group.lastActivity}</span>
+                            </div>
+                          </div>
                         </div>
+                      </div>
+
+                      <div className="flex items-center space-x-3">
+                        <div className="flex -space-x-2">
+                          {group.members.slice(0, 4).map((member) => (
+                            <img
+                              key={member.id}
+                              src={member.avatar}
+                              alt={member.name}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewProfile(member.id);
+                              }}
+                              className="w-8 h-8 rounded-full border-2 border-white object-cover cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
+                              title={`View ${member.name}'s profile`}
+                            />
+                          ))}
+                          {group.members.length > 4 && (
+                            <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs font-medium text-gray-600">
+                              +{group.members.length - 4}
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-sm text-gray-600">{group.members.length} members</span>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {collaborationGroups.length === 0 && (
+                    <div className="text-center py-12">
+                      <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Groups Yet</h3>
+                      <p className="text-gray-600">Accept interest requests to create collaboration groups</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* Group Chat View with Knowledge Panel */
+              <div className="flex flex-1">
+                {/* Chat Window */}
+                <div className="flex-1 flex flex-col border-r border-gray-200">
+                  {/* Chat Header */}
+                  <div className="p-4 border-b border-gray-200 bg-white">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <button
+                          onClick={() => setSelectedGroup(null)}
+                          className="text-gray-600 hover:text-gray-900"
+                        >
+                          ← Back
+                        </button>
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{selectedGroup.name}</h3>
+                          <p className="text-sm text-gray-600">{selectedGroup.members.length} members</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        {selectedGroup.creatorId === currentUserId && (
+                          <>
+                            <button
+                              onClick={() => setShowUploadModal(true)}
+                              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1"
+                            >
+                              <Plus className="w-4 h-4" />
+                              <span>Upload</span>
+                            </button>
+                            <button
+                              onClick={() => setShowGroupManageModal(true)}
+                              className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                            >
+                              Manage
+                            </button>
+                          </>
+                        )}
+                        <button
+                          onClick={() => setShowKnowledgePanel(!showKnowledgePanel)}
+                          className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                        >
+                          {showKnowledgePanel ? 'Hide' : 'Show'} Knowledge
+                        </button>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mb-4">
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Team Members</h4>
-                    <div className="flex space-x-4">
-                      {group.members.map((member) => (
-                        <div key={member.id} className="flex items-center space-x-2">
+                  {/* Messages Area */}
+                  <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+                    {groupMessages.map((msg) => (
+                      <div key={msg.id} className="mb-4">
+                        <div className="flex items-start space-x-3">
                           <img
-                            src={member.avatar}
-                            alt={member.name}
-                            className="w-8 h-8 rounded-full object-cover"
+                            src={msg.senderAvatar}
+                            alt={msg.sender}
+                            onClick={() => {
+                              // Try to find matching user profile
+                              const profile = Object.values(userProfiles).find(p => p.name === msg.sender);
+                              if (profile) handleViewProfile(profile.id);
+                            }}
+                            className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
+                            title="View profile"
                           />
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">{member.name}</div>
-                            <div className="text-xs text-gray-600">{member.role}</div>
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <span className="font-medium text-gray-900 text-sm">{msg.sender}</span>
+                              <span className="text-xs text-gray-500">{msg.timestamp}</span>
+                            </div>
+                            <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
+                              <p className="text-gray-800 text-sm">{msg.message}</p>
+                            </div>
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
 
-                  <div className="flex space-x-3">
-                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                      Join Group
-                    </button>
-                    <button className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                      View Details
-                    </button>
+                  {/* Message Input */}
+                  <div className="p-4 border-t border-gray-200 bg-white">
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                        placeholder="Type your message..."
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <button
+                        onClick={handleSendMessage}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                      >
+                        <Send className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
+
+                {/* Knowledge Panel (conditionally shown) */}
+                {showKnowledgePanel && (
+                  <div className="w-80 bg-white p-4 overflow-y-auto border-l border-gray-200">
+                    <h3 className="font-semibold text-gray-900 mb-4">Shared Documents</h3>
+                    
+                    {selectedGroup.documents.length === 0 ? (
+                      <div className="text-center py-8">
+                        <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                        <p className="text-sm text-gray-600">No documents yet</p>
+                        {selectedGroup.creatorId === currentUserId && (
+                          <p className="text-xs text-gray-500 mt-1">Upload documents to share with the team</p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {selectedGroup.documents.map((doc) => (
+                          <div key={doc.id} className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 cursor-pointer">
+                            <div className="flex items-start justify-between mb-2">
+                              <div className="flex items-center space-x-2 flex-1">
+                                <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                <span className="text-sm font-medium text-gray-900 break-words">{doc.name}</span>
+                              </div>
+                            </div>
+                            <div className="text-xs text-gray-600 space-y-1">
+                              <div>Uploaded by {doc.uploadedBy}</div>
+                              <div className="flex items-center justify-between">
+                                <span>{doc.uploadedAt}</span>
+                                <span>{doc.size}</span>
+                              </div>
+                            </div>
+                            <div className="mt-2 flex space-x-2">
+                              <button className="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                                Download
+                              </button>
+                              {selectedGroup.creatorId === currentUserId && (
+                                <button className="text-xs text-red-600 hover:text-red-700 font-medium">
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
-        {/* Deal Pipeline Tab */}
-        {activeTab === 'pipeline' && (
+        {/* Requests Tab - Shows interest requests for opportunities user posted */}
+        {activeTab === 'requests' && (
           <div className="p-6 overflow-y-auto h-full">
             <div className="mb-6">
-              <div className="grid grid-cols-4 gap-4 mb-6">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">$8.5M</div>
-                  <div className="text-sm text-blue-700">Total Pipeline Value</div>
-                </div>
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">3</div>
-                  <div className="text-sm text-blue-700">Active Deals</div>
-                </div>
-                <div className="bg-orange-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-orange-600">55%</div>
-                  <div className="text-sm text-orange-700">Avg. Win Rate</div>
-                </div>
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-900">12</div>
-                  <div className="text-sm text-blue-800">Regions Covered</div>
-                </div>
-              </div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Interest Requests</h2>
+              <p className="text-gray-600">Review and respond to collaboration requests from other professionals</p>
             </div>
 
             <div className="space-y-4">
-              {dealPipeline.map((deal) => (
-                <div key={deal.id} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">{deal.clientName}</h3>
-                      <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
-                        <span className={`px-2 py-1 rounded-full text-xs ${getStageColor(deal.stage)}`}>
-                          {deal.stage.replace('-', ' ')}
-                        </span>
-                        <div className="flex items-center space-x-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>Expected close: {deal.expectedClose}</span>
+              {interestRequests.filter(r => r.status === 'pending').length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+                  <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Pending Requests</h3>
+                  <p className="text-gray-600">You'll see collaboration requests here when others express interest in your opportunities</p>
+                </div>
+              ) : (
+                interestRequests.filter(r => r.status === 'pending').map((request) => (
+                  <div key={request.id} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-start space-x-4">
+                      <img
+                        src={request.applicantAvatar}
+                        alt={request.applicantName}
+                        onClick={() => handleViewProfile(request.applicantName.split(' ')[0].toLowerCase() + request.applicantName.split(' ')[1].toLowerCase().charAt(0))}
+                        className="w-16 h-16 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
+                        title="View profile"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900">{request.applicantName}</h3>
+                            <p className="text-sm text-gray-600">{request.applicantRole} at {request.applicantOrganization}</p>
+                          </div>
+                          <span className="text-xs text-gray-500">{request.timestamp}</span>
                         </div>
-                        <div className="flex items-center space-x-1">
-                          <TrendingUp className="w-4 h-4" />
-                          <span>{deal.probability}% probability</span>
+                        
+                        <div className="mb-3">
+                          <div className="text-sm font-medium text-blue-600 mb-1">
+                            Opportunity: {request.opportunityTitle}
+                          </div>
+                          <p className="text-gray-700 text-sm leading-relaxed">{request.message}</p>
+                        </div>
+
+                        <div className="flex items-center space-x-3">
+                          <button
+                            onClick={() => {
+                              setSelectedRequest(request);
+                              setShowRequestDetailModal(true);
+                            }}
+                            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                          >
+                            View Profile
+                          </button>
+                          <button
+                            onClick={() => handleRequestAction(request.id, 'accept')}
+                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => handleRequestAction(request.id, 'reject')}
+                            className="border border-red-300 text-red-600 hover:bg-red-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                          >
+                            Decline
+                          </button>
                         </div>
                       </div>
-                      <div className="text-sm text-gray-600">
-                        Team Lead: <span className="font-medium text-gray-900">{deal.teamLead}</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xl font-bold text-gray-900">{deal.value}</div>
-                      <div className="text-sm text-gray-600">Deal Value</div>
                     </div>
                   </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-sm text-gray-600 mb-1">Regions:</div>
-                      <div className="flex space-x-2">
-                        {deal.regions.map((region) => (
-                          <span key={region} className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
-                            {region}
-                          </span>
-                        ))}
+                ))
+              )}
+              
+              {/* Show accepted/rejected requests history */}
+              {interestRequests.filter(r => r.status !== 'pending').length > 0 && (
+                <div className="mt-8">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Request History</h3>
+                  <div className="space-y-3">
+                    {interestRequests.filter(r => r.status !== 'pending').map((request) => (
+                      <div key={request.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <img
+                            src={request.applicantAvatar}
+                            alt={request.applicantName}
+                            onClick={() => handleViewProfile(request.applicantName.split(' ')[0].toLowerCase() + request.applicantName.split(' ')[1].toLowerCase().charAt(0))}
+                            className="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
+                            title="View profile"
+                          />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{request.applicantName}</p>
+                            <p className="text-xs text-gray-600">{request.opportunityTitle}</p>
+                          </div>
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          request.status === 'accepted' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {request.status}
+                        </span>
                       </div>
-                    </div>
-                    
-                    <div className="flex space-x-2">
-                      <button className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-3 py-2 rounded-lg text-sm transition-colors">
-                        View Details
-                      </button>
-                      <button className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm transition-colors">
-                        Update Status
-                      </button>
-                    </div>
+                    ))}
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}
@@ -919,41 +1576,119 @@ const CollaborationHub: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Industry</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Industry Sector</label>
                   <select
                     value={newOpportunity.industry}
-                    onChange={(e) => setNewOpportunity({...newOpportunity, industry: e.target.value})}
+                    onChange={(e) => {
+                      setNewOpportunity({
+                        ...newOpportunity, 
+                        industry: e.target.value,
+                        clientSector: '' // Reset client sector when industry changes
+                      });
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">Select Industry</option>
+                    <option value="">Select Industry Sector</option>
                     <option value="Financial Services">Financial Services</option>
-                    <option value="Mining">Mining</option>
+                    <option value="Energy & Resources">Energy & Resources</option>
                     <option value="Technology">Technology</option>
-                    <option value="Energy">Energy</option>
+                    <option value="Healthcare & Life Sciences">Healthcare & Life Sciences</option>
+                    <option value="Consumer & Retail">Consumer & Retail</option>
+                    <option value="Infrastructure & Real Estate">Infrastructure & Real Estate</option>
+                    <option value="Manufacturing & Industrial">Manufacturing & Industrial</option>
+                    <option value="Public Sector">Public Sector</option>
+                    <option value="Media & Entertainment">Media & Entertainment</option>
+                    <option value="Agriculture & Natural Resources">Agriculture & Natural Resources</option>
+                    <option value="Professional Services">Professional Services</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Client Sector</label>
-                  <input
-                    type="text"
+                  <select
                     value={newOpportunity.clientSector}
                     onChange={(e) => setNewOpportunity({...newOpportunity, clientSector: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    placeholder="e.g., Banking, Manufacturing"
-                  />
+                    disabled={!newOpportunity.industry}
+                  >
+                    <option value="">
+                      {newOpportunity.industry ? 'Select client sector' : 'Select industry first'}
+                    </option>
+                    {newOpportunity.industry && industrySectorMap[newOpportunity.industry]?.map((sector) => (
+                      <option key={sector} value={sector}>{sector}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Regions Where Expertise is Needed</label>
-                <input
-                  type="text"
-                  value={newOpportunity.regionsNeeded}
-                  onChange={(e) => setNewOpportunity({...newOpportunity, regionsNeeded: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                  placeholder="e.g., Nigeria, Ghana, Kenya (comma separated)"
-                />
+                <select
+                  multiple
+                  value={newOpportunity.regionsNeeded.split(',').map(r => r.trim()).filter(r => r)}
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.selectedOptions, option => option.value);
+                    setNewOpportunity({...newOpportunity, regionsNeeded: selected.join(', ')});
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 h-32"
+                >
+                  <option value="Algeria">Algeria</option>
+                  <option value="Angola">Angola</option>
+                  <option value="Benin">Benin</option>
+                  <option value="Botswana">Botswana</option>
+                  <option value="Burkina Faso">Burkina Faso</option>
+                  <option value="Burundi">Burundi</option>
+                  <option value="Cameroon">Cameroon</option>
+                  <option value="Cape Verde">Cape Verde</option>
+                  <option value="Central African Republic">Central African Republic</option>
+                  <option value="Chad">Chad</option>
+                  <option value="Comoros">Comoros</option>
+                  <option value="Congo">Congo</option>
+                  <option value="Côte d'Ivoire">Côte d'Ivoire</option>
+                  <option value="Democratic Republic of Congo">Democratic Republic of Congo</option>
+                  <option value="Djibouti">Djibouti</option>
+                  <option value="Egypt">Egypt</option>
+                  <option value="Equatorial Guinea">Equatorial Guinea</option>
+                  <option value="Eritrea">Eritrea</option>
+                  <option value="Eswatini">Eswatini</option>
+                  <option value="Ethiopia">Ethiopia</option>
+                  <option value="Gabon">Gabon</option>
+                  <option value="Gambia">Gambia</option>
+                  <option value="Ghana">Ghana</option>
+                  <option value="Guinea">Guinea</option>
+                  <option value="Guinea-Bissau">Guinea-Bissau</option>
+                  <option value="Kenya">Kenya</option>
+                  <option value="Lesotho">Lesotho</option>
+                  <option value="Liberia">Liberia</option>
+                  <option value="Libya">Libya</option>
+                  <option value="Madagascar">Madagascar</option>
+                  <option value="Malawi">Malawi</option>
+                  <option value="Mali">Mali</option>
+                  <option value="Mauritania">Mauritania</option>
+                  <option value="Mauritius">Mauritius</option>
+                  <option value="Morocco">Morocco</option>
+                  <option value="Mozambique">Mozambique</option>
+                  <option value="Namibia">Namibia</option>
+                  <option value="Niger">Niger</option>
+                  <option value="Nigeria">Nigeria</option>
+                  <option value="Rwanda">Rwanda</option>
+                  <option value="São Tomé and Príncipe">São Tomé and Príncipe</option>
+                  <option value="Senegal">Senegal</option>
+                  <option value="Seychelles">Seychelles</option>
+                  <option value="Sierra Leone">Sierra Leone</option>
+                  <option value="Somalia">Somalia</option>
+                  <option value="South Africa">South Africa</option>
+                  <option value="South Sudan">South Sudan</option>
+                  <option value="Sudan">Sudan</option>
+                  <option value="Tanzania">Tanzania</option>
+                  <option value="Togo">Togo</option>
+                  <option value="Tunisia">Tunisia</option>
+                  <option value="Uganda">Uganda</option>
+                  <option value="Zambia">Zambia</option>
+                  <option value="Zimbabwe">Zimbabwe</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">Hold Ctrl (Windows) or Cmd (Mac) to select multiple countries</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -1136,6 +1871,344 @@ const CollaborationHub: React.FC = () => {
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors"
                 >
                   Submit Interest
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Request Detail Modal */}
+      {showRequestDetailModal && selectedRequest && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-6">
+                <h3 className="text-2xl font-semibold text-gray-900">
+                  Applicant Profile
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowRequestDetailModal(false);
+                    setSelectedRequest(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <div className="flex items-start space-x-4 mb-6">
+                <img
+                  src={selectedRequest.applicantAvatar}
+                  alt={selectedRequest.applicantName}
+                  className="w-20 h-20 rounded-full object-cover"
+                />
+                <div className="flex-1">
+                  <h4 className="text-xl font-semibold text-gray-900">{selectedRequest.applicantName}</h4>
+                  <p className="text-gray-600">{selectedRequest.applicantRole}</p>
+                  <p className="text-gray-600">{selectedRequest.applicantOrganization}</p>
+                  <p className="text-sm text-gray-500 mt-1">{selectedRequest.applicantEmail}</p>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <h5 className="font-semibold text-gray-900 mb-2">Opportunity</h5>
+                <p className="text-blue-600">{selectedRequest.opportunityTitle}</p>
+              </div>
+
+              <div className="mb-6">
+                <h5 className="font-semibold text-gray-900 mb-2">Message</h5>
+                <p className="text-gray-700 leading-relaxed">{selectedRequest.message}</p>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <h5 className="font-semibold text-gray-900 mb-2">Quick Stats</h5>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-600">Response Time</p>
+                    <p className="font-medium text-gray-900">Within 24 hours</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Availability</p>
+                    <p className="font-medium text-gray-900">Immediate</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => handleRequestAction(selectedRequest.id, 'reject')}
+                  className="flex-1 border border-red-300 text-red-600 hover:bg-red-50 py-3 px-4 rounded-lg font-medium transition-colors"
+                >
+                  Decline
+                </button>
+                <button
+                  onClick={() => handleRequestAction(selectedRequest.id, 'accept')}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                >
+                  Accept & Create Group
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Upload Document Modal */}
+      {showUploadModal && selectedGroup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full">
+            <div className="p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                Upload Document
+              </h3>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select File (PDF, DOC, XLSX, PPTX)
+                </label>
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx,.xlsx,.xls,.pptx,.ppt"
+                  onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                {uploadFile && (
+                  <div className="mt-2 text-sm text-gray-600">
+                    Selected: {uploadFile.name} ({(uploadFile.size / (1024 * 1024)).toFixed(2)} MB)
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => {
+                    setShowUploadModal(false);
+                    setUploadFile(null);
+                  }}
+                  className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 px-4 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUploadDocument}
+                  disabled={!uploadFile}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  Upload
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Group Management Modal */}
+      {showGroupManageModal && selectedGroup && selectedGroup.creatorId === currentUserId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-6">
+                <h3 className="text-2xl font-semibold text-gray-900">
+                  Manage Group: {selectedGroup.name}
+                </h3>
+                <button
+                  onClick={() => setShowGroupManageModal(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              {/* Group Members Management */}
+              <div className="mb-6">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Group Members</h4>
+                <div className="space-y-3">
+                  {selectedGroup.members.map((member) => (
+                    <div key={member.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <img
+                          src={member.avatar}
+                          alt={member.name}
+                          onClick={() => handleViewProfile(member.id)}
+                          className="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
+                          title="View profile"
+                        />
+                        <div>
+                          <p className="font-medium text-gray-900">{member.name}</p>
+                          <p className="text-sm text-gray-600">{member.role}</p>
+                        </div>
+                      </div>
+                      {member.id !== currentUserId && (
+                        <button
+                          onClick={() => handleRemoveMember(member.id)}
+                          className="text-red-600 hover:text-red-700 text-sm font-medium"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Group Documents */}
+              <div className="mb-6">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Shared Documents</h4>
+                {selectedGroup.documents.length === 0 ? (
+                  <p className="text-gray-600 text-sm">No documents uploaded yet</p>
+                ) : (
+                  <div className="space-y-2">
+                    {selectedGroup.documents.map((doc) => (
+                      <div key={doc.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                        <div className="flex items-center space-x-2">
+                          <FileText className="w-5 h-5 text-blue-600" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{doc.name}</p>
+                            <p className="text-xs text-gray-600">{doc.size} • {doc.uploadedAt}</p>
+                          </div>
+                        </div>
+                        <button className="text-red-600 hover:text-red-700 text-sm font-medium">
+                          Delete
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Danger Zone */}
+              <div className="border-t border-gray-200 pt-6">
+                <h4 className="text-lg font-semibold text-red-600 mb-3">Danger Zone</h4>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <p className="text-sm text-gray-700 mb-3">
+                    Deleting this group will permanently remove all messages, documents, and member access. This action cannot be undone.
+                  </p>
+                  <button
+                    onClick={handleDeleteGroup}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Delete Group Permanently
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <button
+                  onClick={() => setShowGroupManageModal(false)}
+                  className="w-full border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 px-4 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Profile Modal */}
+      {showProfileModal && selectedProfile && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-6">
+                <h3 className="text-2xl font-semibold text-gray-900">
+                  Professional Profile
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowProfileModal(false);
+                    setSelectedProfile(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              {/* Profile Header */}
+              <div className="flex items-start space-x-6 mb-6 pb-6 border-b border-gray-200">
+                <img
+                  src={selectedProfile.avatar}
+                  alt={selectedProfile.name}
+                  className="w-24 h-24 rounded-full object-cover"
+                />
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-1">{selectedProfile.name}</h2>
+                  <p className="text-lg text-gray-700 mb-2">{selectedProfile.role}</p>
+                  <p className="text-gray-600 mb-3">{selectedProfile.organization}</p>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="bg-blue-100 text-blue-800 text-xs font-medium px-3 py-1 rounded-full">
+                      {selectedProfile.country}
+                    </span>
+                    <span className="bg-green-100 text-green-800 text-xs font-medium px-3 py-1 rounded-full">
+                      {selectedProfile.yearsOfExperience} years experience
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div className="mb-6">
+                <h4 className="text-lg font-semibold text-gray-900 mb-3">Contact Information</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-medium text-gray-600 w-24">Email:</span>
+                    <a href={`mailto:${selectedProfile.email}`} className="text-sm text-blue-600 hover:text-blue-700">
+                      {selectedProfile.email}
+                    </a>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-medium text-gray-600 w-24">Location:</span>
+                    <span className="text-sm text-gray-800">{selectedProfile.country}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Service Line */}
+              <div className="mb-6">
+                <h4 className="text-lg font-semibold text-gray-900 mb-3">Service Line</h4>
+                <p className="text-gray-700">{selectedProfile.serviceLine}</p>
+              </div>
+
+              {/* Expertise */}
+              <div className="mb-6">
+                <h4 className="text-lg font-semibold text-gray-900 mb-3">Areas of Expertise</h4>
+                <div className="flex flex-wrap gap-2">
+                  {selectedProfile.expertise.map((skill, index) => (
+                    <span
+                      key={index}
+                      className="bg-gray-100 text-gray-800 text-sm px-3 py-1 rounded-lg"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Bio */}
+              <div className="mb-6">
+                <h4 className="text-lg font-semibold text-gray-900 mb-3">About</h4>
+                <p className="text-gray-700 leading-relaxed">{selectedProfile.bio}</p>
+              </div>
+
+              {/* Actions */}
+              <div className="flex space-x-3 pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => window.location.href = `mailto:${selectedProfile.email}`}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Send Email
+                </button>
+                <button
+                  onClick={() => {
+                    setShowProfileModal(false);
+                    setSelectedProfile(null);
+                  }}
+                  className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 px-4 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Close
                 </button>
               </div>
             </div>

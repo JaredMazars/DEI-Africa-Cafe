@@ -96,3 +96,167 @@ input:focus, textarea:focus, select:focus {
   ring-color: var(--forvis-navy);
   box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
 }
+
+/* Animated Blob Backgrounds */
+@keyframes blob {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(20px, -50px) scale(1.1);
+  }
+  50% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  75% {
+    transform: translate(50px, 50px) scale(1.05);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN - MOBILE FIRST
+   ======================================== */
+
+/* Base mobile styles (already mobile-friendly with Tailwind) */
+@media (max-width: 640px) {
+  /* Typography adjustments for mobile */
+  h1 {
+    font-size: 1.75rem;
+    line-height: 2rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.75rem;
+  }
+  
+  h3 {
+    font-size: 1.25rem;
+    line-height: 1.5rem;
+  }
+  
+  /* Mobile padding adjustments */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Cards spacing on mobile */
+  .card-forvis {
+    margin-bottom: 1rem;
+  }
+  
+  /* Mobile buttons - full width on very small screens */
+  .btn-mobile-full {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Mobile form inputs */
+  input, textarea, select {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  /* Mobile tables - stack on small screens */
+  .table-mobile-stack tbody tr {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--forvis-gray-100);
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+  }
+  
+  .table-mobile-stack tbody td {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--forvis-gray-100);
+  }
+  
+  .table-mobile-stack tbody td:last-child {
+    border-bottom: none;
+  }
+  
+  .table-mobile-stack tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--forvis-navy);
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 641px) and (max-width: 1024px) {
+  /* Grid adjustments for tablets */
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  /* Sidebar adjustments */
+  .sidebar-tablet {
+    width: 16rem;
+  }
+}
+
+/* Desktop - preserve existing spacing and ratios */
+@media (min-width: 1025px) {
+  /* Desktop grid layouts */
+  .grid-responsive {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+  
+  /* Desktop sidebar */
+  .sidebar-desktop {
+    width: 16rem;
+  }
+  
+  /* Desktop max-width container */
+  .container-desktop {
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Touch-friendly adjustments */
+@media (hover: none) and (pointer: coarse) {
+  /* Increase tap targets for mobile */
+  button, a, input[type="button"], input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Remove hover states on touch devices */
+  .card-forvis:hover {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white;
+  }
+  
+  .card-forvis {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+}
+

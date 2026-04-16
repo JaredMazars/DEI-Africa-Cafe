@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { Settings, Save, RefreshCw, Target, MapPin, Clock, Languages, Briefcase, User } from 'lucide-react';
 import { authAPI } from '../services/api';
 
@@ -47,16 +46,25 @@ const languageOptions = [
 ];
 
 const Preferences: React.FC = () => {
-  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  
+  // Hardcoded user data
+  const user = {
+    profile: {
+      interests: ['Technology', 'Business'],
+      location: 'South Africa',
+      languages: ['English']
+    }
+  };
+  
   const [preferences, setPreferences] = useState<UserPreferences>({
     mentorPreferences: {
-      preferredExpertise: user?.profile?.interests || [],
-      preferredLocation: user?.profile?.location ? [user.profile.location] : [],
+      preferredExpertise: user.profile.interests || [],
+      preferredLocation: user.profile.location ? [user.profile.location] : [],
       preferredExperience: [],
-      preferredLanguages: user?.profile?.languages || ['English'],
+      preferredLanguages: user.profile.languages || ['English'],
       sessionFrequency: '1-2 sessions/week',
       communicationStyle: 'structured'
     },
@@ -156,7 +164,7 @@ const Preferences: React.FC = () => {
   const renderMentorPreferences = () => (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center mx-auto">
           <Target className="w-8 h-8 text-white" />
         </div>
         <h2 className="text-3xl font-bold text-gray-900">Mentor Preferences</h2>
@@ -288,7 +296,7 @@ const Preferences: React.FC = () => {
   const renderAvailability = () => (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center mx-auto">
           <Clock className="w-8 h-8 text-white" />
         </div>
         <h2 className="text-3xl font-bold text-gray-900">Availability Settings</h2>
@@ -358,7 +366,7 @@ const Preferences: React.FC = () => {
   const renderNotifications = () => (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center mx-auto">
           <Settings className="w-8 h-8 text-white" />
         </div>
         <h2 className="text-3xl font-bold text-gray-900">Notification Settings</h2>
@@ -436,11 +444,11 @@ const Preferences: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center mx-auto mb-4">
             <Settings className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Preferences</h1>
@@ -514,7 +522,7 @@ const Preferences: React.FC = () => {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:from-blue-700 hover:to-indigo-800 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
+                className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl shadow-lg hover:from-blue-700 hover:to-blue-800 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
               >
                 {saving ? (
                   <>
