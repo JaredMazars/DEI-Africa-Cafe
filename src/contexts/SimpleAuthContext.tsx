@@ -1,82 +1,111 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+interface UserProfile {
+  name: string;
+  role: string;
+  location?: string;
+}
+
+interface CurrentUser {
+  id: string;
+  email: string;
+  role: string;
+  profile?: UserProfile;
+}
+
 interface AuthContextType {
   isAuthenticated: boolean;
+  currentUser: CurrentUser | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Hardcoded credentials
-const VALID_EMAIL = 'jaredmoodley1212@gmail.com';
-const VALID_PASSWORD = 'password123';
+// Decode a JWT payload without verifying signature (client-side only use)
+function decodeJWT(token: string): Record<string, unknown> | null {
+  try {
+    const payload = token.split('.')[1];
+    return JSON.parse(atob(payload));
+  } catch {
+    return null;
+  }
+}
 
-// Expert role credentials
-const EXPERT_EMAIL = 'expert@oneafrica.com';
-const EXPERT_PASSWORD = 'expert123';
+function isTokenExpired(token: string): boolean {
+  const decoded = decodeJWT(token);
+  if (!decoded || typeof decoded.exp !== 'number') return true;
+  return decoded.exp * 1000 < Date.now();
+}
 
 export function SimpleAuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
   useEffect(() => {
-    // Check if user is already logged in
-    const authStatus = localStorage.getItem('isAuthenticated');
-    if (authStatus === 'true') {
-      setIsAuthenticated(true);
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('currentUser');
+    if (token && !isTokenExpired(token) && userData) {
+      try {
+        setCurrentUser(JSON.parse(userData));
+        setIsAuthenticated(true);
+      } catch {
+        localStorage.removeItem('token');
+        localStorage.removeItem('currentUser');
+      }
+    } else {
+      // Clean up expired/invalid session
+      localStorage.removeItem('token');
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('isAuthenticated');
     }
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Check expert credentials
-    if (email === EXPERT_EMAIL && password === EXPERT_PASSWORD) {
-      setIsAuthenticated(true);
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('currentUser', JSON.stringify({
-        email: EXPERT_EMAIL,
-        role: 'expert',
-        profile: { name: 'Expert User', role: 'expert' }
-      }));
-      return;
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Invalid email or password.');
     }
-    
-    // Check admin credentials
-    if (email === VALID_EMAIL && password === VALID_PASSWORD) {
-      setIsAuthenticated(true);
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('currentUser', JSON.stringify({
-        email: VALID_EMAIL,
-        role: 'admin',
-        profile: { name: 'Admin User', role: 'admin' }
-      }));
-      return;
-    }
-    
-    // Check verified registered users
-    const verifiedUser = localStorage.getItem('verifiedUser');
-    if (verifiedUser) {
-      const userData = JSON.parse(verifiedUser);
-      if (email === userData.email && password === userData.password) {
-        setIsAuthenticated(true);
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('currentUser', JSON.stringify(userData));
-        return;
-      }
-    }
-    
-    throw new Error('Invalid email or password. Please verify your email first if you just registered.');
+
+    const { token, user } = data.data;
+
+    localStorage.setItem('token', token);
+    localStorage.setItem('isAuthenticated', 'true');
+    localStorage.setItem('currentUser', JSON.stringify({
+      id: user.id,
+      email: user.email,
+      role: user.profile?.role || 'mentee',
+      profile: user.profile,
+    }));
+
+    setCurrentUser({
+      id: user.id,
+      email: user.email,
+      role: user.profile?.role || 'mentee',
+      profile: user.profile,
+    });
+    setIsAuthenticated(true);
   };
 
   const logout = () => {
     setIsAuthenticated(false);
+    setCurrentUser(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('currentUser');
     localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('isAdmin');
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, currentUser, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

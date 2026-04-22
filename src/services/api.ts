@@ -1,10 +1,9 @@
 import { mockAPI } from './mockData';
 
-// MOCK MODE: All API calls are intercepted and use local data
-// No backend server required!
-
-const API_BASE_URL = 'http://localhost:5000/api';
-const USE_MOCK_DATA = true; // Set to false to use real backend
+// Use relative URLs so the app works both locally (via vite proxy) and in production
+// where the Express server serves both the API and the frontend.
+const API_BASE_URL = '/api';
+const USE_MOCK_DATA = false;
 
 // Get auth token from localStorage
 const getAuthToken = () => {

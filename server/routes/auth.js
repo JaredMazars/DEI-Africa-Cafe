@@ -12,6 +12,35 @@ import { sendVerificationEmail, sendPasswordResetEmail, sendWelcomeEmail } from 
 
 const router = express.Router();
 
+// Admin login - credentials stored in env vars, never in code
+router.post('/admin-login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        const adminEmail = process.env.ADMIN_EMAIL || 'admin@deiafrica.com';
+        const adminPassword = process.env.ADMIN_PASSWORD || 'DEICafe@Admin2024!';
+
+        if (email !== adminEmail || password !== adminPassword) {
+            return res.status(401).json({ success: false, message: 'Invalid admin credentials.' });
+        }
+
+        const token = jwt.sign(
+            { userId: 'admin-user', email, role: 'admin' },
+            process.env.JWT_SECRET || 'demo-secret-key-change-in-production',
+            { expiresIn: '8h' }
+        );
+
+        res.json({
+            success: true,
+            message: 'Admin login successful',
+            data: { token, user: { id: 'admin-user', email, role: 'admin' } }
+        });
+    } catch (error) {
+        console.error('Admin login error:', error);
+        res.status(500).json({ success: false, message: 'Server error during admin login' });
+    }
+});
+
 // Demo login (bypasses database) - for testing purposes
 router.post('/demo-login', async (req, res) => {
     try {
@@ -74,59 +103,51 @@ router.post('/register', [
 
         const { email, password } = req.body;
 
-        // TEMPORARY: Just send verification email for testing (no database storage)
-        try {
-            // Generate verification token (expires in 24 hours)
-            const verificationToken = jwt.sign(
-                { email, type: 'email-verification' },
-                process.env.JWT_SECRET,
-                { expiresIn: '24h' }
-            );
-
-            // Send verification email to the user's actual email address
-            await sendVerificationEmail(email, verificationToken, email.split('@')[0]);
-            
-            console.log(`📧 Verification email sent to ${email}`);
-
-            // Return success response
-            res.status(201).json({
-                success: true,
-                message: `Registration successful! Verification email sent to ${email}`,
-                data: {
-                    user: {
-                        id: 'temp-' + Date.now(),
-                        email: email,
-                        isFirstLogin: false,
-                        emailVerified: false
-                    },
-                    token: jwt.sign(
-                        { userId: 'temp-' + Date.now(), email },
-                        process.env.JWT_SECRET,
-                        { expiresIn: '7d' }
-                    )
-                }
-            });
-        } catch (emailError) {
-            console.error('Error sending verification email:', emailError);
-            // Still return success even if email fails (for testing)
-            res.status(201).json({
-                success: true,
-                message: 'Registration successful! (Email service unavailable)',
-                data: {
-                    user: {
-                        id: 'temp-' + Date.now(),
-                        email: email,
-                        isFirstLogin: false,
-                        emailVerified: false
-                    },
-                    token: jwt.sign(
-                        { userId: 'temp-' + Date.now(), email },
-                        process.env.JWT_SECRET,
-                        { expiresIn: '7d' }
-                    )
-                }
+        // Check if user already exists
+        const existingUser = await User.findByEmail(email);
+        if (existingUser) {
+            return res.status(409).json({
+                success: false,
+                message: 'An account with this email already exists.'
             });
         }
+
+        // Create user in database
+        const newUser = await User.create({ email, password });
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { userId: newUser.user_id, email: newUser.email },
+            process.env.JWT_SECRET || 'demo-secret-key-change-in-production',
+            { expiresIn: '7d' }
+        );
+
+        // Send verification email (non-blocking)
+        try {
+            const verificationToken = jwt.sign(
+                { email, type: 'email-verification' },
+                process.env.JWT_SECRET || 'demo-secret-key-change-in-production',
+                { expiresIn: '24h' }
+            );
+            await sendVerificationEmail(email, verificationToken, email.split('@')[0]);
+            console.log(`📧 Verification email sent to ${email}`);
+        } catch (emailError) {
+            console.error('Verification email failed (non-fatal):', emailError.message);
+        }
+
+        res.status(201).json({
+            success: true,
+            message: `Registration successful! Please check ${email} to verify your account.`,
+            data: {
+                user: {
+                    id: newUser.user_id,
+                    email: newUser.email,
+                    isFirstLogin: true,
+                    emailVerified: false
+                },
+                token
+            }
+        });
 
     } catch (error) {
         console.error('Registration error:', error);

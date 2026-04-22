@@ -1,46 +1,49 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navigation from './components/Navigation';
+import ErrorBoundary from './components/ErrorBoundary';
+import PageSkeleton from './components/PageSkeleton';
 import { initializeDataStore } from './services/dataStore';
-import Dashboard from './pages/Dashboard';
-import MentorDiscovery from './pages/MentorDiscovery';
-import ResourceLibrary from './pages/ResourceLibrary';
-import Calendar from './pages/CalendarNew';
-import Profile from './pages/Profile';
-import Discussion from './pages/DiscussionNew';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { SimpleAuthProvider, useSimpleAuth } from './contexts/SimpleAuthContext';
-import SimpleLogin from './pages/SimpleLogin';
-import SimpleRegister from './pages/SimpleRegister';
-import SimpleOnboardingForm from './pages/SimpleOnboardingForm';
-import VerificationPending from './pages/VerificationPending';
-import SimpleVerifyEmail from './pages/SimpleVerifyEmail';
-import ExpertDirectory from './pages/ExpertDirectory';
-import CollaborationHub from './pages/CollaborationHub';
-import MentorMatching from './pages/MentorMatching';
-import Home from './pages/Home';
-import Preferences from './pages/Preferences';
-import MentorshipActivities from './pages/MentorshipActivities';
-import MentorshipActivitiesEnhanced from './pages/MentorshipActivitiesEnhanced';
-import MyMentors from './pages/MyMentors';
-import MyMentees from './pages/MyMentees';
-import MentorContent from './pages/MentorContent';
-import AdminLogin from './pages/AdminLogin';
-import AdminContentManager from './pages/AdminContentManager';
-import ArticleView from './pages/ArticleView';
+
+// Lazy-loaded page components
+const Dashboard             = lazy(() => import('./pages/Dashboard'));
+const MentorDiscovery       = lazy(() => import('./pages/MentorDiscovery'));
+const ResourceLibrary       = lazy(() => import('./pages/ResourceLibrary'));
+const Calendar              = lazy(() => import('./pages/CalendarNew'));
+const Profile               = lazy(() => import('./pages/Profile'));
+const Discussion            = lazy(() => import('./pages/DiscussionNew'));
+const SimpleLogin           = lazy(() => import('./pages/SimpleLogin'));
+const SimpleRegister        = lazy(() => import('./pages/SimpleRegister'));
+const SimpleOnboardingForm  = lazy(() => import('./pages/SimpleOnboardingForm'));
+const VerificationPending   = lazy(() => import('./pages/VerificationPending'));
+const SimpleVerifyEmail     = lazy(() => import('./pages/SimpleVerifyEmail'));
+const ExpertDirectory       = lazy(() => import('./pages/ExpertDirectory'));
+const CollaborationHub      = lazy(() => import('./pages/CollaborationHub'));
+const MentorMatching        = lazy(() => import('./pages/MentorMatching'));
+const Home                  = lazy(() => import('./pages/Home'));
+const Preferences           = lazy(() => import('./pages/Preferences'));
+const MentorshipActivitiesEnhanced = lazy(() => import('./pages/MentorshipActivitiesEnhanced'));
+const MyMentors             = lazy(() => import('./pages/MyMentors'));
+const MyMentees             = lazy(() => import('./pages/MyMentees'));
+const MentorContent         = lazy(() => import('./pages/MentorContent'));
+const AdminLogin            = lazy(() => import('./pages/AdminLogin'));
+const AdminContentManager   = lazy(() => import('./pages/AdminContentManager'));
+const ArticleView           = lazy(() => import('./pages/ArticleView'));
 
 // New Admin Console Components
-import AdminLayout from './admin/AdminLayout';
-import AdminOverview from './admin/pages/AdminOverview';
-import AdminUsers from './admin/pages/AdminUsers';
-import AdminMentors from './admin/pages/AdminMentors';
-import AdminExperts from './admin/pages/AdminExperts';
-import AdminContent from './admin/pages/AdminContent';
-import AdminResources from './admin/pages/AdminResources';
-import AdminOpportunities from './admin/pages/AdminOpportunities';
-import AdminCollaboration from './admin/pages/AdminCollaboration';
-import AdminNotifications from './admin/pages/AdminNotifications';
-import AdminAudit from './admin/pages/AdminAudit';
+const AdminLayout           = lazy(() => import('./admin/AdminLayout'));
+const AdminOverview         = lazy(() => import('./admin/pages/AdminOverview'));
+const AdminUsers            = lazy(() => import('./admin/pages/AdminUsers'));
+const AdminMentors          = lazy(() => import('./admin/pages/AdminMentors'));
+const AdminExperts          = lazy(() => import('./admin/pages/AdminExperts'));
+const AdminContent          = lazy(() => import('./admin/pages/AdminContent'));
+const AdminResources        = lazy(() => import('./admin/pages/AdminResources'));
+const AdminOpportunities    = lazy(() => import('./admin/pages/AdminOpportunities'));
+const AdminCollaboration    = lazy(() => import('./admin/pages/AdminCollaboration'));
+const AdminNotifications    = lazy(() => import('./admin/pages/AdminNotifications'));
+const AdminAudit            = lazy(() => import('./admin/pages/AdminAudit'));
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -53,11 +56,27 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-// Simple admin route guard using localStorage token from the admin login screen
+// Simple admin route guard — verifies the stored JWT has role: admin
 function AdminRoute({ children }: { children: React.ReactNode }) {
-  const hasAdminToken = typeof window !== 'undefined' && !!localStorage.getItem('adminToken');
+  const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
 
-  if (!hasAdminToken) {
+  if (!token) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  // Decode JWT (no signature verification — server is authoritative)
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const isExpired = payload.exp && payload.exp * 1000 < Date.now();
+    const isAdmin = payload.role === 'admin';
+
+    if (isExpired || !isAdmin) {
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('isAdmin');
+      return <Navigate to="/admin/login" replace />;
+    }
+  } catch {
+    localStorage.removeItem('adminToken');
     return <Navigate to="/admin/login" replace />;
   }
 
@@ -72,10 +91,11 @@ function AppContent() {
   const isPublicRoute = ['/login', '/register', '/onboarding', '/verification-pending', '/verify-email'].includes(location.pathname);
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-[#F4F4F4] via-white to-[#F4F4F4]">
       {/* Show Navigation only when authenticated and not on admin or public routes */}
       {isAuthenticated && !isAdminRoute && !isPublicRoute && <Navigation />}
-      
+
+      <Suspense fallback={<PageSkeleton />}>
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<SimpleLogin />} />
@@ -102,7 +122,7 @@ function AppContent() {
         <Route path="/my-mentees" element={<ProtectedRoute><MyMentees /></ProtectedRoute>} />
         <Route path="/mentor-content" element={<ProtectedRoute><MentorContent /></ProtectedRoute>} />
         <Route path="/mentor-view/mentee/:menteeId" element={<ProtectedRoute><MentorshipActivitiesEnhanced /></ProtectedRoute>} />
-        <Route path="/mentorship-activities-legacy" element={<ProtectedRoute><MentorshipActivities /></ProtectedRoute>} />
+
         <Route path="/experts" element={<ProtectedRoute><ExpertDirectory /></ProtectedRoute>} />
         <Route path="/collaboration" element={<ProtectedRoute><CollaborationHub /></ProtectedRoute>} />
         <Route path="/preferences" element={<ProtectedRoute><Preferences /></ProtectedRoute>} />
@@ -132,6 +152,7 @@ function AppContent() {
         {/* Catch all route */}
         <Route path="*" element={<Navigate to={isAuthenticated ? "/home" : "/login"} replace />} />
       </Routes>
+      </Suspense>
     </div>
   );
 }
@@ -143,13 +164,15 @@ function App() {
   }, []);
 
   return (
-    <Router>
-      <SimpleAuthProvider>
-        <NotificationProvider>
-          <AppContent />
-        </NotificationProvider>
-      </SimpleAuthProvider>
-    </Router>
+    <ErrorBoundary>
+      <Router>
+        <SimpleAuthProvider>
+          <NotificationProvider>
+            <AppContent />
+          </NotificationProvider>
+        </SimpleAuthProvider>
+      </Router>
+    </ErrorBoundary>
   );
 }
 
