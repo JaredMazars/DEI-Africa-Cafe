@@ -18,6 +18,7 @@ import questionRoutes from './routes/questions.js';
 import opportunityRoutes from './routes/opportunities.js';
 import dashboardRoutes from './routes/dashboard.js';
 import preferencesRoutes from './routes/preferences.js';
+import matchingRoutes from './routes/matching.js';
 
 // Load environment variables from parent directory
 const __filename = fileURLToPath(import.meta.url);
@@ -76,6 +77,7 @@ app.use('/api/questions', questionRoutes);
 app.use('/api/opportunities', opportunityRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/preferences', preferencesRoutes);
+app.use('/api/matching', matchingRoutes);
 
 // Serve React app for all non-API routes (SPA routing)
 app.get('*', (req, res) => {

@@ -88,6 +88,15 @@ router.post('/', auth, [
             });
         }
 
+        // Enforce 3-mentee capacity rule
+        const atCapacity = await Connection.isMentorAtCapacity(mentor_id);
+        if (atCapacity) {
+            return res.status(400).json({
+                success: false,
+                message: `This mentor has reached their maximum capacity of ${Connection.MENTOR_CAPACITY} active mentees. Please choose another mentor.`
+            });
+        }
+
         // Verify that the requesting user is either the mentor or mentee
         if (req.user.user_id !== mentor_id && req.user.user_id !== mentee_id) {
             return res.status(403).json({
@@ -145,6 +154,17 @@ router.put('/:connectionId/status', auth, [
                 success: false,
                 message: 'You can only update your own connections'
             });
+        }
+
+        // When a mentor accepts a new mentee, re-check capacity
+        if (status === 'accepted') {
+            const atCapacity = await Connection.isMentorAtCapacity(connection.mentor_id);
+            if (atCapacity) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Mentor has reached their maximum capacity of ${Connection.MENTOR_CAPACITY} active mentees.`
+                });
+            }
         }
 
         const updatedConnection = await Connection.updateStatus(connectionId, status);

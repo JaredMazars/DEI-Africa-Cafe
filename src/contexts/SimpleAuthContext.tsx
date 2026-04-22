@@ -2,8 +2,20 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface UserProfile {
   name: string;
-  role: string;
+  role: 'mentor' | 'mentee' | 'both' | string;
   location?: string;
+  experience?: string;
+  availability?: string;
+  bio?: string;
+  can_mentor?: boolean;
+  can_be_mentored?: boolean;
+  // what this user offers (their own expertise)
+  expertise?: string[];
+  // what kind of mentor expertise they are looking for
+  desired_expertise?: string[];
+  interests?: string[];
+  goals?: string[];
+  languages?: string[];
 }
 
 interface CurrentUser {
@@ -18,6 +30,7 @@ interface AuthContextType {
   currentUser: CurrentUser | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  updateUserProfile: (profile: Partial<UserProfile>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -76,22 +89,43 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
 
     const { token, user } = data.data;
 
+    const resolvedRole = user.profile?.role || 'mentee';
+    const userToStore: CurrentUser = {
+      id: user.id,
+      email: user.email,
+      role: resolvedRole,
+      profile: user.profile ? {
+        name:             user.profile.name,
+        role:             resolvedRole,
+        location:         user.profile.location,
+        experience:       user.profile.experience,
+        availability:     user.profile.availability,
+        bio:              user.profile.bio,
+        can_mentor:       user.profile.can_mentor,
+        can_be_mentored:  user.profile.can_be_mentored,
+        expertise:        user.profile.expertise        || [],
+        desired_expertise: user.profile.desired_expertise || [],
+        interests:        user.profile.interests        || [],
+        goals:            user.profile.goals            || [],
+        languages:        user.profile.languages        || [],
+      } : undefined,
+    };
+
     localStorage.setItem('token', token);
     localStorage.setItem('isAuthenticated', 'true');
-    localStorage.setItem('currentUser', JSON.stringify({
-      id: user.id,
-      email: user.email,
-      role: user.profile?.role || 'mentee',
-      profile: user.profile,
-    }));
+    localStorage.setItem('currentUser', JSON.stringify(userToStore));
 
-    setCurrentUser({
-      id: user.id,
-      email: user.email,
-      role: user.profile?.role || 'mentee',
-      profile: user.profile,
-    });
+    setCurrentUser(userToStore);
     setIsAuthenticated(true);
+  };
+
+  const updateUserProfile = (profile: Partial<UserProfile>) => {
+    setCurrentUser(prev => {
+      if (!prev) return prev;
+      const merged: CurrentUser = { ...prev, profile: { ...(prev.profile as UserProfile), ...profile } };
+      localStorage.setItem('currentUser', JSON.stringify(merged));
+      return merged;
+    });
   };
 
   const logout = () => {
@@ -105,7 +139,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, currentUser, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, currentUser, login, logout, updateUserProfile }}>
       {children}
     </AuthContext.Provider>
   );

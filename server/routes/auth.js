@@ -1,9 +1,11 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import { body, validationResult } from 'express-validator';
 import User from '../models/User.js';
 import UserProfile from '../models/UserProfile.js';
 import UserExpertise from '../models/UserExpertise.js';
+import UserDesiredExpertise from '../models/UserDesiredExpertise.js';
 import UserInterests from '../models/UserInterests.js';
 import UserGoals from '../models/UserGoals.js';
 import UserLanguages from '../models/UserLanguages.js';
@@ -115,6 +117,41 @@ router.post('/register', [
         // Create user in database
         const newUser = await User.create({ email, password });
 
+        // Save profile if provided from onboarding step
+        if (req.body.profile) {
+            const {
+                name, role, location, experience, availability,
+                expertise, desired_expertise, interests, goals, languages
+            } = req.body.profile;
+
+            const profileRole = role || 'mentee';
+
+            await UserProfile.create({
+                user_id:          newUser.user_id,
+                role:             profileRole,
+                name:             name || email.split('@')[0],
+                location:         location || 'Unknown',
+                experience:       experience || 'Junior (0-2 years)',
+                availability:     availability || '1-2 hours/week',
+                can_mentor:       profileRole === 'mentor' || profileRole === 'both' ? 1 : 0,
+                can_be_mentored:  profileRole === 'mentee' || profileRole === 'both' ? 1 : 0,
+            });
+
+            // Save own expertise (what this user offers)
+            if (expertise?.length > 0) {
+                await UserExpertise.create(newUser.user_id, expertise);
+            }
+
+            // Save desired expertise (what kind of mentor they want)
+            if (desired_expertise?.length > 0) {
+                await UserDesiredExpertise.create(newUser.user_id, desired_expertise);
+            }
+
+            if (interests?.length > 0)  await UserInterests.create(newUser.user_id, interests);
+            if (goals?.length > 0)      await UserGoals.create(newUser.user_id, goals);
+            if (languages?.length > 0)  await UserLanguages.create(newUser.user_id, languages);
+        }
+
         // Generate JWT token
         const token = jwt.sign(
             { userId: newUser.user_id, email: newUser.email },
@@ -175,43 +212,41 @@ router.post('/login', [
 
         const { email, password } = req.body;
 
-        // TEST MODE: Allow login without database
         console.log('🔐 Login attempt:', email);
 
-        // For demo purposes, accept the hardcoded admin credentials
-        if (email === 'jaredmoodley1212@gmail.com' && password === 'password123') {
-            const token = jwt.sign(
-                { userId: 'demo-admin-123', email },
-                process.env.JWT_SECRET || 'your-secret-key',
-                { expiresIn: '7d' }
-            );
-
-            return res.json({
-                success: true,
-                message: 'Login successful',
-                data: {
-                    user: {
-                        id: 'demo-admin-123',
-                        email: email,
-                        isFirstLogin: false,
-                        profile: {
-                            name: 'Admin User',
-                            role: 'mentee',
-                            location: 'South Africa'
-                        }
-                    },
-                    token
-                }
+        // Find user in DB
+        const user = await User.findByEmail(email);
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid email or password.'
             });
         }
 
-        // For any other credentials in TEST MODE, just accept them if they're formatted correctly
-        // In production, this would check against database
-        console.log('✅ TEST MODE: Accepting login for:', email);
-        
+        // Verify password
+        const passwordMatch = await bcrypt.compare(password, user.password_hash);
+        if (!passwordMatch) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid email or password.'
+            });
+        }
+
+        // Load full profile and related data in parallel
+        const [profile, expertiseRows, desiredRows, interestsRows, goalsRows, languagesRows] = await Promise.all([
+            UserProfile.findByUserId(user.user_id),
+            UserExpertise.findByUserId(user.user_id),
+            UserDesiredExpertise.findByUserId(user.user_id),
+            UserInterests.findByUserId(user.user_id),
+            UserGoals.findByUserId(user.user_id),
+            UserLanguages.findByUserId(user.user_id),
+        ]);
+
+        await User.updateLastLogin(user.user_id);
+
         const token = jwt.sign(
-            { userId: 'user-' + Date.now(), email },
-            process.env.JWT_SECRET || 'your-secret-key',
+            { userId: user.user_id, email: user.email },
+            process.env.JWT_SECRET || 'demo-secret-key-change-in-production',
             { expiresIn: '7d' }
         );
 
@@ -220,14 +255,24 @@ router.post('/login', [
             message: 'Login successful',
             data: {
                 user: {
-                    id: 'user-' + Date.now(),
-                    email: email,
-                    isFirstLogin: false,
-                    profile: {
-                        name: email.split('@')[0],
-                        role: 'mentee',
-                        location: 'Unknown'
-                    }
+                    id: user.user_id,
+                    email: user.email,
+                    isFirstLogin: !profile,
+                    profile: profile ? {
+                        name:             profile.name,
+                        role:             profile.role,
+                        location:         profile.location,
+                        experience:       profile.experience,
+                        availability:     profile.availability,
+                        bio:              profile.bio,
+                        can_mentor:       profile.can_mentor,
+                        can_be_mentored:  profile.can_be_mentored,
+                        expertise:           expertiseRows.map(e => e.expertise),
+                        desired_expertise:   desiredRows.map(d => d.expertise),
+                        interests:           interestsRows.map(i => i.interest),
+                        goals:               goalsRows.map(g => g.goal),
+                        languages:           languagesRows.map(l => l.language),
+                    } : null
                 },
                 token
             }

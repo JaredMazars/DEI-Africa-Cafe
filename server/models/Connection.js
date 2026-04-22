@@ -154,6 +154,35 @@ class Connection {
             throw error;
         }
     }
+
+    /**
+     * Returns how many accepted mentees a mentor currently has.
+     * Used to enforce the 3-mentee capacity rule.
+     */
+    static async getMenteeCount(mentorId) {
+        try {
+            const result = await executeQuery(`
+                SELECT COUNT(*) as mentee_count
+                FROM Connections
+                WHERE mentor_id = '${mentorId}' AND status = 'accepted'
+            `);
+            return result.recordset[0]?.mentee_count ?? 0;
+        } catch (error) {
+            console.error('Error getting mentee count:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Check if a mentor is at full capacity (3 accepted mentees).
+     */
+    static async isMentorAtCapacity(mentorId) {
+        const count = await this.getMenteeCount(mentorId);
+        return count >= Connection.MENTOR_CAPACITY;
+    }
 }
+
+/** Maximum number of accepted mentees a mentor can have at one time */
+Connection.MENTOR_CAPACITY = 3;
 
 export default Connection;
