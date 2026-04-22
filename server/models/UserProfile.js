@@ -1,50 +1,106 @@
 import { executeQuery } from '../config/database.js';
 
+/**
+ * UserProfile
+ *
+ * Real Azure SQL schema:
+ *   users:                 id, name, email, bio, location, role, is_mentor, is_mentee, experience, availability, avatar_url
+ *   experts:               id, user_id (→ users.id), name, title, bio, avatar_url, location, experience_years, is_available
+ *   expert_expertise:      id, expert_id (→ experts.id), expertise
+ *   expert_languages:      id, expert_id, language
+ *   user_desired_expertise: id, user_id (→ users.id), expertise
+ *   user_expertise:        id, user_id (→ users.id), expertise  (for non-expert mentors)
+ *   connections:           id, requester_id (users.id), expert_id (experts.id), status
+ *
+ * When a user registers as mentor/both, we also insert an experts row, so they
+ * appear in the matching pool.
+ */
 class UserProfile {
     constructor(data) {
-        this.profile_id = data.profile_id;
-        this.user_id = data.user_id;
-        this.role = data.role;
-        this.name = data.name;
-        this.location = data.location;
-        this.experience = data.experience;
-        this.availability = data.availability;
-        this.bio = data.bio;
-        this.profile_image_url = data.profile_image_url;
-        this.created_at = data.created_at;
-        this.updated_at = data.updated_at;
+        this.id            = data.id || data.user_id;
+        this.user_id       = this.id;
+        this.expert_id     = data.expert_id;
+        this.name          = data.name;
+        this.role          = data.role;
+        this.location      = data.location;
+        this.bio           = data.bio;
+        this.experience    = data.experience;
+        this.availability  = data.availability;
+        this.is_mentor     = data.is_mentor;
+        this.is_mentee     = data.is_mentee;
+        this.profile_image_url = data.avatar_url || data.profile_image_url;
+        this.created_at    = data.created_at;
+        this.updated_at    = data.updated_at;
     }
 
+    /** s(q) helper — single-quote escape */
+    static sq(v) { return v ? `'${String(v).replace(/'/g, "''")}'` : 'NULL'; }
+
+    /**
+     * "Create" profile:
+     * 1. UPDATE the users row with onboarding data.
+     * 2. If mentor/both, ensure an experts row exists for this user.
+     */
     static async create(profileData) {
         try {
-            const canMentor     = profileData.can_mentor     ?? (profileData.role === 'mentor' || profileData.role === 'both' ? 1 : 0);
-            const canBeMentored = profileData.can_be_mentored ?? (profileData.role === 'mentee' || profileData.role === 'both' ? 1 : 0);
+            const role     = profileData.role || 'mentee';
+            const isMentor = (role === 'mentor' || role === 'both') ? 1 : 0;
+            const isMentee = (role === 'mentee' || role === 'both') ? 1 : 0;
+            const userId   = profileData.user_id;
 
-            const query = `
-                INSERT INTO UserProfiles (user_id, role, name, location, experience, availability, bio, profile_image_url, can_mentor, can_be_mentored, created_at, updated_at)
-                OUTPUT INSERTED.*
-                VALUES ('${profileData.user_id}', '${profileData.role}', '${profileData.name.replace(/'/g, "''")}', 
-                        '${profileData.location}', '${profileData.experience}', '${profileData.availability}', 
-                        ${profileData.bio ? `'${profileData.bio.replace(/'/g, "''")}'` : 'NULL'}, 
-                        ${profileData.profile_image_url ? `'${profileData.profile_image_url}'` : 'NULL'}, 
-                        ${canMentor}, ${canBeMentored},
-                        GETDATE(), GETDATE())
-            `;
-            
-            const result = await executeQuery(query);
-            return new UserProfile(result.recordset[0]);
+            // 1. UPDATE users
+            await executeQuery(`
+                UPDATE users SET
+                    name         = ${UserProfile.sq(profileData.name)},
+                    role         = '${role}',
+                    is_mentor    = ${isMentor},
+                    is_mentee    = ${isMentee},
+                    location     = ${UserProfile.sq(profileData.location)},
+                    bio          = ${UserProfile.sq(profileData.bio)},
+                    experience   = ${UserProfile.sq(profileData.experience)},
+                    availability = ${UserProfile.sq(profileData.availability)},
+                    updated_at   = GETDATE()
+                WHERE id = '${userId}'
+            `);
+
+            // 2. If mentor/both, ensure an experts entry
+            if (isMentor) {
+                const existingExpert = await executeQuery(
+                    `SELECT id FROM experts WHERE user_id = '${userId}'`
+                );
+                if (existingExpert.recordset.length === 0) {
+                    await executeQuery(`
+                        INSERT INTO experts (user_id, name, bio, location, is_available, created_at, updated_at)
+                        VALUES (
+                            '${userId}',
+                            ${UserProfile.sq(profileData.name)},
+                            ${UserProfile.sq(profileData.bio)},
+                            ${UserProfile.sq(profileData.location)},
+                            1, GETDATE(), GETDATE()
+                        )
+                    `);
+                }
+            }
+
+            return await UserProfile.findByUserId(userId);
         } catch (error) {
-            console.error('Error creating user profile:', error);
+            console.error('Error creating/updating user profile:', error);
             throw error;
         }
     }
 
     static async findByUserId(userId) {
         try {
-            const query = `SELECT * FROM UserProfiles WHERE user_id = '${userId}'`;
+            const query = `
+                SELECT u.*, e.id as expert_id,
+                       COALESCE(e.avatar_url, u.avatar_url) as profile_image_url
+                FROM users u
+                LEFT JOIN experts e ON e.user_id = u.id
+                WHERE u.id = '${userId}'
+            `;
             const result = await executeQuery(query);
-            
-            return result.recordset.length > 0 ? new UserProfile(result.recordset[0]) : null;
+            if (result.recordset.length === 0) return null;
+            return new UserProfile(result.recordset[0]);
         } catch (error) {
             console.error('Error finding profile by user ID:', error);
             throw error;
@@ -53,93 +109,58 @@ class UserProfile {
 
     static async update(userId, updateData) {
         try {
-            const query = `
-                UPDATE UserProfiles 
-                SET name = '${updateData.name}', 
-                    location = '${updateData.location}', 
-                    experience = '${updateData.experience}', 
-                    availability = '${updateData.availability}', 
-                    bio = ${updateData.bio ? `'${updateData.bio.replace(/'/g, "''")}'` : 'NULL'}, 
-                    profile_image_url = ${updateData.profile_image_url ? `'${updateData.profile_image_url}'` : 'NULL'},
-                    updated_at = GETDATE()
-                OUTPUT INSERTED.*
-                WHERE user_id = '${userId}'
-            `;
-            
-            const result = await executeQuery(query);
-            return result.recordset.length > 0 ? new UserProfile(result.recordset[0]) : null;
+            const sets = ['updated_at = GETDATE()'];
+            if (updateData.name)         sets.push(`name = ${UserProfile.sq(updateData.name)}`);
+            if (updateData.location)     sets.push(`location = ${UserProfile.sq(updateData.location)}`);
+            if (updateData.experience)   sets.push(`experience = ${UserProfile.sq(updateData.experience)}`);
+            if (updateData.availability) sets.push(`availability = ${UserProfile.sq(updateData.availability)}`);
+            if (updateData.bio)          sets.push(`bio = ${UserProfile.sq(updateData.bio)}`);
+
+            await executeQuery(`UPDATE users SET ${sets.join(', ')} WHERE id = '${userId}'`);
+            return UserProfile.findByUserId(userId);
         } catch (error) {
             console.error('Error updating user profile:', error);
             throw error;
         }
     }
 
-    static async getMentorsByExpertise(expertise) {
-        try {
-            const query = `
-                SELECT DISTINCT up.*, ue.expertise
-                FROM UserProfiles up
-                INNER JOIN UserExpertise ue ON up.user_id = ue.user_id
-                WHERE up.role = 'mentor' AND ue.expertise LIKE '%${expertise}%'
-                ORDER BY up.created_at DESC
-            `;
-            
-            const result = await executeQuery(query);
-            return result.recordset.map(profile => new UserProfile(profile));
-        } catch (error) {
-            console.error('Error getting mentors by expertise:', error);
-            throw error;
-        }
-    }
-
-    static async getMenteesByInterests(interest) {
-        try {
-            const query = `
-                SELECT DISTINCT up.*, ui.interest
-                FROM UserProfiles up
-                INNER JOIN UserInterests ui ON up.user_id = ui.user_id
-                WHERE up.role = 'mentee' AND ui.interest LIKE '%${interest}%'
-                ORDER BY up.created_at DESC
-            `;
-            
-            const result = await executeQuery(query);
-            return result.recordset.map(profile => new UserProfile(profile));
-        } catch (error) {
-            console.error('Error getting mentees by interests:', error);
-            throw error;
-        }
-    }
-
+    /**
+     * Get all mentors from the experts table with expertise lists + capacity info.
+     */
     static async getAllMentors() {
         try {
-            // Include role='mentor' and role='both'; include active mentee count for capacity display
             const query = `
-                SELECT up.*,
-                       STRING_AGG(DISTINCT ue.expertise, ', ')  as expertise_list,
-                       STRING_AGG(DISTINCT ui.interest, ', ')   as interests_list,
-                       STRING_AGG(DISTINCT ul.language, ', ')   as languages_list,
-                       ISNULL(mc.active_mentees, 0)             as active_mentee_count,
-                       CASE WHEN ISNULL(mc.active_mentees, 0) >= 3 THEN 1 ELSE 0 END as at_capacity
-                FROM UserProfiles up
-                LEFT JOIN UserExpertise ue  ON up.user_id = ue.user_id
-                LEFT JOIN UserInterests ui  ON up.user_id = ui.user_id
-                LEFT JOIN UserLanguages ul  ON up.user_id = ul.user_id
-                LEFT JOIN (
-                    SELECT mentor_id, COUNT(*) as active_mentees
-                    FROM Connections
-                    WHERE status = 'accepted'
-                    GROUP BY mentor_id
-                ) mc ON up.user_id = mc.mentor_id
-                WHERE up.role IN ('mentor', 'both') OR up.can_mentor = 1
-                GROUP BY up.profile_id, up.user_id, up.role, up.name, up.location,
-                         up.experience, up.availability, up.bio, up.profile_image_url,
-                         up.created_at, up.updated_at,
-                         up.can_mentor, up.can_be_mentored, mc.active_mentees
-                ORDER BY mc.active_mentees ASC, up.created_at DESC
+                SELECT
+                    e.id         as expert_id,
+                    e.user_id,
+                    e.name,
+                    e.title,
+                    e.bio,
+                    e.location,
+                    e.avatar_url as profile_image_url,
+                    e.experience_years,
+                    e.is_available,
+                    (
+                        SELECT STRING_AGG(ee.expertise, ', ')
+                        FROM expert_expertise ee WHERE ee.expert_id = e.id
+                    ) as expertise_list,
+                    (
+                        SELECT STRING_AGG(el.language, ', ')
+                        FROM expert_languages el WHERE el.expert_id = e.id
+                    ) as languages_list,
+                    (
+                        SELECT COUNT(*) FROM connections c2
+                        WHERE c2.expert_id = e.id AND c2.status = 'accepted'
+                    ) as active_mentee_count
+                FROM experts e
+                WHERE e.is_available = 1
+                ORDER BY e.name
             `;
-            
             const result = await executeQuery(query);
-            return result.recordset;
+            return result.recordset.map(row => ({
+                ...row,
+                at_capacity: row.active_mentee_count >= 3,
+            }));
         } catch (error) {
             console.error('Error getting all mentors:', error);
             throw error;
@@ -147,77 +168,93 @@ class UserProfile {
     }
 
     /**
-     * Get mentors ranked by match score for a given mentee.
-     * Match score = number of overlapping expertise areas between
-     * the mentee's desired_expertise and the mentor's UserExpertise.
-     * Mentors at capacity (3 active mentees) are excluded.
+     * SQL-based mentor matching:
+     * Counts overlap between requesting user's user_desired_expertise
+     * and each expert's expert_expertise, sorted by match_score DESC.
+     * Excludes experts already at 3-mentee capacity.
      */
     static async getMatchedMentorsForUser(userId) {
         try {
             const query = `
-                SELECT up.*,
-                       STRING_AGG(DISTINCT ue.expertise,  ', ') as expertise_list,
-                       STRING_AGG(DISTINCT ui.interest,   ', ') as interests_list,
-                       STRING_AGG(DISTINCT ul.language,   ', ') as languages_list,
-                       ISNULL(mc.active_mentees, 0)             as active_mentee_count,
-                       CASE WHEN ISNULL(mc.active_mentees, 0) >= 3 THEN 1 ELSE 0 END as at_capacity,
-                       -- Count how many of the user's desired_expertise areas overlap
-                       ISNULL((
-                           SELECT COUNT(*)
-                           FROM UserDesiredExpertise ude
-                           WHERE ude.user_id = '${userId}'
-                             AND EXISTS (
-                                 SELECT 1 FROM UserExpertise me2
-                                 WHERE me2.user_id = up.user_id
-                                   AND me2.expertise = ude.expertise
-                             )
-                       ), 0) as match_score
-                FROM UserProfiles up
-                LEFT JOIN UserExpertise ue  ON up.user_id = ue.user_id
-                LEFT JOIN UserInterests ui  ON up.user_id = ui.user_id
-                LEFT JOIN UserLanguages ul  ON up.user_id = ul.user_id
-                LEFT JOIN (
-                    SELECT mentor_id, COUNT(*) as active_mentees
-                    FROM Connections WHERE status = 'accepted'
-                    GROUP BY mentor_id
-                ) mc ON up.user_id = mc.mentor_id
-                WHERE (up.role IN ('mentor', 'both') OR up.can_mentor = 1)
-                  AND up.user_id <> '${userId}'
-                  AND ISNULL(mc.active_mentees, 0) < 3
-                GROUP BY up.profile_id, up.user_id, up.role, up.name, up.location,
-                         up.experience, up.availability, up.bio, up.profile_image_url,
-                         up.created_at, up.updated_at,
-                         up.can_mentor, up.can_be_mentored, mc.active_mentees
-                ORDER BY match_score DESC, mc.active_mentees ASC
+                SELECT
+                    e.id         as expert_id,
+                    e.user_id,
+                    e.name,
+                    e.title,
+                    e.bio,
+                    e.location,
+                    e.avatar_url as profile_image_url,
+                    e.experience_years,
+                    (
+                        SELECT STRING_AGG(ee.expertise, ', ')
+                        FROM expert_expertise ee WHERE ee.expert_id = e.id
+                    ) as expertise_list,
+                    (
+                        SELECT STRING_AGG(el.language, ', ')
+                        FROM expert_languages el WHERE el.expert_id = e.id
+                    ) as languages_list,
+                    (
+                        SELECT COUNT(*)
+                        FROM expert_expertise ee2
+                        WHERE ee2.expert_id = e.id
+                          AND ee2.expertise IN (
+                            SELECT expertise FROM user_desired_expertise
+                            WHERE user_id = '${userId}'
+                          )
+                    ) as match_score,
+                    (
+                        SELECT COUNT(*) FROM connections c2
+                        WHERE c2.expert_id = e.id AND c2.status = 'accepted'
+                    ) as active_mentee_count
+                FROM experts e
+                WHERE e.is_available = 1
+                  AND (e.user_id IS NULL OR e.user_id != '${userId}')
+                  AND (
+                        SELECT COUNT(*) FROM connections c3
+                        WHERE c3.expert_id = e.id AND c3.status = 'accepted'
+                      ) < 3
+                ORDER BY match_score DESC, active_mentee_count ASC
             `;
             const result = await executeQuery(query);
-            return result.recordset;
+            return result.recordset.map(row => ({
+                ...row,
+                at_capacity: false,
+                atCapacity:  false,
+            }));
         } catch (error) {
             console.error('Error getting matched mentors:', error);
             throw error;
         }
     }
-
+    /**
+     * Get all mentees (users where is_mentee=1 or role mentee/both)
+     */
     static async getAllMentees() {
         try {
             const query = `
-                SELECT up.*, 
-                       STRING_AGG(ue.expertise, ', ') as expertise_list,
-                       STRING_AGG(ui.interest, ', ') as interests_list,
-                       STRING_AGG(ul.language, ', ') as languages_list
-                FROM UserProfiles up
-                LEFT JOIN UserExpertise ue ON up.user_id = ue.user_id
-                LEFT JOIN UserInterests ui ON up.user_id = ui.user_id
-                LEFT JOIN UserLanguages ul ON up.user_id = ul.user_id
-                WHERE up.role = 'mentee'
-                GROUP BY up.profile_id, up.user_id, up.role, up.name, up.location, 
-                         up.experience, up.availability, up.bio, up.profile_image_url, 
-                         up.created_at, up.updated_at
-                ORDER BY up.created_at DESC
+                SELECT
+                    u.id as user_id,
+                    u.name,
+                    u.role,
+                    u.location,
+                    u.bio,
+                    u.experience,
+                    u.availability,
+                    u.avatar_url as profile_image_url,
+                    (
+                        SELECT STRING_AGG(ude.expertise, ', ')
+                        FROM user_desired_expertise ude WHERE ude.user_id = u.id
+                    ) as desired_expertise_list,
+                    (
+                        SELECT STRING_AGG(ul.language, ', ')
+                        FROM user_languages ul WHERE ul.user_id = u.id
+                    ) as languages_list
+                FROM users u
+                WHERE u.is_active = 1 AND (u.is_mentee = 1 OR u.role IN ('mentee','both'))
+                ORDER BY u.name
             `;
-            
             const result = await executeQuery(query);
-            return result.recordset.map(profile => new UserProfile(profile));
+            return result.recordset;
         } catch (error) {
             console.error('Error getting all mentees:', error);
             throw error;

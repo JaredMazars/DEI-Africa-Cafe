@@ -15,7 +15,7 @@ class UserExpertise {
             ).join(', ');
             
             const query = `
-                INSERT INTO UserExpertise (user_id, expertise, created_at)
+                INSERT INTO user_expertise (user_id, expertise, created_at)
                 VALUES ${values}
             `;
             
@@ -29,7 +29,7 @@ class UserExpertise {
 
     static async findByUserId(userId) {
         try {
-            const query = `SELECT * FROM UserExpertise WHERE user_id = '${userId}'`;
+            const query = `SELECT * FROM user_expertise WHERE user_id = '${userId}'`;
             const result = await executeQuery(query);
             
             return result.recordset.map(expertise => new UserExpertise(expertise));
@@ -41,7 +41,7 @@ class UserExpertise {
 
     static async deleteByUserId(userId) {
         try {
-            const query = `DELETE FROM UserExpertise WHERE user_id = '${userId}'`;
+            const query = `DELETE FROM user_expertise WHERE user_id = '${userId}'`;
             await executeQuery(query);
         } catch (error) {
             console.error('Error deleting user expertise:', error);

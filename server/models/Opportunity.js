@@ -46,7 +46,7 @@ class Opportunity {
                        up.profile_image_url as contact_person_avatar,
                        (SELECT COUNT(*) FROM OpportunityInterests oi WHERE oi.opportunity_id = o.opportunity_id) as applicant_count
                 FROM Opportunities o
-                LEFT JOIN UserProfiles up ON o.contact_person_id = up.user_id
+                LEFT JOIN users up ON o.contact_person_id = up.id
                 ORDER BY o.created_at DESC
             `;
             
@@ -65,7 +65,7 @@ class Opportunity {
                        up.name as contact_person_name,
                        up.profile_image_url as contact_person_avatar
                 FROM Opportunities o
-                LEFT JOIN UserProfiles up ON o.contact_person_id = up.user_id
+                LEFT JOIN users up ON o.contact_person_id = up.id
                 WHERE o.opportunity_id = '${opportunityId}'
             `;
             

@@ -32,7 +32,7 @@ class Message {
             const query = `
                 SELECT m.*, up.name as sender_name, up.profile_image_url as sender_avatar
                 FROM Messages m
-                LEFT JOIN UserProfiles up ON m.sender_id = up.user_id
+                LEFT JOIN users up ON m.sender_id = up.id
                 WHERE m.connection_id = '${connectionId}'
                 ORDER BY m.created_at ASC
             `;
@@ -83,7 +83,7 @@ class Message {
                        c.mentor_id, c.mentee_id
                 FROM Messages m
                 INNER JOIN Connections c ON m.connection_id = c.connection_id
-                LEFT JOIN UserProfiles up ON m.sender_id = up.user_id
+                LEFT JOIN users up ON m.sender_id = up.id
                 WHERE (c.mentor_id = '${userId}' OR c.mentee_id = '${userId}')
                 AND m.sender_id != '${userId}'
                 ORDER BY m.created_at DESC

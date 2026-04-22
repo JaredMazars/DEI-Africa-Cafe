@@ -2,6 +2,7 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { body, validationResult } from 'express-validator';
+import { executeQuery } from '../config/database.js';
 import User from '../models/User.js';
 import UserProfile from '../models/UserProfile.js';
 import UserExpertise from '../models/UserExpertise.js';
@@ -116,6 +117,7 @@ router.post('/register', [
 
         // Create user in database
         const newUser = await User.create({ email, password });
+        const userId = newUser.id;  // actual DB column is 'id'
 
         // Save profile if provided from onboarding step
         if (req.body.profile) {
@@ -126,35 +128,46 @@ router.post('/register', [
 
             const profileRole = role || 'mentee';
 
-            await UserProfile.create({
-                user_id:          newUser.user_id,
-                role:             profileRole,
-                name:             name || email.split('@')[0],
-                location:         location || 'Unknown',
-                experience:       experience || 'Junior (0-2 years)',
-                availability:     availability || '1-2 hours/week',
-                can_mentor:       profileRole === 'mentor' || profileRole === 'both' ? 1 : 0,
-                can_be_mentored:  profileRole === 'mentee' || profileRole === 'both' ? 1 : 0,
+            // Updates users row + creates experts row if mentor/both
+            const savedProfile = await UserProfile.create({
+                user_id:      userId,
+                role:         profileRole,
+                name:         name || email.split('@')[0],
+                location:     location || 'Unknown',
+                experience:   experience || 'Junior (0-2 years)',
+                availability: availability || '1-2 hours/week',
             });
 
-            // Save own expertise (what this user offers)
+            // Save own expertise
             if (expertise?.length > 0) {
-                await UserExpertise.create(newUser.user_id, expertise);
+                await UserExpertise.create(userId, expertise);
+                // If mentor, also insert into expert_expertise so they appear in matching
+                if (savedProfile?.expert_id && (profileRole === 'mentor' || profileRole === 'both')) {
+                    const expertId = savedProfile.expert_id;
+                    const expValues = expertise
+                        .map(e => `('${expertId}', '${e.replace(/'/g, "''")}')`)
+                        .join(', ');
+                    try {
+                        await executeQuery(
+                            `INSERT INTO expert_expertise (expert_id, expertise) VALUES ${expValues}`
+                        );
+                    } catch { /* non-fatal */ }
+                }
             }
 
             // Save desired expertise (what kind of mentor they want)
             if (desired_expertise?.length > 0) {
-                await UserDesiredExpertise.create(newUser.user_id, desired_expertise);
+                await UserDesiredExpertise.create(userId, desired_expertise);
             }
 
-            if (interests?.length > 0)  await UserInterests.create(newUser.user_id, interests);
-            if (goals?.length > 0)      await UserGoals.create(newUser.user_id, goals);
-            if (languages?.length > 0)  await UserLanguages.create(newUser.user_id, languages);
+            if (interests?.length > 0)  { try { await UserInterests.create(userId, interests); } catch {} }
+            if (goals?.length > 0)      await UserGoals.create(userId, goals);
+            if (languages?.length > 0)  await UserLanguages.create(userId, languages);
         }
 
         // Generate JWT token
         const token = jwt.sign(
-            { userId: newUser.user_id, email: newUser.email },
+            { userId: newUser.id, email: newUser.email },
             process.env.JWT_SECRET || 'demo-secret-key-change-in-production',
             { expiresIn: '7d' }
         );
@@ -177,7 +190,7 @@ router.post('/register', [
             message: `Registration successful! Please check ${email} to verify your account.`,
             data: {
                 user: {
-                    id: newUser.user_id,
+                    id: newUser.id,
                     email: newUser.email,
                     isFirstLogin: true,
                     emailVerified: false
@@ -233,19 +246,18 @@ router.post('/login', [
         }
 
         // Load full profile and related data in parallel
-        const [profile, expertiseRows, desiredRows, interestsRows, goalsRows, languagesRows] = await Promise.all([
-            UserProfile.findByUserId(user.user_id),
-            UserExpertise.findByUserId(user.user_id),
-            UserDesiredExpertise.findByUserId(user.user_id),
-            UserInterests.findByUserId(user.user_id),
-            UserGoals.findByUserId(user.user_id),
-            UserLanguages.findByUserId(user.user_id),
+        const [profile, expertiseRows, desiredRows, goalsRows, languagesRows] = await Promise.all([
+            UserProfile.findByUserId(user.id),
+            UserExpertise.findByUserId(user.id),
+            UserDesiredExpertise.findByUserId(user.id),
+            UserGoals.findByUserId(user.id),
+            UserLanguages.findByUserId(user.id),
         ]);
 
-        await User.updateLastLogin(user.user_id);
+        await User.updateLastLogin(user.id);
 
         const token = jwt.sign(
-            { userId: user.user_id, email: user.email },
+            { userId: user.id, email: user.email },
             process.env.JWT_SECRET || 'demo-secret-key-change-in-production',
             { expiresIn: '7d' }
         );
@@ -255,21 +267,20 @@ router.post('/login', [
             message: 'Login successful',
             data: {
                 user: {
-                    id: user.user_id,
+                    id: user.id,
                     email: user.email,
                     isFirstLogin: !profile,
                     profile: profile ? {
-                        name:             profile.name,
-                        role:             profile.role,
-                        location:         profile.location,
-                        experience:       profile.experience,
-                        availability:     profile.availability,
-                        bio:              profile.bio,
-                        can_mentor:       profile.can_mentor,
-                        can_be_mentored:  profile.can_be_mentored,
+                        name:             profile.name || user.name,
+                        role:             profile.role || user.role,
+                        location:         profile.location || user.location,
+                        experience:       profile.experience || user.experience,
+                        availability:     profile.availability || user.availability,
+                        bio:              profile.bio || user.bio,
+                        is_mentor:        user.is_mentor,
+                        is_mentee:        user.is_mentee,
                         expertise:           expertiseRows.map(e => e.expertise),
                         desired_expertise:   desiredRows.map(d => d.expertise),
-                        interests:           interestsRows.map(i => i.interest),
                         goals:               goalsRows.map(g => g.goal),
                         languages:           languagesRows.map(l => l.language),
                     } : null
@@ -290,13 +301,13 @@ router.post('/login', [
 // Get current user profile
 router.get('/me', auth, async (req, res) => {
     try {
-        const profile = await UserProfile.findByUserId(req.user.user_id);
+        const profile = await UserProfile.findByUserId(req.user.id);
         
         res.json({
             success: true,
             data: {
                 user: {
-                    id: req.user.user_id,
+                    id: req.user.id,
                     email: req.user.email,
                     isFirstLogin: !profile,
                     profile: profile || null
@@ -315,7 +326,7 @@ router.get('/me', auth, async (req, res) => {
 
 // Complete onboarding profile
 router.post('/complete-profile', auth, [
-    body('role').isIn(['mentor', 'mentee']).withMessage('Role must be mentor or mentee'),
+    body('role').isIn(['mentor', 'mentee', 'both']).withMessage('Role must be mentor, mentee, or both'),
     body('name').notEmpty().withMessage('Name is required'),
     body('location').notEmpty().withMessage('Location is required'),
     body('experience').notEmpty().withMessage('Experience is required'),
@@ -336,29 +347,29 @@ router.post('/complete-profile', auth, [
         }
 
         const { expertise, interests, goals, languages, ...profileData } = req.body;
-        profileData.user_id = req.user.user_id;
+        profileData.user_id = req.user.id;
 
         // Create profile
         const profile = await UserProfile.create(profileData);
 
         // Create expertise entries
         if (expertise && expertise.length > 0) {
-            await UserExpertise.create(req.user.user_id, expertise);
+            await UserExpertise.create(req.user.id, expertise);
         }
 
         // Create interests entries
         if (interests && interests.length > 0) {
-            await UserInterests.create(req.user.user_id, interests);
+            try { await UserInterests.create(req.user.id, interests); } catch {}
         }
 
         // Create goals entries
         if (goals && goals.length > 0) {
-            await UserGoals.create(req.user.user_id, goals);
+            await UserGoals.create(req.user.id, goals);
         }
 
         // Create languages entries
         if (languages && languages.length > 0) {
-            await UserLanguages.create(req.user.user_id, languages);
+            await UserLanguages.create(req.user.id, languages);
         }
 
         res.json({

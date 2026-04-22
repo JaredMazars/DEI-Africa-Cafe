@@ -15,7 +15,7 @@ class UserGoals {
             ).join(', ');
             
             const query = `
-                INSERT INTO UserGoals (user_id, goal, created_at)
+                INSERT INTO user_goals (user_id, goal, created_at)
                 VALUES ${values}
             `;
             
@@ -29,7 +29,7 @@ class UserGoals {
 
     static async findByUserId(userId) {
         try {
-            const query = `SELECT * FROM UserGoals WHERE user_id = '${userId}'`;
+            const query = `SELECT * FROM user_goals WHERE user_id = '${userId}'`;
             const result = await executeQuery(query);
             
             return result.recordset.map(goal => new UserGoals(goal));
@@ -41,7 +41,7 @@ class UserGoals {
 
     static async deleteByUserId(userId) {
         try {
-            const query = `DELETE FROM UserGoals WHERE user_id = '${userId}'`;
+            const query = `DELETE FROM user_goals WHERE user_id = '${userId}'`;
             await executeQuery(query);
         } catch (error) {
             console.error('Error deleting user goals:', error);

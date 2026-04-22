@@ -38,7 +38,7 @@ class Question {
                        up.profile_image_url as author_avatar,
                        (SELECT COUNT(*) FROM QuestionAnswers qa WHERE qa.question_id = q.question_id) as response_count
                 FROM Questions q
-                LEFT JOIN UserProfiles up ON q.user_id = up.user_id
+                LEFT JOIN users up ON q.user_id = up.id
                 ORDER BY q.created_at DESC
             `;
             
@@ -57,7 +57,7 @@ class Question {
                        up.name as author_name,
                        up.profile_image_url as author_avatar
                 FROM Questions q
-                LEFT JOIN UserProfiles up ON q.user_id = up.user_id
+                LEFT JOIN users up ON q.user_id = up.id
                 WHERE q.question_id = '${questionId}'
             `;
             

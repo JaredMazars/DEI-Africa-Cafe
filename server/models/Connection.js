@@ -1,24 +1,42 @@
 import { executeQuery } from '../config/database.js';
 
+/**
+ * Connection model
+ * Real DB schema:
+ *   connections: id, requester_id (users.id), expert_id (experts.id), message, status, created_at, updated_at
+ */
 class Connection {
     constructor(data) {
-        this.connection_id = data.connection_id;
-        this.mentor_id = data.mentor_id;
-        this.mentee_id = data.mentee_id;
-        this.status = data.status;
-        this.created_at = data.created_at;
-        this.updated_at = data.updated_at;
+        // Expose both naming conventions for compatibility
+        this.id            = data.id || data.connection_id;
+        this.connection_id = this.id;
+        this.expert_id     = data.expert_id;
+        this.mentor_id     = data.expert_id;   // alias
+        this.requester_id  = data.requester_id;
+        this.mentee_id     = data.requester_id; // alias
+        this.message       = data.message;
+        this.status        = data.status;
+        this.created_at    = data.created_at;
+        this.updated_at    = data.updated_at;
     }
 
+    /**
+     * connectionData.mentor_id = experts.id (the expert being connected to)
+     * connectionData.mentee_id = users.id   (the requesting user)
+     */
     static async create(connectionData) {
         try {
+            const expertId    = connectionData.expert_id || connectionData.mentor_id;
+            const requesterId = connectionData.requester_id || connectionData.mentee_id;
+            const message     = connectionData.message || 'I would like to connect with you.';
+
             const query = `
-                INSERT INTO Connections (mentor_id, mentee_id, status, created_at, updated_at)
+                INSERT INTO connections (requester_id, expert_id, message, status, created_at, updated_at)
                 OUTPUT INSERTED.*
-                VALUES ('${connectionData.mentor_id}', '${connectionData.mentee_id}', 
-                        '${connectionData.status || 'pending'}', GETDATE(), GETDATE())
+                VALUES ('${requesterId}', '${expertId}',
+                        '${message.replace(/'/g, "''")}',
+                        'pending', GETDATE(), GETDATE())
             `;
-            
             const result = await executeQuery(query);
             return new Connection(result.recordset[0]);
         } catch (error) {
@@ -29,9 +47,8 @@ class Connection {
 
     static async findById(connectionId) {
         try {
-            const query = `SELECT * FROM Connections WHERE connection_id = '${connectionId}'`;
+            const query = `SELECT * FROM connections WHERE id = '${connectionId}'`;
             const result = await executeQuery(query);
-            
             return result.recordset.length > 0 ? new Connection(result.recordset[0]) : null;
         } catch (error) {
             console.error('Error finding connection by ID:', error);
@@ -39,31 +56,18 @@ class Connection {
         }
     }
 
+    /**
+     * Get all connections for a user (as mentor via experts.user_id or as mentee via requester_id)
+     */
     static async getUserConnections(userId) {
         try {
             const query = `
-                SELECT c.*, 
-                       mentor_profile.name as mentor_name, 
-                       mentor_profile.profile_image_url as mentor_avatar,
-                       mentor_profile.location as mentor_location, 
-                       mentor_profile.experience as mentor_experience,
-                       mentor_profile.bio as mentor_bio,
-                       mentee_profile.name as mentee_name, 
-                       mentee_profile.profile_image_url as mentee_avatar,
-                       mentee_profile.location as mentee_location, 
-                       mentee_profile.experience as mentee_experience,
-                       mentee_profile.bio as mentee_bio,
-                       mentor_user.email as mentor_email,
-                       mentee_user.email as mentee_email
-                FROM Connections c
-                LEFT JOIN UserProfiles mentor_profile ON c.mentor_id = mentor_profile.user_id
-                LEFT JOIN UserProfiles mentee_profile ON c.mentee_id = mentee_profile.user_id
-                LEFT JOIN Users mentor_user ON c.mentor_id = mentor_user.user_id
-                LEFT JOIN Users mentee_user ON c.mentee_id = mentee_user.user_id
-                WHERE c.mentor_id = '${userId}' OR c.mentee_id = '${userId}'
+                SELECT c.*
+                FROM connections c
+                LEFT JOIN experts e ON c.expert_id = e.id
+                WHERE c.requester_id = '${userId}' OR e.user_id = '${userId}'
                 ORDER BY c.created_at DESC
             `;
-            
             const result = await executeQuery(query);
             return result.recordset.map(conn => new Connection(conn));
         } catch (error) {
@@ -75,12 +79,11 @@ class Connection {
     static async updateStatus(connectionId, status) {
         try {
             const query = `
-                UPDATE Connections 
+                UPDATE connections
                 SET status = '${status}', updated_at = GETDATE()
                 OUTPUT INSERTED.*
-                WHERE connection_id = '${connectionId}'
+                WHERE id = '${connectionId}'
             `;
-            
             const result = await executeQuery(query);
             return result.recordset.length > 0 ? new Connection(result.recordset[0]) : null;
         } catch (error) {
@@ -92,14 +95,13 @@ class Connection {
     static async getConnectionStats() {
         try {
             const query = `
-                SELECT 
+                SELECT
                     COUNT(*) as total_connections,
                     SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) as active_connections,
                     SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_connections,
                     COUNT(CASE WHEN created_at >= DATEADD(month, -1, GETDATE()) THEN 1 END) as new_connections_this_month
-                FROM Connections
+                FROM connections
             `;
-            
             const result = await executeQuery(query);
             return result.recordset[0];
         } catch (error) {
@@ -108,13 +110,16 @@ class Connection {
         }
     }
 
-    static async checkExistingConnection(mentorId, menteeId) {
+    /**
+     * Check for an existing connection between a mentee and an expert
+     * expertId = experts.id, menteeUserId = users.id
+     */
+    static async checkExistingConnection(expertId, menteeUserId) {
         try {
             const query = `
-                SELECT * FROM Connections 
-                WHERE mentor_id = '${mentorId}' AND mentee_id = '${menteeId}'
+                SELECT * FROM connections
+                WHERE expert_id = '${expertId}' AND requester_id = '${menteeUserId}'
             `;
-            
             const result = await executeQuery(query);
             return result.recordset.length > 0 ? new Connection(result.recordset[0]) : null;
         } catch (error) {
@@ -126,27 +131,24 @@ class Connection {
     static async getConnectionsWithDetails(userId) {
         try {
             const query = `
-                SELECT c.*,
-                       mentor_profile.name as mentor_name,
-                       mentor_profile.profile_image_url as mentor_avatar,
-                       mentor_profile.location as mentor_location,
-                       mentor_profile.experience as mentor_experience,
-                       mentor_profile.bio as mentor_bio,
-                       mentee_profile.name as mentee_name,
-                       mentee_profile.profile_image_url as mentee_avatar,
-                       mentee_profile.location as mentee_location,
-                       mentee_profile.experience as mentee_experience,
-                       mentee_profile.bio as mentee_bio,
-                       (SELECT COUNT(*) FROM Sessions s WHERE s.connection_id = c.connection_id AND s.status = 'completed') as total_sessions,
-                       (SELECT COUNT(*) FROM Sessions s WHERE s.connection_id = c.connection_id AND s.status = 'scheduled' AND s.scheduled_at > GETDATE()) as upcoming_sessions,
-                       (SELECT AVG(CAST(rating as FLOAT)) FROM Reviews r WHERE r.connection_id = c.connection_id) as average_rating
-                FROM Connections c
-                LEFT JOIN UserProfiles mentor_profile ON c.mentor_id = mentor_profile.user_id
-                LEFT JOIN UserProfiles mentee_profile ON c.mentee_id = mentee_profile.user_id
-                WHERE (c.mentor_id = '${userId}' OR c.mentee_id = '${userId}') AND c.status = 'accepted'
+                SELECT
+                    c.*,
+                    e.name as mentor_name,
+                    e.avatar_url as mentor_avatar,
+                    e.location as mentor_location,
+                    e.bio as mentor_bio,
+                    e.title as mentor_title,
+                    u_req.name as mentee_name,
+                    u_req.location as mentee_location,
+                    u_req.bio as mentee_bio,
+                    e.user_id as mentor_user_id
+                FROM connections c
+                LEFT JOIN experts e ON c.expert_id = e.id
+                LEFT JOIN users u_req ON c.requester_id = u_req.id
+                WHERE c.requester_id = '${userId}'
+                   OR e.user_id = '${userId}'
                 ORDER BY c.updated_at DESC
             `;
-            
             const result = await executeQuery(query);
             return result.recordset;
         } catch (error) {
@@ -156,15 +158,14 @@ class Connection {
     }
 
     /**
-     * Returns how many accepted mentees a mentor currently has.
-     * Used to enforce the 3-mentee capacity rule.
+     * Count accepted mentees for a given expert (experts.id)
      */
-    static async getMenteeCount(mentorId) {
+    static async getMenteeCount(expertId) {
         try {
             const result = await executeQuery(`
                 SELECT COUNT(*) as mentee_count
-                FROM Connections
-                WHERE mentor_id = '${mentorId}' AND status = 'accepted'
+                FROM connections
+                WHERE expert_id = '${expertId}' AND status = 'accepted'
             `);
             return result.recordset[0]?.mentee_count ?? 0;
         } catch (error) {
@@ -173,16 +174,12 @@ class Connection {
         }
     }
 
-    /**
-     * Check if a mentor is at full capacity (3 accepted mentees).
-     */
-    static async isMentorAtCapacity(mentorId) {
-        const count = await this.getMenteeCount(mentorId);
+    static async isMentorAtCapacity(expertId) {
+        const count = await Connection.getMenteeCount(expertId);
         return count >= Connection.MENTOR_CAPACITY;
     }
 }
 
-/** Maximum number of accepted mentees a mentor can have at one time */
 Connection.MENTOR_CAPACITY = 3;
 
 export default Connection;

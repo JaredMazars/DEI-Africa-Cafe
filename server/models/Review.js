@@ -37,7 +37,7 @@ class Review {
                        reviewer_profile.name as reviewer_name,
                        reviewer_profile.profile_image_url as reviewer_avatar
                 FROM Reviews r
-                LEFT JOIN UserProfiles reviewer_profile ON r.reviewer_id = reviewer_profile.user_id
+                LEFT JOIN users reviewer_profile ON r.reviewer_id = reviewer_profile.id
                 WHERE r.reviewee_id = '${userId}'
                 ORDER BY r.created_at DESC
             `;
@@ -73,7 +73,7 @@ class Review {
                        reviewer_profile.name as reviewer_name,
                        reviewer_profile.profile_image_url as reviewer_avatar
                 FROM Reviews r
-                LEFT JOIN UserProfiles reviewer_profile ON r.reviewer_id = reviewer_profile.user_id
+                LEFT JOIN users reviewer_profile ON r.reviewer_id = reviewer_profile.id
                 WHERE r.reviewee_id = '${userId}'
                 ORDER BY r.created_at DESC
             `;

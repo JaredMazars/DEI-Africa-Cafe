@@ -21,7 +21,7 @@ class UserDesiredExpertise {
                 .map(e => `('${userId}', '${e.replace(/'/g, "''")}', GETDATE())`)
                 .join(', ');
             await executeQuery(
-                `INSERT INTO UserDesiredExpertise (user_id, expertise, created_at) VALUES ${values}`
+                `INSERT INTO user_desired_expertise (user_id, expertise, created_at) VALUES ${values}`
             );
             return true;
         } catch (error) {
@@ -33,7 +33,7 @@ class UserDesiredExpertise {
     static async findByUserId(userId) {
         try {
             const result = await executeQuery(
-                `SELECT * FROM UserDesiredExpertise WHERE user_id = '${userId}'`
+                `SELECT * FROM user_desired_expertise WHERE user_id = '${userId}'`
             );
             return result.recordset.map(r => new UserDesiredExpertise(r));
         } catch (error) {
@@ -45,7 +45,7 @@ class UserDesiredExpertise {
     static async deleteByUserId(userId) {
         try {
             await executeQuery(
-                `DELETE FROM UserDesiredExpertise WHERE user_id = '${userId}'`
+                `DELETE FROM user_desired_expertise WHERE user_id = '${userId}'`
             );
         } catch (error) {
             console.error('Error deleting desired expertise:', error);

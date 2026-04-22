@@ -15,7 +15,7 @@ class UserLanguages {
             ).join(', ');
             
             const query = `
-                INSERT INTO UserLanguages (user_id, language, created_at)
+                INSERT INTO user_languages (user_id, language, created_at)
                 VALUES ${values}
             `;
             
@@ -29,7 +29,7 @@ class UserLanguages {
 
     static async findByUserId(userId) {
         try {
-            const query = `SELECT * FROM UserLanguages WHERE user_id = '${userId}'`;
+            const query = `SELECT * FROM user_languages WHERE user_id = '${userId}'`;
             const result = await executeQuery(query);
             
             return result.recordset.map(language => new UserLanguages(language));
@@ -41,7 +41,7 @@ class UserLanguages {
 
     static async deleteByUserId(userId) {
         try {
-            const query = `DELETE FROM UserLanguages WHERE user_id = '${userId}'`;
+            const query = `DELETE FROM user_languages WHERE user_id = '${userId}'`;
             await executeQuery(query);
         } catch (error) {
             console.error('Error deleting user languages:', error);

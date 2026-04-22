@@ -41,7 +41,7 @@ class Expert {
                        (SELECT AVG(CAST(rating as FLOAT)) FROM Reviews r WHERE r.reviewee_id = e.user_id) as average_rating,
                        (SELECT COUNT(*) FROM Reviews r WHERE r.reviewee_id = e.user_id) as review_count
                 FROM Experts e
-                INNER JOIN UserProfiles up ON e.user_id = up.user_id
+                INNER JOIN users up ON e.user_id = up.id
                 WHERE e.is_verified = 1
                 ORDER BY e.created_at DESC
             `;
@@ -59,7 +59,7 @@ class Expert {
             const query = `
                 SELECT e.*, up.name, up.location, up.bio, up.profile_image_url, up.experience
                 FROM Experts e
-                INNER JOIN UserProfiles up ON e.user_id = up.user_id
+                INNER JOIN users up ON e.user_id = up.id
                 WHERE e.expert_id = '${expertId}'
             `;
             

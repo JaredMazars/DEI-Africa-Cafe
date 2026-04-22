@@ -57,8 +57,8 @@ class Session {
                        mentee_profile.profile_image_url as mentee_avatar
                 FROM Sessions s
                 INNER JOIN Connections c ON s.connection_id = c.connection_id
-                LEFT JOIN UserProfiles mentor_profile ON c.mentor_id = mentor_profile.user_id
-                LEFT JOIN UserProfiles mentee_profile ON c.mentee_id = mentee_profile.user_id
+                LEFT JOIN users mentor_profile ON c.expert_id = mentor_profile.id
+                LEFT JOIN users mentee_profile ON c.requester_id = mentee_profile.id
                 WHERE c.mentor_id = '${userId}' OR c.mentee_id = '${userId}'
                 ORDER BY s.scheduled_at ASC
             `;
@@ -81,8 +81,8 @@ class Session {
                        mentee_profile.profile_image_url as mentee_avatar
                 FROM Sessions s
                 INNER JOIN Connections c ON s.connection_id = c.connection_id
-                LEFT JOIN UserProfiles mentor_profile ON c.mentor_id = mentor_profile.user_id
-                LEFT JOIN UserProfiles mentee_profile ON c.mentee_id = mentee_profile.user_id
+                LEFT JOIN users mentor_profile ON c.expert_id = mentor_profile.id
+                LEFT JOIN users mentee_profile ON c.requester_id = mentee_profile.id
                 WHERE (c.mentor_id = '${userId}' OR c.mentee_id = '${userId}')
                 AND s.scheduled_at > GETDATE()
                 AND s.status = 'scheduled'

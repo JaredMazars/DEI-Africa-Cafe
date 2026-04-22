@@ -13,7 +13,7 @@ const router = express.Router();
 // Get user's connections with full details
 router.get('/', auth, async (req, res) => {
     try {
-        const connections = await Connection.getConnectionsWithDetails(req.user.user_id);
+        const connections = await Connection.getConnectionsWithDetails(req.user.id);
         
         res.json({
             success: true,
@@ -34,15 +34,15 @@ router.get('/stats', auth, async (req, res) => {
     try {
         const [connectionStats, userConnections] = await Promise.all([
             Connection.getConnectionStats(),
-            Connection.getUserConnections(req.user.user_id)
+            Connection.getUserConnections(req.user.id)
         ]);
 
         const userStats = {
             totalConnections: userConnections.length,
             activeConnections: userConnections.filter(c => c.status === 'accepted').length,
             pendingConnections: userConnections.filter(c => c.status === 'pending').length,
-            mentorConnections: userConnections.filter(c => c.mentor_id === req.user.user_id).length,
-            menteeConnections: userConnections.filter(c => c.mentee_id === req.user.user_id).length
+            mentorConnections: userConnections.filter(c => c.expert_id === req.user.id || c.mentor_id === req.user.id).length,
+            menteeConnections: userConnections.filter(c => c.requester_id === req.user.id || c.mentee_id === req.user.id).length
         };
 
         res.json({
@@ -98,7 +98,7 @@ router.post('/', auth, [
         }
 
         // Verify that the requesting user is either the mentor or mentee
-        if (req.user.user_id !== mentor_id && req.user.user_id !== mentee_id) {
+        if (req.user.id !== mentor_id && req.user.id !== mentee_id) {
             return res.status(403).json({
                 success: false,
                 message: 'You can only create connections involving yourself'
@@ -149,7 +149,8 @@ router.put('/:connectionId/status', auth, [
         }
 
         // Verify that the requesting user is part of this connection
-        if (req.user.user_id !== connection.mentor_id && req.user.user_id !== connection.mentee_id) {
+        if (req.user.id !== connection.expert_id && req.user.id !== connection.requester_id
+            && req.user.id !== connection.mentor_id && req.user.id !== connection.mentee_id) {
             return res.status(403).json({
                 success: false,
                 message: 'You can only update your own connections'
@@ -158,7 +159,7 @@ router.put('/:connectionId/status', auth, [
 
         // When a mentor accepts a new mentee, re-check capacity
         if (status === 'accepted') {
-            const atCapacity = await Connection.isMentorAtCapacity(connection.mentor_id);
+            const atCapacity = await Connection.isMentorAtCapacity(connection.expert_id || connection.mentor_id);
             if (atCapacity) {
                 return res.status(400).json({
                     success: false,
@@ -197,12 +198,12 @@ router.get('/potential-mentors', auth, async (req, res) => {
         }
 
         // Filter out existing connections
-        const existingConnections = await Connection.getUserConnections(req.user.user_id);
-        const connectedMentorIds = existingConnections.map(c => c.mentor_id);
+        const existingConnections = await Connection.getUserConnections(req.user.id);
+        const connectedMentorIds = existingConnections.map(c => c.expert_id || c.mentor_id);
         
         const availableMentors = mentors.filter(mentor => 
-            !connectedMentorIds.includes(mentor.user_id) && 
-            mentor.user_id !== req.user.user_id
+            !connectedMentorIds.includes(mentor.expert_id) && 
+            mentor.user_id !== req.user.id
         );
 
         res.json({
@@ -232,12 +233,12 @@ router.get('/potential-mentees', auth, async (req, res) => {
         }
 
         // Filter out existing connections
-        const existingConnections = await Connection.getUserConnections(req.user.user_id);
-        const connectedMenteeIds = existingConnections.map(c => c.mentee_id);
+        const existingConnections = await Connection.getUserConnections(req.user.id);
+        const connectedMenteeIds = existingConnections.map(c => c.requester_id || c.mentee_id);
         
         const availableMentees = mentees.filter(mentee => 
             !connectedMenteeIds.includes(mentee.user_id) && 
-            mentee.user_id !== req.user.user_id
+            mentee.user_id !== req.user.id
         );
 
         res.json({
