@@ -389,4 +389,4 @@ export default function SimpleOnboardingForm() {
         </div>
       </div>
     </div>
-  );
+  );}
