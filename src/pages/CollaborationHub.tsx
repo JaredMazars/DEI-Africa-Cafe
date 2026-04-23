@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { Plus, Search, MapPin, Users, Calendar, TrendingUp, FileText, Target, Send, DollarSign, Clock, Filter, BarChart3, Globe } from 'lucide-react';
 import { opportunitiesAPI } from '../services/api';
@@ -596,7 +596,7 @@ const CollaborationHub: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'open': return 'bg-blue-100 text-blue-800';
+      case 'open': return 'bg-[#1A1F5E]/10 text-[#1A1F5E]';
       case 'in-progress': return 'bg-yellow-100 text-yellow-800';
       case 'closed': return 'bg-gray-100 text-gray-600';
       default: return 'bg-gray-100 text-gray-600';
@@ -607,17 +607,17 @@ const CollaborationHub: React.FC = () => {
     switch (priority) {
       case 'high': return 'bg-red-100 text-red-800';
       case 'medium': return 'bg-orange-100 text-orange-800';
-      case 'low': return 'bg-blue-100 text-blue-800';
+      case 'low': return 'bg-[#1A1F5E]/10 text-[#1A1F5E]';
       default: return 'bg-gray-100 text-gray-600';
     }
   };
 
   const getStageColor = (stage: string) => {
     switch (stage) {
-      case 'prospecting': return 'bg-blue-100 text-blue-800';
+      case 'prospecting': return 'bg-[#1A1F5E]/10 text-[#1A1F5E]';
       case 'proposal': return 'bg-yellow-100 text-yellow-800';
       case 'negotiation': return 'bg-orange-100 text-orange-800';
-      case 'closed': return 'bg-blue-100 text-blue-800';
+      case 'closed': return 'bg-[#1A1F5E]/10 text-[#1A1F5E]';
       default: return 'bg-gray-100 text-gray-600';
     }
   };
@@ -862,11 +862,11 @@ const CollaborationHub: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Professional Header with Forvis Mazars Branding */}
-      <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 text-white">
+      <div className="bg-gradient-to-r from-[#1A1F5E] via-[#0072CE] to-[#1A1F5E] text-white">
         <div className="max-w-[1920px] mx-auto px-12 sm:px-16 lg:px-20 py-12">
           <div className="text-center">
             <h1 className="text-4xl font-bold mb-3 text-white">Client Collaboration & Opportunity Hub</h1>
-            <p className="text-xl text-blue-100 max-w-3xl mx-auto">
+            <p className="text-xl text-white/80 max-w-3xl mx-auto">
               Share opportunities and collaborate on cross-border projects across our network
             </p>
           </div>
@@ -882,7 +882,7 @@ const CollaborationHub: React.FC = () => {
             {activeTab === 'opportunities' && (
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="bg-blue-900 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 ml-auto"
+                className="bg-[#1A1F5E] hover:bg-[#1A1F5E] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 ml-auto"
               >
                 <Plus className="w-4 h-4" />
                 <span>Post Opportunity</span>
@@ -896,7 +896,7 @@ const CollaborationHub: React.FC = () => {
               onClick={() => setActiveTab('opportunities')}
               className={`pb-3 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'opportunities'
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-[#0072CE] text-[#0072CE]'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -906,7 +906,7 @@ const CollaborationHub: React.FC = () => {
               onClick={() => setActiveTab('groups')}
               className={`pb-3 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'groups'
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-[#0072CE] text-[#0072CE]'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -916,7 +916,7 @@ const CollaborationHub: React.FC = () => {
               onClick={() => setActiveTab('requests')}
               className={`pb-3 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'requests'
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-[#0072CE] text-[#0072CE]'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -931,7 +931,7 @@ const CollaborationHub: React.FC = () => {
               onClick={() => setActiveTab('knowledge')}
               className={`pb-3 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'knowledge'
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-[#0072CE] text-[#0072CE]'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -953,7 +953,7 @@ const CollaborationHub: React.FC = () => {
                     placeholder="Search opportunities..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] text-sm"
                   />
                 </div>
 
@@ -963,7 +963,7 @@ const CollaborationHub: React.FC = () => {
                     <select
                       value={selectedFilters.industry}
                       onChange={(e) => setSelectedFilters({...selectedFilters, industry: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[#1A1F5E]/20"
                     >
                       <option value="">All Industries</option>
                       <option value="Financial Services">Financial Services</option>
@@ -978,7 +978,7 @@ const CollaborationHub: React.FC = () => {
                     <select
                       value={selectedFilters.region}
                       onChange={(e) => setSelectedFilters({...selectedFilters, region: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[#1A1F5E]/20"
                     >
                       <option value="">All Regions</option>
                       <option value="West Africa">West Africa</option>
@@ -993,7 +993,7 @@ const CollaborationHub: React.FC = () => {
                     <select
                       value={selectedFilters.status}
                       onChange={(e) => setSelectedFilters({...selectedFilters, status: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[#1A1F5E]/20"
                     >
                       <option value="all">All Statuses</option>
                       <option value="open">Open</option>
@@ -1003,9 +1003,9 @@ const CollaborationHub: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-2">Opportunity Stats</h4>
-                  <div className="space-y-2 text-sm text-blue-700">
+                <div className="mt-6 p-4 bg-[#F4F4F4] rounded-lg">
+                  <h4 className="font-medium text-[#1A1F5E] mb-2">Opportunity Stats</h4>
+                  <div className="space-y-2 text-sm text-[#1A1F5E]">
                     <div className="flex justify-between">
                       <span>Open Opportunities:</span>
                       <span className="font-medium">{opportunities.filter(o => o.status === 'open').length}</span>
@@ -1032,7 +1032,7 @@ const CollaborationHub: React.FC = () => {
                       <div className="flex-1">
                         <h3 className="text-xl font-semibold text-gray-900 mb-2">{opportunity.title}</h3>
                         <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
-                          <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">{opportunity.industry}</span>
+                          <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-2 py-1 rounded-full text-xs">{opportunity.industry}</span>
                           <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">{opportunity.clientSector}</span>
                           <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(opportunity.status)}`}>
                             {opportunity.status.replace('-', ' ')}
@@ -1087,7 +1087,7 @@ const CollaborationHub: React.FC = () => {
                       </div>
                       
                       <div className="flex space-x-3">
-                        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        <button className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                           Express Interest
                         </button>
                         <button className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
@@ -1119,7 +1119,7 @@ const CollaborationHub: React.FC = () => {
                     onClick={() => setCurrentPage(page)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       currentPage === page
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-[#0072CE] text-white'
                         : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
                   >
@@ -1167,7 +1167,7 @@ const CollaborationHub: React.FC = () => {
                           }
                         ]);
                       }}
-                      className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md transition-all cursor-pointer hover:border-blue-300"
+                      className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-md transition-all cursor-pointer hover:border-[#0072CE]/40"
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
@@ -1198,7 +1198,7 @@ const CollaborationHub: React.FC = () => {
                                 e.stopPropagation();
                                 handleViewProfile(member.id);
                               }}
-                              className="w-8 h-8 rounded-full border-2 border-white object-cover cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
+                              className="w-8 h-8 rounded-full border-2 border-white object-cover cursor-pointer hover:ring-2 hover:ring-[#1A1F5E]/20 transition-all"
                               title={`View ${member.name}'s profile`}
                             />
                           ))}
@@ -1247,7 +1247,7 @@ const CollaborationHub: React.FC = () => {
                           <>
                             <button
                               onClick={() => setShowUploadModal(true)}
-                              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1"
+                              className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1"
                             >
                               <Plus className="w-4 h-4" />
                               <span>Upload</span>
@@ -1262,7 +1262,7 @@ const CollaborationHub: React.FC = () => {
                         )}
                         <button
                           onClick={() => setShowKnowledgePanel(!showKnowledgePanel)}
-                          className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                          className="text-[#0072CE] hover:text-[#1A1F5E] text-sm font-medium"
                         >
                           {showKnowledgePanel ? 'Hide' : 'Show'} Knowledge
                         </button>
@@ -1283,7 +1283,7 @@ const CollaborationHub: React.FC = () => {
                               const profile = Object.values(userProfiles).find(p => p.name === msg.sender);
                               if (profile) handleViewProfile(profile.id);
                             }}
-                            className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
+                            className="w-8 h-8 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-[#1A1F5E]/20 transition-all"
                             title="View profile"
                           />
                           <div className="flex-1">
@@ -1309,11 +1309,11 @@ const CollaborationHub: React.FC = () => {
                         onChange={(e) => setNewMessage(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                         placeholder="Type your message..."
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                       />
                       <button
                         onClick={handleSendMessage}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                        className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-4 py-2 rounded-lg transition-colors"
                       >
                         <Send className="w-5 h-5" />
                       </button>
@@ -1340,7 +1340,7 @@ const CollaborationHub: React.FC = () => {
                           <div key={doc.id} className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 cursor-pointer">
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex items-center space-x-2 flex-1">
-                                <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                <FileText className="w-4 h-4 text-[#0072CE] flex-shrink-0" />
                                 <span className="text-sm font-medium text-gray-900 break-words">{doc.name}</span>
                               </div>
                             </div>
@@ -1352,7 +1352,7 @@ const CollaborationHub: React.FC = () => {
                               </div>
                             </div>
                             <div className="mt-2 flex space-x-2">
-                              <button className="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                              <button className="text-xs text-[#0072CE] hover:text-[#1A1F5E] font-medium">
                                 Download
                               </button>
                               {selectedGroup.creatorId === currentUserId && (
@@ -1395,7 +1395,7 @@ const CollaborationHub: React.FC = () => {
                         src={request.applicantAvatar}
                         alt={request.applicantName}
                         onClick={() => handleViewProfile(request.applicantName.split(' ')[0].toLowerCase() + request.applicantName.split(' ')[1].toLowerCase().charAt(0))}
-                        className="w-16 h-16 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
+                        className="w-16 h-16 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-[#1A1F5E]/20 transition-all"
                         title="View profile"
                       />
                       <div className="flex-1">
@@ -1408,7 +1408,7 @@ const CollaborationHub: React.FC = () => {
                         </div>
                         
                         <div className="mb-3">
-                          <div className="text-sm font-medium text-blue-600 mb-1">
+                          <div className="text-sm font-medium text-[#0072CE] mb-1">
                             Opportunity: {request.opportunityTitle}
                           </div>
                           <p className="text-gray-700 text-sm leading-relaxed">{request.message}</p>
@@ -1420,7 +1420,7 @@ const CollaborationHub: React.FC = () => {
                               setSelectedRequest(request);
                               setShowRequestDetailModal(true);
                             }}
-                            className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                            className="text-[#0072CE] hover:text-[#1A1F5E] text-sm font-medium"
                           >
                             View Profile
                           </button>
@@ -1455,7 +1455,7 @@ const CollaborationHub: React.FC = () => {
                             src={request.applicantAvatar}
                             alt={request.applicantName}
                             onClick={() => handleViewProfile(request.applicantName.split(' ')[0].toLowerCase() + request.applicantName.split(' ')[1].toLowerCase().charAt(0))}
-                            className="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
+                            className="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-[#1A1F5E]/20 transition-all"
                             title="View profile"
                           />
                           <div>
@@ -1492,12 +1492,12 @@ const CollaborationHub: React.FC = () => {
                 <div key={study.id} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-sm transition-shadow">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2 hover:text-blue-600 cursor-pointer">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2 hover:text-[#0072CE] cursor-pointer">
                         {study.title}
                       </h3>
                       <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
-                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">{study.industry}</span>
-                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">{study.region}</span>
+                        <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-2 py-1 rounded-full text-xs">{study.industry}</span>
+                        <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-2 py-1 rounded-full text-xs">{study.region}</span>
                         <div className="flex items-center space-x-1">
                           <FileText className="w-4 h-4" />
                           <span>{study.downloadCount} downloads</span>
@@ -1525,7 +1525,7 @@ const CollaborationHub: React.FC = () => {
                       <button className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                         Preview
                       </button>
-                      <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                      <button className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                         Download
                       </button>
                     </div>
@@ -1558,7 +1558,7 @@ const CollaborationHub: React.FC = () => {
                   type="text"
                   value={newOpportunity.title}
                   onChange={(e) => setNewOpportunity({...newOpportunity, title: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   placeholder="Brief, descriptive title for the opportunity"
                 />
               </div>
@@ -1569,7 +1569,7 @@ const CollaborationHub: React.FC = () => {
                   rows={4}
                   value={newOpportunity.description}
                   onChange={(e) => setNewOpportunity({...newOpportunity, description: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   placeholder="Detailed description of the opportunity, client needs, and required expertise..."
                 />
               </div>
@@ -1586,7 +1586,7 @@ const CollaborationHub: React.FC = () => {
                         clientSector: '' // Reset client sector when industry changes
                       });
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20"
                   >
                     <option value="">Select Industry Sector</option>
                     <option value="Financial Services">Financial Services</option>
@@ -1609,7 +1609,7 @@ const CollaborationHub: React.FC = () => {
                   <select
                     value={newOpportunity.clientSector}
                     onChange={(e) => setNewOpportunity({...newOpportunity, clientSector: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20"
                     disabled={!newOpportunity.industry}
                   >
                     <option value="">
@@ -1631,7 +1631,7 @@ const CollaborationHub: React.FC = () => {
                     const selected = Array.from(e.target.selectedOptions, option => option.value);
                     setNewOpportunity({...newOpportunity, regionsNeeded: selected.join(', ')});
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 h-32"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 h-32"
                 >
                   <option value="Algeria">Algeria</option>
                   <option value="Angola">Angola</option>
@@ -1697,7 +1697,7 @@ const CollaborationHub: React.FC = () => {
                   <select
                     value={newOpportunity.budget}
                     onChange={(e) => setNewOpportunity({...newOpportunity, budget: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20"
                   >
                     <option value="">Select Budget Range</option>
                     <option value="$100K - $500K">$100K - $500K</option>
@@ -1714,7 +1714,7 @@ const CollaborationHub: React.FC = () => {
                     type="date"
                     value={newOpportunity.deadline}
                     onChange={(e) => setNewOpportunity({...newOpportunity, deadline: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20"
                   />
                 </div>
               </div>
@@ -1729,7 +1729,7 @@ const CollaborationHub: React.FC = () => {
               </button>
               <button
                 onClick={handleCreateOpportunity}
-                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center justify-center space-x-2"
+                className="flex-1 px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white rounded-lg transition-colors flex items-center justify-center space-x-2"
               >
                 <Send className="w-4 h-4" />
                 <span>Post Opportunity</span>
@@ -1748,7 +1748,7 @@ const CollaborationHub: React.FC = () => {
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-2">{selectedOpportunity.title}</h2>
                   <div className="flex items-center space-x-4 text-sm text-gray-600">
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">{selectedOpportunity.industry}</span>
+                    <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-2 py-1 rounded-full text-xs">{selectedOpportunity.industry}</span>
                     <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">{selectedOpportunity.clientSector}</span>
                     <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(selectedOpportunity.status)}`}>
                       {selectedOpportunity.status.replace('-', ' ')}
@@ -1823,7 +1823,7 @@ const CollaborationHub: React.FC = () => {
                     setShowOpportunityModal(false);
                     handleExpressInterest(selectedOpportunity);
                   }}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg text-sm font-medium transition-colors"
+                  className="flex-1 bg-[#0072CE] hover:bg-[#1A1F5E] text-white py-3 px-4 rounded-lg text-sm font-medium transition-colors"
                 >
                   Express Interest
                 </button>
@@ -1850,7 +1850,7 @@ const CollaborationHub: React.FC = () => {
                   rows={4}
                   value={interestMessage}
                   onChange={(e) => setInterestMessage(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   placeholder="Describe your relevant experience and how you can contribute..."
                 />
               </div>
@@ -1868,7 +1868,7 @@ const CollaborationHub: React.FC = () => {
                 </button>
                 <button
                   onClick={handleSendInterest}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors"
+                  className="flex-1 bg-[#0072CE] hover:bg-[#1A1F5E] text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors"
                 >
                   Submit Interest
                 </button>
@@ -1914,7 +1914,7 @@ const CollaborationHub: React.FC = () => {
 
               <div className="mb-6">
                 <h5 className="font-semibold text-gray-900 mb-2">Opportunity</h5>
-                <p className="text-blue-600">{selectedRequest.opportunityTitle}</p>
+                <p className="text-[#0072CE]">{selectedRequest.opportunityTitle}</p>
               </div>
 
               <div className="mb-6">
@@ -1972,7 +1972,7 @@ const CollaborationHub: React.FC = () => {
                   type="file"
                   accept=".pdf,.doc,.docx,.xlsx,.xls,.pptx,.ppt"
                   onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                 />
                 {uploadFile && (
                   <div className="mt-2 text-sm text-gray-600">
@@ -1994,7 +1994,7 @@ const CollaborationHub: React.FC = () => {
                 <button
                   onClick={handleUploadDocument}
                   disabled={!uploadFile}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  className="flex-1 bg-[#0072CE] hover:bg-[#1A1F5E] text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                   Upload
                 </button>
@@ -2032,7 +2032,7 @@ const CollaborationHub: React.FC = () => {
                           src={member.avatar}
                           alt={member.name}
                           onClick={() => handleViewProfile(member.id)}
-                          className="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
+                          className="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-[#1A1F5E]/20 transition-all"
                           title="View profile"
                         />
                         <div>
@@ -2063,7 +2063,7 @@ const CollaborationHub: React.FC = () => {
                     {selectedGroup.documents.map((doc) => (
                       <div key={doc.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                         <div className="flex items-center space-x-2">
-                          <FileText className="w-5 h-5 text-blue-600" />
+                          <FileText className="w-5 h-5 text-[#0072CE]" />
                           <div>
                             <p className="text-sm font-medium text-gray-900">{doc.name}</p>
                             <p className="text-xs text-gray-600">{doc.size} • {doc.uploadedAt}</p>
@@ -2139,7 +2139,7 @@ const CollaborationHub: React.FC = () => {
                   <p className="text-lg text-gray-700 mb-2">{selectedProfile.role}</p>
                   <p className="text-gray-600 mb-3">{selectedProfile.organization}</p>
                   <div className="flex flex-wrap gap-2">
-                    <span className="bg-blue-100 text-blue-800 text-xs font-medium px-3 py-1 rounded-full">
+                    <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] text-xs font-medium px-3 py-1 rounded-full">
                       {selectedProfile.country}
                     </span>
                     <span className="bg-green-100 text-green-800 text-xs font-medium px-3 py-1 rounded-full">
@@ -2155,7 +2155,7 @@ const CollaborationHub: React.FC = () => {
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
                     <span className="text-sm font-medium text-gray-600 w-24">Email:</span>
-                    <a href={`mailto:${selectedProfile.email}`} className="text-sm text-blue-600 hover:text-blue-700">
+                    <a href={`mailto:${selectedProfile.email}`} className="text-sm text-[#0072CE] hover:text-[#1A1F5E]">
                       {selectedProfile.email}
                     </a>
                   </div>
@@ -2197,7 +2197,7 @@ const CollaborationHub: React.FC = () => {
               <div className="flex space-x-3 pt-4 border-t border-gray-200">
                 <button
                   onClick={() => window.location.href = `mailto:${selectedProfile.email}`}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors"
+                  className="flex-1 bg-[#0072CE] hover:bg-[#1A1F5E] text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors"
                 >
                   Send Email
                 </button>

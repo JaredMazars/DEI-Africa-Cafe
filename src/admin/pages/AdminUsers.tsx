@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   Users,
   Search,
@@ -133,7 +133,7 @@ const AdminUsers: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search by name or email..."
-              className="w-full pl-9 sm:pl-11 pr-4 py-2.5 sm:py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-9 sm:pl-11 pr-4 py-2.5 sm:py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
             />
           </div>
 
@@ -143,7 +143,7 @@ const AdminUsers: React.FC = () => {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+              className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] appearance-none"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -188,7 +188,7 @@ const AdminUsers: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                      <span className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] rounded-full text-sm font-medium">
                         {user.role}
                       </span>
                     </td>

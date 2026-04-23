@@ -1,15 +1,15 @@
-import React from 'react';
+﻿import React from 'react';
 import { Calendar, Video, Users, Clock, ChevronRight, CheckCircle, Plus } from 'lucide-react';
 
 export default function CalendarPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 text-white">
+      <div className="bg-gradient-to-r from-[#1A1F5E] via-[#0072CE] to-[#1A1F5E] text-white">
         <div className="max-w-[1920px] mx-auto px-12 sm:px-16 lg:px-20 py-12">
           <div className="text-center">
             <h1 className="text-4xl text-white font-bold mb-3">Calendar & Scheduling</h1>
-            <p className="text-xl text-blue-100 max-w-3xl mx-auto">
+            <p className="text-xl text-white/80 max-w-3xl mx-auto">
               Manage all your mentorship sessions and meetings in Microsoft Teams Calendar
             </p>
           </div>
@@ -29,9 +29,9 @@ export default function CalendarPage() {
 
           {/* Features Grid */}
           <div className="grid md:grid-cols-2 gap-8 mb-12">
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
+            <div className="bg-[#F4F4F4] border-2 border-[#0072CE]/30 rounded-xl p-6">
               <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 bg-[#0072CE] rounded-lg flex items-center justify-center flex-shrink-0">
                   <Calendar className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -41,9 +41,9 @@ export default function CalendarPage() {
               </div>
             </div>
 
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
+            <div className="bg-[#F4F4F4] border-2 border-[#0072CE]/30 rounded-xl p-6">
               <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 bg-[#0072CE] rounded-lg flex items-center justify-center flex-shrink-0">
                   <Video className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -79,7 +79,7 @@ export default function CalendarPage() {
           </div>
 
           {/* What You Can Do Section */}
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-xl p-8 mb-8">
+          <div className="bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] border-2 border-[#0072CE]/30 rounded-xl p-8 mb-8">
             <h3 className="text-xl font-semibold text-gray-900 mb-6 text-center">What You Can Do in Teams Calendar</h3>
             <div className="grid md:grid-cols-2 gap-4">
               {[
@@ -93,7 +93,7 @@ export default function CalendarPage() {
                 'Sync with Outlook Calendar'
               ].map((feature, index) => (
                 <div key={index} className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                  <CheckCircle className="w-5 h-5 text-[#0072CE] flex-shrink-0" />
                   <span className="text-gray-700">{feature}</span>
                 </div>
               ))}\n            </div>
@@ -105,7 +105,7 @@ export default function CalendarPage() {
               href="https://teams.microsoft.com/l/meeting/new"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center space-x-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-10 py-5 rounded-xl font-bold text-xl shadow-2xl hover:shadow-3xl transition-all transform hover:scale-105"
+              className="inline-flex items-center space-x-3 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white px-10 py-5 rounded-xl font-bold text-xl shadow-2xl hover:shadow-3xl transition-all transform hover:scale-105"
             >
               <Plus className="w-8 h-8" />
               <span>Schedule New Meeting</span>
@@ -117,7 +117,7 @@ export default function CalendarPage() {
                 href="https://teams.microsoft.com/l/calendar"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center space-x-2 bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-6 py-3 rounded-lg font-semibold transition-colors"
+                className="inline-flex items-center space-x-2 bg-white border-2 border-[#0072CE] text-[#0072CE] hover:bg-[#1A1F5E]/5 px-6 py-3 rounded-lg font-semibold transition-colors"
               >
                 <Calendar className="w-5 h-5" />
                 <span>View Calendar</span>
@@ -150,7 +150,7 @@ export default function CalendarPage() {
             href="https://support.microsoft.com/en-us/office/schedule-a-meeting-in-microsoft-teams-943507a9-8583-4c58-b5d2-8ec8265e04e5"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-700 font-medium inline-flex items-center space-x-1"
+            className="text-[#0072CE] hover:text-[#1A1F5E] font-medium inline-flex items-center space-x-1"
           >
             <span>Learn How to Schedule in Teams</span>
             <ChevronRight className="w-4 h-4" />

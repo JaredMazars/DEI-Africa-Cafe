@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   Users,
   UserCog,
@@ -105,9 +105,9 @@ const AdminOverview: React.FC = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl p-4 sm:p-6 text-white">
+      <div className="bg-gradient-to-r from-[#0072CE] to-[#0072CE] rounded-xl p-4 sm:p-6 text-white">
         <h2 className="text-lg sm:text-xl font-bold mb-2 text-base text-white">Welcome, Admin!</h2>
-        <p className="text-sm sm:text-base text-blue-100">
+        <p className="text-sm sm:text-base text-white/80">
           You have full access to manage all platform features. Use the sidebar to navigate to different sections.
         </p>
       </div>
@@ -143,7 +143,7 @@ const AdminOverview: React.FC = () => {
                       </span>
                     </div>
                     <p className="text-xs sm:text-sm text-gray-700 break-words">
-                      <span className="font-medium text-blue-600">{audit.action}</span>{' '}
+                      <span className="font-medium text-[#0072CE]">{audit.action}</span>{' '}
                       <span className="text-gray-500">{audit.entity}</span> - {audit.details}
                     </p>
                   </div>

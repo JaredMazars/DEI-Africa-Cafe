@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { ClipboardList, Search, Download, Filter, Calendar } from 'lucide-react';
 import { getData, STORAGE_KEYS } from '../../services/dataStore';
 import { AuditEntry } from '../../services/auditLogger';
@@ -61,7 +61,7 @@ const AdminAudit: React.FC = () => {
         </div>
         <button
           onClick={exportAudits}
-          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+          className="flex items-center gap-2 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
         >
           <Download className="w-5 h-5" />
           Export CSV
@@ -69,8 +69,8 @@ const AdminAudit: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-xl p-6 shadow-sm border">
-        <div className="inline-flex p-3 rounded-lg bg-blue-100 mb-3">
-          <ClipboardList className="w-6 h-6 text-blue-600" />
+        <div className="inline-flex p-3 rounded-lg bg-[#1A1F5E]/10 mb-3">
+          <ClipboardList className="w-6 h-6 text-[#0072CE]" />
         </div>
         <p className="text-gray-600 text-sm">Total Actions Logged</p>
         <p className="text-3xl font-bold text-gray-900 mt-1">{audits.length}</p>
@@ -85,7 +85,7 @@ const AdminAudit: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search audit log..."
-              className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
             />
           </div>
           <div className="relative">
@@ -93,7 +93,7 @@ const AdminAudit: React.FC = () => {
             <select
               value={filterAction}
               onChange={(e) => setFilterAction(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 appearance-none"
+              className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 appearance-none"
             >
               <option value="all">All Actions</option>
               {actions.map(action => (
@@ -129,7 +129,7 @@ const AdminAudit: React.FC = () => {
                     <p className="text-sm text-gray-700">
                       <span className={`inline-block px-2 py-1 rounded text-xs font-bold mr-2 ${
                         audit.action === 'CREATED' ? 'bg-green-100 text-green-700' :
-                        audit.action === 'UPDATED' ? 'bg-blue-100 text-blue-700' :
+                        audit.action === 'UPDATED' ? 'bg-[#1A1F5E]/10 text-[#1A1F5E]' :
                         audit.action === 'DELETED' ? 'bg-red-100 text-red-700' :
                         'bg-gray-100 text-gray-700'
                       }`}>

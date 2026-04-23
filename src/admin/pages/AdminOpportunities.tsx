@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Briefcase, Plus, Edit, Trash2, Save, X, Search } from 'lucide-react';
 import { getData, setData, STORAGE_KEYS } from '../../services/dataStore';
 import { logAuditAction } from '../../services/auditLogger';
@@ -121,7 +121,7 @@ const AdminOpportunities: React.FC = () => {
         </div>
         <button
           onClick={() => { resetModal(); setShowModal(true); }}
-          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+          className="flex items-center gap-2 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
         >
           <Plus className="w-5 h-5" />
           Add Opportunity
@@ -150,7 +150,7 @@ const AdminOpportunities: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search opportunities..."
-            className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
           />
         </div>
       </div>
@@ -169,7 +169,7 @@ const AdminOpportunities: React.FC = () => {
                 <p className="text-sm text-gray-600 mb-1">{opp.company} • {opp.location}</p>
                 <p className="text-sm text-gray-700 mb-3">{opp.description}</p>
                 <div className="flex items-center gap-4 text-xs text-gray-500">
-                  <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">{opp.type}</span>
+                  <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-2 py-1 rounded">{opp.type}</span>
                   <span>Deadline: {opp.deadline}</span>
                 </div>
               </div>
@@ -187,7 +187,7 @@ const AdminOpportunities: React.FC = () => {
                     setFormData(opp);
                     setShowModal(true);
                   }}
-                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                  className="p-2 text-[#0072CE] hover:bg-[#1A1F5E]/5 rounded-lg"
                 >
                   <Edit className="w-5 h-5" />
                 </button>
@@ -219,22 +219,22 @@ const AdminOpportunities: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Title *</label>
-                <input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                <input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Company *</label>
-                  <input type="text" value={formData.company} onChange={(e) => setFormData({ ...formData, company: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                  <input type="text" value={formData.company} onChange={(e) => setFormData({ ...formData, company: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
-                  <input type="text" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                  <input type="text" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Type</label>
-                  <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value as any })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                  <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value as any })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20">
                     <option value="Job">Job</option>
                     <option value="Fellowship">Fellowship</option>
                     <option value="Event">Event</option>
@@ -242,20 +242,20 @@ const AdminOpportunities: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Deadline</label>
-                  <input type="date" value={formData.deadline} onChange={(e) => setFormData({ ...formData, deadline: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                  <input type="date" value={formData.deadline} onChange={(e) => setFormData({ ...formData, deadline: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
-                <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows={3} />
+                <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" rows={3} />
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Requirements</label>
-                <textarea value={formData.requirements} onChange={(e) => setFormData({ ...formData, requirements: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows={3} />
+                <textarea value={formData.requirements} onChange={(e) => setFormData({ ...formData, requirements: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" rows={3} />
               </div>
               <div className="flex gap-4 mt-6">
                 <button onClick={resetModal} className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-bold">Cancel</button>
-                <button onClick={handleSubmit} className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-bold"><Save className="w-5 h-5 inline mr-2" />{editingId ? 'Update' : 'Add'}</button>
+                <button onClick={handleSubmit} className="flex-1 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white py-3 rounded-lg font-bold"><Save className="w-5 h-5 inline mr-2" />{editingId ? 'Update' : 'Add'}</button>
               </div>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { Plus, Search, Users, Lock, Globe, Send, MoreVertical, UserPlus, Settings } from 'lucide-react';
 import { messagesAPI, connectionsAPI } from '../services/api';
@@ -149,7 +149,7 @@ const Chat: React.FC = () => {
                 <h1 className="text-2xl font-bold text-gray-900">Chat Channels</h1>
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-colors"
+                  className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white p-2 rounded-lg transition-colors"
                 >
                   <Plus className="w-5 h-5" />
                 </button>
@@ -163,7 +163,7 @@ const Chat: React.FC = () => {
                   placeholder="Search channels..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] text-sm"
                 />
               </div>
             </div>
@@ -176,7 +176,7 @@ const Chat: React.FC = () => {
                   key={channel.id}
                   onClick={() => setSelectedChannel(channel.id)}
                   className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-                    selectedChannel === channel.id ? 'bg-blue-50 border-r-2 border-r-blue-600' : ''
+                    selectedChannel === channel.id ? 'bg-[#F4F4F4] border-r-2 border-r-blue-600' : ''
                   }`}
                 >
                   <div className="flex items-start justify-between mb-2">
@@ -223,7 +223,7 @@ const Chat: React.FC = () => {
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => setShowInviteModal(true)}
-                      className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      className="p-2 text-gray-500 hover:text-[#0072CE] hover:bg-[#1A1F5E]/5 rounded-lg transition-colors"
                     >
                       <UserPlus className="w-5 h-5" />
                     </button>
@@ -266,11 +266,11 @@ const Chat: React.FC = () => {
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   />
                   <button
                     onClick={handleSendMessage}
-                    className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-colors"
+                    className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white p-2 rounded-lg transition-colors"
                   >
                     <Send className="w-5 h-5" />
                   </button>
@@ -302,7 +302,7 @@ const Chat: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Channel Name</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   placeholder="Enter channel name"
                 />
               </div>
@@ -311,14 +311,14 @@ const Chat: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                 <textarea
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   placeholder="Describe what this channel is about"
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Channel Type</label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]">
                   <option value="public">Public - Anyone can join</option>
                   <option value="private">Private - Invite only</option>
                 </select>
@@ -334,7 +334,7 @@ const Chat: React.FC = () => {
               </button>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                className="flex-1 px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white rounded-lg transition-colors"
               >
                 Create Channel
               </button>
@@ -354,7 +354,7 @@ const Chat: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Search Users</label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   placeholder="Search by name or email"
                 />
               </div>
@@ -364,7 +364,7 @@ const Chat: React.FC = () => {
                   {['Thabo Mthembu', 'Nomsa Dlamini', 'Sipho Ndaba', 'Lerato Molefe'].map((user) => (
                     <div key={user} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg">
                       <span className="text-sm text-gray-900">{user}</span>
-                      <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                      <button className="text-[#0072CE] hover:text-[#1A1F5E] text-sm font-medium">
                         Invite
                       </button>
                     </div>
@@ -382,7 +382,7 @@ const Chat: React.FC = () => {
               </button>
               <button
                 onClick={() => setShowInviteModal(false)}
-                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                className="flex-1 px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white rounded-lg transition-colors"
               >
                 Send Invites
               </button>

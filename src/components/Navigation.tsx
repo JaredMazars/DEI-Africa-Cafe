@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Home, 
@@ -45,7 +45,7 @@ const Navigation = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-50">
+    <nav className="bg-[#1A1F5E] shadow-2xl sticky top-0 z-50">
       <div className="max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-12">
         <div className="flex justify-between items-center h-16 sm:h-20">
           {/* Logo and Brand */}
@@ -75,8 +75,8 @@ const Navigation = () => {
                   to={item.path}
                   className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                     isActive(item.path)
-                      ? 'bg-blue-100 text-blue-700 shadow-sm'
-                      : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                      ? 'text-white font-semibold border-b-2 border-[#E83E2D]'
+                      : 'text-white/80 hover:text-white hover:bg-white/10'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -94,14 +94,14 @@ const Navigation = () => {
               <input
                 type="text"
                 placeholder="Search..."
-                className="pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm w-64"
+                className="pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] text-sm w-64"
               />
             </div> */}
 
             {/* Notifications */}
             <button 
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 sm:p-2.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex-shrink-0"
+              className="relative p-2 sm:p-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors flex-shrink-0"
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
@@ -115,25 +115,25 @@ const Navigation = () => {
             <div className="relative flex-shrink-0">
               <button
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center space-x-2 sm:space-x-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg hover:bg-gray-100 transition-colors"
+                className="flex items-center space-x-2 sm:space-x-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg hover:bg-white/10 transition-colors"
               >
                 <div 
                   data-profile-icon
-                  className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0"
+                  className="w-7 h-7 sm:w-8 sm:h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0"
                 >
-                  <span className="text-blue-600 font-medium text-xs sm:text-sm">
+                  <span className="text-white font-medium text-xs sm:text-sm">
                     U
                   </span>
                 </div>
                 <div className="hidden md:block text-left min-w-0">
-                  <div className="text-sm font-medium text-gray-900 truncate">
+                  <div className="text-sm font-medium text-white truncate">
                     User
                   </div>
-                  <div className="text-xs text-gray-500 truncate">
+                  <div className="text-xs text-white/60 truncate">
                     Mentee
                   </div>
                 </div>
-                <Settings className="w-4 h-4 text-gray-400 hidden sm:block flex-shrink-0" />
+                <Settings className="w-4 h-4 text-white/60 hidden sm:block flex-shrink-0" />
               </button>
 
               {/* Dropdown Menu */}
@@ -152,7 +152,7 @@ const Navigation = () => {
                     className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     onClick={() => setShowProfileMenu(false)}
                   >
-                    <Trophy className="w-4 h-4 text-blue-600" />
+                    <Trophy className="w-4 h-4 text-[#0072CE]" />
                     <span>My Mentors</span>
                   </Link>
                   <Link
@@ -160,7 +160,7 @@ const Navigation = () => {
                     className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     onClick={() => setShowProfileMenu(false)}
                   >
-                    <Users className="w-4 h-4 text-blue-600" />
+                    <Users className="w-4 h-4 text-[#0072CE]" />
                     <span>My Mentees</span>
                   </Link>
                   <Link
@@ -189,7 +189,7 @@ const Navigation = () => {
         </div>
 
         {/* Mobile Navigation */}
-        <div className="lg:hidden border-t border-gray-200 py-2 sm:py-3 overflow-x-auto">
+        <div className="lg:hidden border-t border-white/20 py-2 sm:py-3 overflow-x-auto">
           <div className="flex items-center space-x-1 sm:space-x-2 pb-1 min-w-max px-3 sm:px-6">
             {navigationItems.map((item) => {
               const Icon = item.icon;
@@ -199,8 +199,8 @@ const Navigation = () => {
                   to={item.path}
                   className={`flex items-center space-x-1.5 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-200 ${
                     isActive(item.path)
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                      ? 'text-white font-semibold bg-white/10 border-b-2 border-[#E83E2D]'
+                      : 'text-white/80 hover:text-white hover:bg-white/10'
                   }`}
                 >
                   <Icon className="w-4 h-4 flex-shrink-0" />

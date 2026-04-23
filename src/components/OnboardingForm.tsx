@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Users, Briefcase, Target, User, Clock, ArrowLeft, ArrowRight } from 'lucide-react';
 
@@ -171,7 +171,7 @@ export function OnboardingForm() {
                   type="text"
                   value={data.name}
                   onChange={(e) => setData({ ...data, name: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-[#1A1F5E]"
                   placeholder="Enter your full name"
                 />
               </div>
@@ -181,7 +181,7 @@ export function OnboardingForm() {
                 <select
                   value={data.location}
                   onChange={(e) => setData({ ...data, location: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-[#1A1F5E]"
                 >
                   <option value="">Select your location</option>
                   {locationOptions.map((location) => (
@@ -279,7 +279,7 @@ export function OnboardingForm() {
                 <select
                   value={data.experience}
                   onChange={(e) => setData({ ...data, experience: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-[#1A1F5E]"
                 >
                   <option value="">Select your level</option>
                   {data.role === 'mentor' ? (
@@ -339,7 +339,7 @@ export function OnboardingForm() {
                 <select
                   value={data.availability}
                   onChange={(e) => setData({ ...data, availability: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-[#1A1F5E]"
                 >
                   <option value="">Select your availability</option>
                   <option value="1-2 hours/week">1-2 hours per week</option>
@@ -412,7 +412,7 @@ export function OnboardingForm() {
               <button
                 onClick={handleSubmit}
                 disabled={!canProceed()}
-                className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:from-blue-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
+                className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white font-semibold rounded-xl shadow-lg hover:opacity-90 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
               >
                 <span>Complete Profile</span>
                 <ArrowRight className="w-5 h-5" />
@@ -421,7 +421,7 @@ export function OnboardingForm() {
               <button
                 onClick={handleNext}
                 disabled={!canProceed()}
-                className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-600 text-white font-semibold rounded-xl shadow-lg hover:from-blue-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
+                className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white font-semibold rounded-xl shadow-lg hover:opacity-90 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
               >
                 <span>Next</span>
                 <ArrowRight className="w-5 h-5" />

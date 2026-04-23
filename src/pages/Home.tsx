@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { dashboardAPI, connectionsAPI, sessionsAPI, messagesAPI } from '../services/api';
 import { 
@@ -401,7 +401,7 @@ const Home: React.FC = () => {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'completed': return 'bg-blue-100 text-blue-800';
+      case 'completed': return 'bg-[#1A1F5E]/10 text-[#1A1F5E]';
       default: return 'bg-gray-100 text-gray-600';
     }
   };
@@ -420,19 +420,19 @@ const Home: React.FC = () => {
     <div className="space-y-8">
       {loading && (
         <div className="text-center py-8">
-          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-8 h-8 border-2 border-[#0072CE] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-600">Loading dashboard data...</p>
         </div>
       )}
       
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-blue-900 to-blue-800 rounded-xl p-8 text-white">
+      <div className="bg-gradient-to-r from-[#1A1F5E] to-[#0072CE] rounded-xl p-8 text-white">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl text-white font-bold mb-2">
               Welcome back, User! 👋
             </h1>
-            <p className="text-blue-100 text-lg">
+            <p className="text-white/80 text-lg">
               Continue your learning journey with your mentors
             </p>
           </div>
@@ -446,7 +446,7 @@ const Home: React.FC = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-blue-100">
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Connections</p>
@@ -456,18 +456,18 @@ const Home: React.FC = () => {
                 +2 this month
               </p>
             </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-              <Users className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 bg-[#1A1F5E]/10 rounded-xl flex items-center justify-center">
+              <Users className="w-6 h-6 text-[#0072CE]" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-blue-100">
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Upcoming Sessions</p>
               <p className="text-3xl font-bold text-gray-900">{stats.upcomingSessions}</p>
-              <p className="text-sm text-blue-600 flex items-center mt-1">
+              <p className="text-sm text-[#0072CE] flex items-center mt-1">
                 <Calendar className="w-4 h-4 mr-1" />
                 Next 7 days
               </p>
@@ -478,7 +478,7 @@ const Home: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-blue-100">
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Peer Rating</p>
@@ -494,33 +494,33 @@ const Home: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-blue-100">
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Active Connections</p>
               <p className="text-3xl font-bold text-gray-900">{stats.activeConnections}</p>
-              <p className="text-sm text-blue-600 flex items-center mt-1">
+              <p className="text-sm text-[#0072CE] flex items-center mt-1">
                 <Users className="w-4 h-4 mr-1" />
                 Engaged network
               </p>
             </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-              <Users className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 bg-[#1A1F5E]/10 rounded-xl flex items-center justify-center">
+              <Users className="w-6 h-6 text-[#0072CE]" />
             </div>
           </div>
         </div>
       </div>
 
       {/* ---- Your Meeting ---- */}
-      <div className="bg-white rounded-2xl shadow-lg border border-blue-100 overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-blue-900 to-blue-700">
+      <div className="bg-white rounded-2xl shadow-lg border border-[#E5E7EB] overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-[#1A1F5E] to-[#1A1F5E]">
           <div className="flex items-center space-x-3">
             <Video className="w-5 h-5 text-white" />
             <h3 className="text-lg font-semibold text-white">Your Meeting</h3>
           </div>
           <button
             onClick={() => { loadRegisteredSessions(selectedSessionId); }}
-            className="flex items-center space-x-1.5 text-blue-200 hover:text-white text-sm transition-colors"
+            className="flex items-center space-x-1.5 text-white/70 hover:text-white text-sm transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
             <span>Refresh</span>
@@ -529,8 +529,8 @@ const Home: React.FC = () => {
 
         {registeredSessions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-            <div className="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center mb-4">
-              <Calendar className="w-7 h-7 text-blue-400" />
+            <div className="w-14 h-14 bg-[#F4F4F4] rounded-full flex items-center justify-center mb-4">
+              <Calendar className="w-7 h-7 text-[#0072CE]" />
             </div>
             <p className="text-gray-700 font-medium mb-1">No sessions registered yet</p>
             <p className="text-gray-500 text-sm">Register for a session in the <strong>Expert Directory → Webinars</strong> tab and it will appear here.</p>
@@ -550,7 +550,7 @@ const Home: React.FC = () => {
                     setSelectedSessionId(id);
                     setSelectedSession(registeredSessions.find(s => s.id === id) ?? null);
                   }}
-                  className="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
+                  className="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] cursor-pointer"
                 >
                   {registeredSessions.map(session => (
                     <option key={session.id} value={session.id}>
@@ -568,7 +568,7 @@ const Home: React.FC = () => {
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <h4 className="font-semibold text-gray-900 text-base leading-snug">{selectedSession.title}</h4>
-                    <span className="inline-block mt-1 px-2.5 py-0.5 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">{selectedSession.topic}</span>
+                    <span className="inline-block mt-1 px-2.5 py-0.5 bg-[#1A1F5E]/10 text-[#1A1F5E] text-xs font-medium rounded-full">{selectedSession.topic}</span>
                   </div>
                   {selectedSession.expertAvatar && (
                     <img
@@ -581,23 +581,23 @@ const Home: React.FC = () => {
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
                   <div className="flex items-center space-x-2 text-gray-600">
-                    <User className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                    <User className="w-4 h-4 text-white/900 flex-shrink-0" />
                     <span className="truncate">{selectedSession.expert}</span>
                   </div>
                   <div className="flex items-center space-x-2 text-gray-600">
-                    <Calendar className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                    <Calendar className="w-4 h-4 text-white/900 flex-shrink-0" />
                     <span>{selectedSession.date}</span>
                   </div>
                   <div className="flex items-center space-x-2 text-gray-600">
-                    <Clock className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                    <Clock className="w-4 h-4 text-white/900 flex-shrink-0" />
                     <span>{selectedSession.time}</span>
                   </div>
                   <div className="flex items-center space-x-2 text-gray-600">
-                    <MapPin className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                    <MapPin className="w-4 h-4 text-white/900 flex-shrink-0" />
                     <span>{selectedSession.region}</span>
                   </div>
                   <div className="flex items-center space-x-2 text-gray-600">
-                    <Users className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                    <Users className="w-4 h-4 text-white/900 flex-shrink-0" />
                     <span>{selectedSession.attendees}/{selectedSession.maxAttendees} attendees</span>
                   </div>
                 </div>
@@ -614,7 +614,7 @@ const Home: React.FC = () => {
                       alert('Teams link will be available 15 minutes before the session starts.');
                     }
                   }}
-                  className="w-full flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
+                  className="w-full flex items-center justify-center space-x-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white font-semibold py-3 px-6 rounded-xl transition-colors"
                 >
                   <Video className="w-5 h-5" />
                   <span>Join Meeting</span>
@@ -628,18 +628,18 @@ const Home: React.FC = () => {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <button className="bg-white rounded-2xl shadow-lg p-6 border border-blue-100 hover:shadow-xl transition-shadow text-left group">
+        <button className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB] hover:shadow-xl transition-shadow text-left group">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-              <Plus className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 bg-[#1A1F5E]/10 rounded-xl flex items-center justify-center group-hover:bg-[#0072CE]/20 transition-colors">
+              <Plus className="w-6 h-6 text-[#0072CE]" />
             </div>
-            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
+            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-[#0072CE] transition-colors" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Find New Mentors</h3>
           <p className="text-gray-600 text-sm">Discover experienced professionals in your field</p>
         </button>
 
-        <button className="bg-white rounded-2xl shadow-lg p-6 border border-blue-100 hover:shadow-xl transition-shadow text-left group">
+        <button className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB] hover:shadow-xl transition-shadow text-left group">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center group-hover:bg-green-200 transition-colors">
               <Calendar className="w-6 h-6 text-green-600" />
@@ -650,12 +650,12 @@ const Home: React.FC = () => {
           <p className="text-gray-600 text-sm">Book a mentoring session with your connections</p>
         </button>
 
-        <button className="bg-white rounded-2xl shadow-lg p-6 border border-blue-100 hover:shadow-xl transition-shadow text-left group">
+        <button className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB] hover:shadow-xl transition-shadow text-left group">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-              <BookOpen className="w-6 h-6 text-blue-900" />
+            <div className="w-12 h-12 bg-[#1A1F5E]/10 rounded-lg flex items-center justify-center group-hover:bg-[#0072CE]/20 transition-colors">
+              <BookOpen className="w-6 h-6 text-[#1A1F5E]" />
             </div>
-            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-blue-900 transition-colors" />
+            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-[#1A1F5E] transition-colors" />
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Browse Resources</h3>
           <p className="text-gray-600 text-sm">Access learning materials and industry insights</p>
@@ -665,22 +665,22 @@ const Home: React.FC = () => {
       {/* Upcoming Sessions & Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Upcoming Sessions */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-blue-100">
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-semibold text-gray-900 flex items-center">
-              <Calendar className="w-5 h-5 mr-2 text-blue-600" />
+              <Calendar className="w-5 h-5 mr-2 text-[#0072CE]" />
               Upcoming Sessions
             </h3>
-            <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">View All</button>
+            <button className="text-[#0072CE] hover:text-[#1A1F5E] text-sm font-medium">View All</button>
           </div>
           <div className="space-y-4">
             {upcomingSessions.slice(0, 3).map((session) => (
               <div key={session.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
                 <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    {session.type === 'video' && <Video className="w-5 h-5 text-blue-600" />}
-                    {session.type === 'in-person' && <Users className="w-5 h-5 text-blue-600" />}
-                    {session.type === 'phone' && <Coffee className="w-5 h-5 text-blue-600" />}
+                  <div className="w-10 h-10 bg-[#1A1F5E]/10 rounded-full flex items-center justify-center">
+                    {session.type === 'video' && <Video className="w-5 h-5 text-[#0072CE]" />}
+                    {session.type === 'in-person' && <Users className="w-5 h-5 text-[#0072CE]" />}
+                    {session.type === 'phone' && <Coffee className="w-5 h-5 text-[#0072CE]" />}
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900">{session.title}</h4>
@@ -700,13 +700,13 @@ const Home: React.FC = () => {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-blue-100">
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-semibold text-gray-900 flex items-center">
-              <Activity className="w-5 h-5 mr-2 text-blue-600" />
+              <Activity className="w-5 h-5 mr-2 text-[#0072CE]" />
               Recent Activity
             </h3>
-            <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">View All</button>
+            <button className="text-[#0072CE] hover:text-[#1A1F5E] text-sm font-medium">View All</button>
           </div>
           <div className="space-y-4">
             {recentActivity.map((activity) => {
@@ -721,7 +721,7 @@ const Home: React.FC = () => {
                   />
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-1">
-                      <Icon className="w-4 h-4 text-blue-600" />
+                      <Icon className="w-4 h-4 text-[#0072CE]" />
                       <h4 className="font-medium text-gray-900 text-sm">{activity.title}</h4>
                     </div>
                     <p className="text-sm text-gray-600">{activity.description}</p>
@@ -755,7 +755,7 @@ const Home: React.FC = () => {
             onClick={() => setConnectionTab('all')}
             className={`px-6 py-2.5 rounded-lg font-medium text-sm transition-all ${
               connectionTab === 'all'
-                ? 'bg-blue-600 text-white shadow-sm'
+                ? 'bg-[#0072CE] text-white shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
@@ -765,7 +765,7 @@ const Home: React.FC = () => {
             onClick={() => setConnectionTab('mentors')}
             className={`px-6 py-2.5 rounded-lg font-medium text-sm transition-all ${
               connectionTab === 'mentors'
-                ? 'bg-blue-600 text-white shadow-sm'
+                ? 'bg-[#0072CE] text-white shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
@@ -775,7 +775,7 @@ const Home: React.FC = () => {
             onClick={() => setConnectionTab('mentees')}
             className={`px-6 py-2.5 rounded-lg font-medium text-sm transition-all ${
               connectionTab === 'mentees'
-                ? 'bg-blue-600 text-white shadow-sm'
+                ? 'bg-[#0072CE] text-white shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
@@ -785,7 +785,7 @@ const Home: React.FC = () => {
             onClick={() => setConnectionTab('experts')}
             className={`px-6 py-2.5 rounded-lg font-medium text-sm transition-all ${
               connectionTab === 'experts'
-                ? 'bg-blue-600 text-white shadow-sm'
+                ? 'bg-[#0072CE] text-white shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
@@ -802,13 +802,13 @@ const Home: React.FC = () => {
               placeholder={`Search ${connectionTab === 'all' ? 'connections' : connectionTab}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
             />
           </div>
           <select 
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
@@ -825,7 +825,7 @@ const Home: React.FC = () => {
             const matchesStatus = filterStatus === 'all' || connection.status === filterStatus;
             return matchesSearch && matchesStatus;
           }).map((connection) => (
-          <div key={connection.id} className="bg-white rounded-2xl shadow-lg p-6 border border-blue-100 hover:shadow-xl transition-shadow">
+          <div key={connection.id} className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB] hover:shadow-xl transition-shadow">
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center space-x-4">
@@ -837,7 +837,7 @@ const Home: React.FC = () => {
                 />
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">{connection.name}</h3>
-                  <p className="text-blue-600 font-medium text-sm">{connection.title}</p>
+                  <p className="text-[#0072CE] font-medium text-sm">{connection.title}</p>
                   <p className="text-gray-600 text-xs">{connection.company}</p>
                 </div>
               </div>
@@ -849,7 +849,7 @@ const Home: React.FC = () => {
             {/* Role Badge */}
             <div className="flex items-center justify-between mb-4">
               <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                connection.role === 'mentor' ? 'bg-blue-100 text-blue-900' : 'bg-teal-100 text-teal-800'
+                connection.role === 'mentor' ? 'bg-[#1A1F5E]/10 text-[#1A1F5E]' : 'bg-teal-100 text-teal-800'
               }`}>
                 {connection.role === 'mentor' ? '👨‍🏫 Mentor' : '🎓 Mentee'}
               </span>
@@ -880,7 +880,7 @@ const Home: React.FC = () => {
                 {connection.expertise.slice(0, 2).map((skill, index) => (
                   <span
                     key={index}
-                    className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full"
+                    className="px-2 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] text-xs font-medium rounded-full"
                   >
                     {skill}
                   </span>
@@ -895,7 +895,7 @@ const Home: React.FC = () => {
 
             {/* Actions */}
             <div className="grid grid-cols-2 gap-3">
-              <button className="flex items-center justify-center space-x-1 py-2 px-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+              <button className="flex items-center justify-center space-x-1 py-2 px-3 bg-[#0072CE] text-white rounded-lg hover:bg-[#1A1F5E] transition-colors text-sm">
                 <MessageSquare className="w-4 h-4" />
                 <span>Message</span>
               </button>
@@ -941,7 +941,7 @@ const Home: React.FC = () => {
                 onClick={() => setActiveTab('overview')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === 'overview'
-                    ? 'border-blue-600 text-blue-600'
+                    ? 'border-[#0072CE] text-[#0072CE]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
@@ -954,7 +954,7 @@ const Home: React.FC = () => {
                 onClick={() => setActiveTab('connections')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === 'connections'
-                    ? 'border-blue-600 text-blue-600'
+                    ? 'border-[#0072CE] text-[#0072CE]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >

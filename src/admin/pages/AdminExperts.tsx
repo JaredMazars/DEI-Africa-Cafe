@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Users, Plus, Edit, Trash2, Save, X, Search, Video, MessageCircle } from 'lucide-react';
 import { getData, setData, STORAGE_KEYS } from '../../services/dataStore';
 import { logAuditAction } from '../../services/auditLogger';
@@ -165,7 +165,7 @@ const AdminExperts: React.FC = () => {
         {activeTab === 'experts' && (
           <button
             onClick={() => { resetModal(); setShowModal(true); }}
-            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+            className="flex items-center gap-2 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
           >
             <Plus className="w-5 h-5" />
             Add Expert
@@ -176,8 +176,8 @@ const AdminExperts: React.FC = () => {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white rounded-xl p-6 shadow-sm border">
-          <div className="inline-flex p-3 rounded-lg bg-blue-100 mb-3">
-            <Users className="w-6 h-6 text-blue-600" />
+          <div className="inline-flex p-3 rounded-lg bg-[#1A1F5E]/10 mb-3">
+            <Users className="w-6 h-6 text-[#0072CE]" />
           </div>
           <p className="text-gray-600 text-sm">Total Experts</p>
           <p className="text-3xl font-bold text-gray-900 mt-1">{experts.length}</p>
@@ -190,8 +190,8 @@ const AdminExperts: React.FC = () => {
           <p className="text-3xl font-bold text-gray-900 mt-1">{webinars.length}</p>
         </div>
         <div className="bg-white rounded-xl p-6 shadow-sm border">
-          <div className="inline-flex p-3 rounded-lg bg-blue-100 mb-3">
-            <MessageCircle className="w-6 h-6 text-blue-600" />
+          <div className="inline-flex p-3 rounded-lg bg-[#1A1F5E]/10 mb-3">
+            <MessageCircle className="w-6 h-6 text-[#0072CE]" />
           </div>
           <p className="text-gray-600 text-sm">Questions</p>
           <p className="text-3xl font-bold text-gray-900 mt-1">{questions.length}</p>
@@ -222,7 +222,7 @@ const AdminExperts: React.FC = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                    activeTab === tab.id ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'
+                    activeTab === tab.id ? 'bg-[#1A1F5E]/10 text-[#1A1F5E]' : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >
                   <Icon className="w-5 h-5" />
@@ -243,7 +243,7 @@ const AdminExperts: React.FC = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder={`Search ${activeTab}...`}
-                className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
               />
             </div>
           </div>
@@ -261,7 +261,7 @@ const AdminExperts: React.FC = () => {
                           <p className="text-sm text-gray-600">{expert.title} • {expert.company}</p>
                           <div className="flex flex-wrap gap-2 mt-2">
                             {expert.expertise.map((skill, idx) => (
-                              <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
+                              <span key={idx} className="px-2 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] rounded text-xs">
                                 {skill}
                               </span>
                             ))}
@@ -283,7 +283,7 @@ const AdminExperts: React.FC = () => {
                               });
                               setShowModal(true);
                             }}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                            className="p-2 text-[#0072CE] hover:bg-[#1A1F5E]/5 rounded-lg"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
@@ -368,42 +368,42 @@ const AdminExperts: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Name *</label>
-                  <input type="text" value={expertForm.name} onChange={(e) => setExpertForm({ ...expertForm, name: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                  <input type="text" value={expertForm.name} onChange={(e) => setExpertForm({ ...expertForm, name: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Title *</label>
-                  <input type="text" value={expertForm.title} onChange={(e) => setExpertForm({ ...expertForm, title: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                  <input type="text" value={expertForm.title} onChange={(e) => setExpertForm({ ...expertForm, title: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Company</label>
-                <input type="text" value={expertForm.company} onChange={(e) => setExpertForm({ ...expertForm, company: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                <input type="text" value={expertForm.company} onChange={(e) => setExpertForm({ ...expertForm, company: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" />
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Expertise (comma-separated)</label>
-                <input type="text" value={expertForm.expertise} onChange={(e) => setExpertForm({ ...expertForm, expertise: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="AI, Machine Learning, Data Science" />
+                <input type="text" value={expertForm.expertise} onChange={(e) => setExpertForm({ ...expertForm, expertise: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" placeholder="AI, Machine Learning, Data Science" />
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Bio</label>
-                <textarea value={expertForm.bio} onChange={(e) => setExpertForm({ ...expertForm, bio: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows={3} />
+                <textarea value={expertForm.bio} onChange={(e) => setExpertForm({ ...expertForm, bio: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" rows={3} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Availability</label>
-                  <input type="text" value={expertForm.availability} onChange={(e) => setExpertForm({ ...expertForm, availability: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Flexible, Weekends, etc." />
+                  <input type="text" value={expertForm.availability} onChange={(e) => setExpertForm({ ...expertForm, availability: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" placeholder="Flexible, Weekends, etc." />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Languages</label>
-                  <input type="text" value={expertForm.languages} onChange={(e) => setExpertForm({ ...expertForm, languages: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="English, French" />
+                  <input type="text" value={expertForm.languages} onChange={(e) => setExpertForm({ ...expertForm, languages: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" placeholder="English, French" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Image URL</label>
-                <input type="url" value={expertForm.image} onChange={(e) => setExpertForm({ ...expertForm, image: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                <input type="url" value={expertForm.image} onChange={(e) => setExpertForm({ ...expertForm, image: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" />
               </div>
               <div className="flex gap-4 mt-6">
                 <button onClick={resetModal} className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-bold">Cancel</button>
-                <button onClick={handleExpertSubmit} className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-bold"><Save className="w-5 h-5 inline mr-2" />{editingId ? 'Update' : 'Add'}</button>
+                <button onClick={handleExpertSubmit} className="flex-1 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white py-3 rounded-lg font-bold"><Save className="w-5 h-5 inline mr-2" />{editingId ? 'Update' : 'Add'}</button>
               </div>
             </div>
           </div>

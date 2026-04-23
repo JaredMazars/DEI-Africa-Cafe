@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -46,7 +46,7 @@ const AdminLayout: React.FC = () => {
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 bg-gradient-to-r from-blue-900 to-blue-700 text-white p-4 z-50 shadow-lg">
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-gradient-to-r from-[#1A1F5E] to-[#1A1F5E] text-white p-4 z-50 shadow-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-white/20 backdrop-blur-lg rounded-lg p-2">
@@ -54,7 +54,7 @@ const AdminLayout: React.FC = () => {
             </div>
             <div>
               <h1 className="text-base text-white">Admin Console</h1>
-              <p className="text-xs text-blue-200">DEI Africa Café</p>
+              <p className="text-xs text-white/70">DEI Africa Café</p>
             </div>
           </div>
           <button
@@ -78,19 +78,19 @@ const AdminLayout: React.FC = () => {
       {/* Sidebar */}
       <aside className={`
         fixed lg:static inset-y-0 left-0 z-40
-        w-64 bg-gradient-to-b from-blue-900 via-blue-800 to-blue-700 text-white flex flex-col
+        w-64 bg-gradient-to-b from-[#1A1F5E] via-[#0072CE] to-[#1A1F5E] text-white flex flex-col
         transform transition-transform duration-300 ease-in-out
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         {/* Header */}
-        <div className="p-6 border-b border-blue-600 lg:block hidden">
+        <div className="p-6 border-b border-[#0072CE] lg:block hidden">
           <div className="flex items-center gap-3">
             <div className="bg-white/20 backdrop-blur-lg rounded-lg p-2">
               <Shield className="w-6 h-6" />
             </div>
             <div>
               <h1 className="text-base text-white">Admin Console</h1>
-              <p className="text-xs text-blue-200">DEI Africa Café</p>
+              <p className="text-xs text-white/70">DEI Africa Café</p>
             </div>
           </div>
         </div>
@@ -110,8 +110,8 @@ const AdminLayout: React.FC = () => {
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                     isActive
-                      ? 'bg-white text-blue-900 shadow-lg font-semibold'
-                      : 'text-blue-100 hover:bg-white/10 hover:text-white'
+                      ? 'bg-white text-[#1A1F5E] shadow-lg font-semibold'
+                      : 'text-white/80 hover:bg-white/10 hover:text-white'
                   }`
                 }
               >
@@ -123,10 +123,10 @@ const AdminLayout: React.FC = () => {
         </nav>
 
         {/* Logout */}
-        <div className="p-4 border-t border-blue-600">
+        <div className="p-4 border-t border-[#0072CE]">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg w-full text-blue-100 hover:bg-red-500 hover:text-white transition-all"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg w-full text-white/80 hover:bg-red-500 hover:text-white transition-all"
           >
             <LogOut className="w-5 h-5" />
             <span>Logout</span>

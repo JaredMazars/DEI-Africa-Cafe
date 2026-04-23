@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { MessageSquare, Video, Users, Calendar, ChevronRight, CheckCircle } from 'lucide-react';
 
 const Chat: React.FC = () => {
@@ -6,11 +6,11 @@ const Chat: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 text-white">
+      <div className="bg-gradient-to-r from-[#1A1F5E] via-[#0072CE] to-[#1A1F5E] text-white">
         <div className="max-w-[1920px] mx-auto px-12 sm:px-16 lg:px-20 py-12">
           <div className="text-center">
             <h1 className="text-4xl text-white font-bold mb-3">Discussions & Chat</h1>
-            <p className="text-xl text-blue-100 max-w-4xl mx-auto">
+            <p className="text-xl text-white/80 max-w-4xl mx-auto">
               All conversations and discussions now happen in Microsoft Teams for better collaboration
             </p>
           </div>
@@ -30,9 +30,9 @@ const Chat: React.FC = () => {
 
           {/* Features Grid */}
           <div className="grid md:grid-cols-2 gap-8 mb-12">
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
+            <div className="bg-[#F4F4F4] border-2 border-[#0072CE]/30 rounded-xl p-6">
               <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 bg-[#0072CE] rounded-lg flex items-center justify-center flex-shrink-0">
                   <MessageSquare className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -42,9 +42,9 @@ const Chat: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
+            <div className="bg-[#F4F4F4] border-2 border-[#0072CE]/30 rounded-xl p-6">
               <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 bg-[#0072CE] rounded-lg flex items-center justify-center flex-shrink-0">
                   <Video className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -80,7 +80,7 @@ const Chat: React.FC = () => {
           </div>
 
           {/* What You Can Do Section */}
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-xl p-8 mb-8">
+          <div className="bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] border-2 border-[#0072CE]/30 rounded-xl p-8 mb-8">
             <h3 className="text-xl font-semibold text-gray-900 mb-6 text-center">What You Can Do in Teams</h3>
             <div className="grid md:grid-cols-2 gap-4">
               {[
@@ -94,7 +94,7 @@ const Chat: React.FC = () => {
                 'Search conversation history'
               ].map((feature, index) => (
                 <div key={index} className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                  <CheckCircle className="w-5 h-5 text-[#0072CE] flex-shrink-0" />
                   <span className="text-gray-700">{feature}</span>
                 </div>
               ))}
@@ -107,7 +107,7 @@ const Chat: React.FC = () => {
               href="https://teams.microsoft.com/l/team/19%3amentor_discussions"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center space-x-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-10 py-5 rounded-xl font-bold text-xl shadow-2xl hover:shadow-3xl transition-all transform hover:scale-105"
+              className="inline-flex items-center space-x-3 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white px-10 py-5 rounded-xl font-bold text-xl shadow-2xl hover:shadow-3xl transition-all transform hover:scale-105"
             >
               <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M17 3H7C5.89543 3 5 3.89543 5 5V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V5C19 3.89543 18.1046 3 17 3Z"/>
@@ -131,7 +131,7 @@ const Chat: React.FC = () => {
             href="https://support.microsoft.com/en-us/teams"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-700 font-medium inline-flex items-center space-x-1"
+            className="text-[#0072CE] hover:text-[#1A1F5E] font-medium inline-flex items-center space-x-1"
           >
             <span>Visit Teams Help Center</span>
             <ChevronRight className="w-4 h-4" />

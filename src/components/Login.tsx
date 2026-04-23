@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, EyeOff, Loader, Building2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -34,16 +34,16 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F4F4F4] via-white to-[#F4F4F4] px-4">
       <div className="w-full max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 items-center">
         {/* Left Side - Branding */}
         <div className="text-center lg:text-left space-y-8">
           <div className="space-y-4">
             <div className="flex items-center justify-center lg:justify-start space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] rounded-xl flex items-center justify-center">
                 <Building2 className="w-7 h-7 text-white" />
               </div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-700 to-blue-700 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#1A1F5E] to-[#1A1F5E] bg-clip-text text-transparent">
                 DEI Cafe
               </h1>
             </div>
@@ -54,21 +54,21 @@ const Login: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="text-center p-4 rounded-xl bg-white/50 backdrop-blur-sm">
-              <div className="w-8 h-8 bg-blue-600 rounded-full mx-auto mb-2 flex items-center justify-center">
+              <div className="w-8 h-8 bg-[#0072CE] rounded-full mx-auto mb-2 flex items-center justify-center">
                 <span className="text-white font-bold text-sm">10K+</span>
               </div>
               <h3 className="font-semibold text-gray-800">Active Members</h3>
               <p className="text-sm text-gray-600">Across Africa</p>
             </div>
             <div className="text-center p-4 rounded-xl bg-white/50 backdrop-blur-sm">
-              <div className="w-8 h-8 bg-blue-600 rounded-full mx-auto mb-2 flex items-center justify-center">
+              <div className="w-8 h-8 bg-[#0072CE] rounded-full mx-auto mb-2 flex items-center justify-center">
                 <span className="text-white font-bold text-sm">54</span>
               </div>
               <h3 className="font-semibold text-gray-800">Countries</h3>
               <p className="text-sm text-gray-600">Connected</p>
             </div>
             <div className="text-center p-4 rounded-xl bg-white/50 backdrop-blur-sm">
-              <div className="w-8 h-8 bg-blue-600 rounded-full mx-auto mb-2 flex items-center justify-center">
+              <div className="w-8 h-8 bg-[#0072CE] rounded-full mx-auto mb-2 flex items-center justify-center">
                 <span className="text-white font-bold text-sm">5K+</span>
               </div>
               <h3 className="font-semibold text-gray-800">Connections</h3>
@@ -79,9 +79,9 @@ const Login: React.FC = () => {
 
         {/* Right Side - Login Form */}
         <div className="w-full max-w-md mx-auto">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 border border-blue-100">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 border border-[#E5E7EB]">
             <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Building2 className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
@@ -104,7 +104,7 @@ const Login: React.FC = () => {
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] transition-colors"
                   placeholder="Enter your email"
                   required
                 />
@@ -120,7 +120,7 @@ const Login: React.FC = () => {
                     id="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] transition-colors"
                     placeholder="Enter your password"
                     required
                   />
@@ -136,10 +136,10 @@ const Login: React.FC = () => {
 
               <div className="flex items-center justify-between">
                 <label className="flex items-center">
-                  <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                  <input type="checkbox" className="rounded border-gray-300 text-[#0072CE] focus:ring-[#1A1F5E]/20" />
                   <span className="ml-2 text-sm text-gray-600">Remember me</span>
                 </label>
-                <button type="button" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                <button type="button" className="text-sm text-[#0072CE] hover:text-[#1A1F5E] font-medium">
                   Forgot password?
                 </button>
               </div>
@@ -147,7 +147,7 @@ const Login: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
+                className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
               >
                 {loading ? (
                   <>
@@ -163,7 +163,7 @@ const Login: React.FC = () => {
             <div className="mt-8 text-center">
               <p className="text-gray-600">
                 Don't have an account?{' '}
-                <Link to="/register" className="text-blue-600 hover:text-blue-700 font-semibold">
+                <Link to="/register" className="text-[#0072CE] hover:text-[#1A1F5E] font-semibold">
                   Sign up
                 </Link>
               </p>

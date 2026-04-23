@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, User, Share2, Bookmark, Calendar } from 'lucide-react';
 
@@ -81,9 +81,9 @@ The journey toward true workplace diversity is ongoing, but the destination—or
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-[#F4F4F4]">
       {/* Hero Section */}
-      <div className="relative h-[500px] bg-gradient-to-r from-blue-900 to-blue-900 overflow-hidden">
+      <div className="relative h-[500px] bg-gradient-to-r from-[#1A1F5E] to-[#1A1F5E] overflow-hidden">
         <div className="absolute inset-0">
           <img 
             src={article.coverImage}
@@ -103,7 +103,7 @@ The journey toward true workplace diversity is ongoing, but the destination—or
           </button>
 
           <div className="mb-4">
-            <span className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-bold">
+            <span className="bg-[#0072CE] text-white px-4 py-2 rounded-full text-sm font-bold">
               {article.category}
             </span>
           </div>
@@ -113,7 +113,7 @@ The journey toward true workplace diversity is ongoing, but the destination—or
           </h1>
 
           {article.subtitle && (
-            <p className="text-xl md:text-2xl text-blue-200 mb-6">
+            <p className="text-xl md:text-2xl text-white/70 mb-6">
               {article.subtitle}
             </p>
           )}
@@ -146,7 +146,7 @@ The journey toward true workplace diversity is ongoing, but the destination—or
             <Bookmark className="w-4 h-4" />
             Save
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-lg">
+          <button className="flex items-center gap-2 px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white rounded-lg font-medium transition-colors shadow-lg">
             <Share2 className="w-4 h-4" />
             Share
           </button>
@@ -161,9 +161,9 @@ The journey toward true workplace diversity is ongoing, but the destination—or
 
         {/* Author Card */}
         <div className="mt-16 pt-8 border-t-2 border-gray-200">
-          <div className="bg-gradient-to-br from-blue-50 to-blue-50 rounded-2xl p-8 border border-blue-200">
+          <div className="bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] rounded-2xl p-8 border border-[#0072CE]/30">
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+              <div className="w-16 h-16 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] rounded-full flex items-center justify-center text-white text-2xl font-bold">
                 {article.author.split(' ').map(n => n[0]).join('')}
               </div>
               <div>
@@ -201,7 +201,7 @@ The journey toward true workplace diversity is ongoing, but the destination—or
                   className="w-full h-48 object-cover"
                 />
                 <div className="p-6">
-                  <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">
+                  <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-3 py-1 rounded-full text-xs font-bold">
                     {relatedArticle.category}
                   </span>
                   <h3 className="text-xl font-bold text-gray-900 mt-3">{relatedArticle.title}</h3>

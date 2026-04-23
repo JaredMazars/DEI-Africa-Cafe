@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Settings, Save, RefreshCw, Target, MapPin, Clock, Languages, Briefcase, User } from 'lucide-react';
 import { authAPI } from '../services/api';
 
@@ -164,7 +164,7 @@ const Preferences: React.FC = () => {
   const renderMentorPreferences = () => (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] rounded-full flex items-center justify-center mx-auto">
           <Target className="w-8 h-8 text-white" />
         </div>
         <h2 className="text-3xl font-bold text-gray-900">Mentor Preferences</h2>
@@ -183,8 +183,8 @@ const Preferences: React.FC = () => {
                 onClick={() => handleArrayToggle('mentorPreferences', 'preferredExpertise', expertise)}
                 className={`p-4 rounded-xl border-2 transition-all duration-200 text-sm font-medium ${
                   preferences.mentorPreferences.preferredExpertise.includes(expertise)
-                    ? 'border-blue-600 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 text-gray-700 hover:border-blue-300'
+                    ? 'border-[#0072CE] bg-[#F4F4F4] text-[#1A1F5E]'
+                    : 'border-gray-200 text-gray-700 hover:border-[#0072CE]/40'
                 }`}
               >
                 {expertise}
@@ -204,8 +204,8 @@ const Preferences: React.FC = () => {
                 onClick={() => handleArrayToggle('mentorPreferences', 'preferredLocation', location)}
                 className={`p-3 rounded-xl border-2 transition-all duration-200 text-sm font-medium ${
                   preferences.mentorPreferences.preferredLocation.includes(location)
-                    ? 'border-blue-600 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 text-gray-700 hover:border-blue-300'
+                    ? 'border-[#0072CE] bg-[#F4F4F4] text-[#1A1F5E]'
+                    : 'border-gray-200 text-gray-700 hover:border-[#0072CE]/40'
                 }`}
               >
                 {location}
@@ -225,8 +225,8 @@ const Preferences: React.FC = () => {
                 onClick={() => handleArrayToggle('mentorPreferences', 'preferredExperience', experience)}
                 className={`p-4 rounded-xl border-2 transition-all duration-200 text-sm font-medium ${
                   preferences.mentorPreferences.preferredExperience.includes(experience)
-                    ? 'border-blue-600 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 text-gray-700 hover:border-blue-300'
+                    ? 'border-[#0072CE] bg-[#F4F4F4] text-[#1A1F5E]'
+                    : 'border-gray-200 text-gray-700 hover:border-[#0072CE]/40'
                 }`}
               >
                 {experience}
@@ -246,8 +246,8 @@ const Preferences: React.FC = () => {
                 onClick={() => handleArrayToggle('mentorPreferences', 'preferredLanguages', language)}
                 className={`p-3 rounded-xl border-2 transition-all duration-200 text-sm font-medium ${
                   preferences.mentorPreferences.preferredLanguages.includes(language)
-                    ? 'border-blue-600 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 text-gray-700 hover:border-blue-300'
+                    ? 'border-[#0072CE] bg-[#F4F4F4] text-[#1A1F5E]'
+                    : 'border-gray-200 text-gray-700 hover:border-[#0072CE]/40'
                 }`}
               >
                 {language}
@@ -264,7 +264,7 @@ const Preferences: React.FC = () => {
             <select
               value={preferences.mentorPreferences.sessionFrequency}
               onChange={(e) => handleFieldChange('mentorPreferences', 'sessionFrequency', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
             >
               <option value="1 session/week">1 session per week</option>
               <option value="1-2 sessions/week">1-2 sessions per week</option>
@@ -280,7 +280,7 @@ const Preferences: React.FC = () => {
             <select
               value={preferences.mentorPreferences.communicationStyle}
               onChange={(e) => handleFieldChange('mentorPreferences', 'communicationStyle', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
             >
               <option value="structured">Structured sessions</option>
               <option value="casual">Casual conversations</option>
@@ -296,7 +296,7 @@ const Preferences: React.FC = () => {
   const renderAvailability = () => (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] rounded-full flex items-center justify-center mx-auto">
           <Clock className="w-8 h-8 text-white" />
         </div>
         <h2 className="text-3xl font-bold text-gray-900">Availability Settings</h2>
@@ -315,8 +315,8 @@ const Preferences: React.FC = () => {
                 onClick={() => handleArrayToggle('availability', 'timeSlots', slot)}
                 className={`p-4 rounded-xl border-2 transition-all duration-200 text-sm font-medium ${
                   preferences.availability.timeSlots.includes(slot)
-                    ? 'border-blue-600 bg-blue-50 text-blue-700'
-                    : 'border-gray-200 text-gray-700 hover:border-blue-300'
+                    ? 'border-[#0072CE] bg-[#F4F4F4] text-[#1A1F5E]'
+                    : 'border-gray-200 text-gray-700 hover:border-[#0072CE]/40'
                 }`}
               >
                 {slot.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
@@ -333,7 +333,7 @@ const Preferences: React.FC = () => {
             <select
               value={preferences.availability.timezone}
               onChange={(e) => handleFieldChange('availability', 'timezone', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
             >
               <option value="GMT+0">GMT+0 (West Africa)</option>
               <option value="GMT+1">GMT+1 (Central Africa)</option>
@@ -349,7 +349,7 @@ const Preferences: React.FC = () => {
             <select
               value={preferences.availability.maxSessionsPerWeek}
               onChange={(e) => handleFieldChange('availability', 'maxSessionsPerWeek', parseInt(e.target.value))}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
             >
               <option value={1}>1 session</option>
               <option value={2}>2 sessions</option>
@@ -366,7 +366,7 @@ const Preferences: React.FC = () => {
   const renderNotifications = () => (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] rounded-full flex items-center justify-center mx-auto">
           <Settings className="w-8 h-8 text-white" />
         </div>
         <h2 className="text-3xl font-bold text-gray-900">Notification Settings</h2>
@@ -387,7 +387,7 @@ const Preferences: React.FC = () => {
                 onChange={(e) => handleFieldChange('notifications', 'emailNotifications', e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0072CE]"></div>
             </label>
           </div>
 
@@ -403,7 +403,7 @@ const Preferences: React.FC = () => {
                 onChange={(e) => handleFieldChange('notifications', 'sessionReminders', e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0072CE]"></div>
             </label>
           </div>
 
@@ -419,7 +419,7 @@ const Preferences: React.FC = () => {
                 onChange={(e) => handleFieldChange('notifications', 'newConnectionRequests', e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0072CE]"></div>
             </label>
           </div>
 
@@ -435,7 +435,7 @@ const Preferences: React.FC = () => {
                 onChange={(e) => handleFieldChange('notifications', 'weeklyDigest', e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0072CE]"></div>
             </label>
           </div>
         </div>
@@ -444,11 +444,11 @@ const Preferences: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#F4F4F4] via-white to-[#F4F4F4] py-8 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] rounded-full flex items-center justify-center mx-auto mb-4">
             <Settings className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Preferences</h1>
@@ -467,7 +467,7 @@ const Preferences: React.FC = () => {
         )}
 
         {/* Tab Navigation */}
-        <div className="bg-white rounded-2xl shadow-2xl border border-blue-100 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-2xl border border-[#E5E7EB] overflow-hidden">
           <div className="border-b border-gray-200">
             <nav className="flex space-x-8 px-8">
               {[
@@ -480,7 +480,7 @@ const Preferences: React.FC = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                     activeTab === tab.id
-                      ? 'border-blue-600 text-blue-600'
+                      ? 'border-[#0072CE] text-[#0072CE]'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
@@ -495,7 +495,7 @@ const Preferences: React.FC = () => {
           <div className="p-8">
             {loading && (
               <div className="text-center py-8">
-                <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <div className="w-8 h-8 border-2 border-[#0072CE] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                 <p className="text-gray-600">Loading preferences...</p>
               </div>
             )}
@@ -522,7 +522,7 @@ const Preferences: React.FC = () => {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl shadow-lg hover:from-blue-700 hover:to-blue-800 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
+                className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white font-semibold rounded-xl shadow-lg hover:opacity-90 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
               >
                 {saving ? (
                   <>

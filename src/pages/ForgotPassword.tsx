@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, ArrowLeft, CheckCircle, Loader } from 'lucide-react';
 
@@ -47,7 +47,7 @@ const ForgotPassword: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#F4F4F4] via-white to-[#F4F4F4] flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
@@ -78,7 +78,7 @@ const ForgotPassword: React.FC = () => {
                     id="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     placeholder="you@example.com"
                     required
                   />
@@ -99,7 +99,7 @@ const ForgotPassword: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center px-6 py-3 bg-[#0072CE] text-white rounded-lg hover:bg-[#1A1F5E] transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
@@ -118,7 +118,7 @@ const ForgotPassword: React.FC = () => {
               <div className="text-center">
                 <Link
                   to="/login"
-                  className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  className="inline-flex items-center text-sm text-[#0072CE] hover:text-[#1A1F5E] font-medium"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back to Login
@@ -136,11 +136,11 @@ const ForgotPassword: React.FC = () => {
                 We've sent password reset instructions to your email address. Please check your inbox and follow the link to reset your password.
               </p>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <p className="text-sm text-blue-800 mb-2">
+              <div className="bg-[#F4F4F4] border border-[#0072CE]/30 rounded-lg p-4 mb-6">
+                <p className="text-sm text-[#1A1F5E] mb-2">
                   <strong>Didn't receive the email?</strong>
                 </p>
-                <ul className="text-xs text-blue-700 text-left space-y-1">
+                <ul className="text-xs text-[#1A1F5E] text-left space-y-1">
                   <li>• Check your spam/junk folder</li>
                   <li>• Make sure you entered the correct email</li>
                   <li>• Wait a few minutes for the email to arrive</li>
@@ -161,7 +161,7 @@ const ForgotPassword: React.FC = () => {
               {/* Back to Login */}
               <Link
                 to="/login"
-                className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="inline-flex items-center text-sm text-[#0072CE] hover:text-[#1A1F5E] font-medium"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Login
@@ -174,7 +174,7 @@ const ForgotPassword: React.FC = () => {
         <div className="text-center mt-6">
           <p className="text-sm text-gray-600">
             Need help?{' '}
-            <a href="mailto:support@forvismazars.com" className="text-blue-600 hover:text-blue-700 font-medium">
+            <a href="mailto:support@forvismazars.com" className="text-[#0072CE] hover:text-[#1A1F5E] font-medium">
               Contact Support
             </a>
           </p>

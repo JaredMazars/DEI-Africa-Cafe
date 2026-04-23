@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   UserCog,
   Search,
@@ -174,7 +174,7 @@ const AdminMentors: React.FC = () => {
             resetForm();
             setShowModal(true);
           }}
-          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+          className="flex items-center gap-2 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
         >
           <Plus className="w-5 h-5" />
           Add New Mentor
@@ -211,7 +211,7 @@ const AdminMentors: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search mentors by name, email, or expertise..."
-            className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
           />
         </div>
       </div>
@@ -224,7 +224,7 @@ const AdminMentors: React.FC = () => {
               <img
                 src={mentor.photo}
                 alt={mentor.name}
-                className="w-24 h-24 rounded-xl object-cover border-4 border-blue-100"
+                className="w-24 h-24 rounded-xl object-cover border-4 border-[#E5E7EB]"
               />
               
               <div className="flex-1">
@@ -247,7 +247,7 @@ const AdminMentors: React.FC = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleEdit(mentor)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      className="p-2 text-[#0072CE] hover:bg-[#1A1F5E]/5 rounded-lg transition-colors"
                       title="Edit mentor"
                     >
                       <Edit className="w-5 h-5" />
@@ -268,7 +268,7 @@ const AdminMentors: React.FC = () => {
                   {mentor.expertise.map((skill, idx) => (
                     <span
                       key={idx}
-                      className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium"
+                      className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] rounded-full text-sm font-medium"
                     >
                       {skill}
                     </span>
@@ -331,7 +331,7 @@ const AdminMentors: React.FC = () => {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   placeholder="Dr. Emily Rodriguez"
                 />
               </div>
@@ -342,7 +342,7 @@ const AdminMentors: React.FC = () => {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   placeholder="email@deiafrica.com"
                 />
               </div>
@@ -353,7 +353,7 @@ const AdminMentors: React.FC = () => {
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   placeholder="+27 11 555 0101"
                 />
               </div>
@@ -364,7 +364,7 @@ const AdminMentors: React.FC = () => {
                   type="url"
                   value={formData.photo}
                   onChange={(e) => setFormData({ ...formData, photo: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   placeholder="https://example.com/photo.jpg (optional)"
                 />
               </div>
@@ -375,7 +375,7 @@ const AdminMentors: React.FC = () => {
                   type="text"
                   value={formData.expertise}
                   onChange={(e) => setFormData({ ...formData, expertise: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   placeholder="Leadership, Strategy, Career Development"
                 />
               </div>
@@ -385,7 +385,7 @@ const AdminMentors: React.FC = () => {
                 <textarea
                   value={formData.bio}
                   onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   rows={4}
                   placeholder="Brief professional background and expertise..."
                 />
@@ -401,7 +401,7 @@ const AdminMentors: React.FC = () => {
               </button>
               <button
                 onClick={handleSubmit}
-                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-700 text-white py-3 rounded-lg font-bold shadow-lg transition-all"
+                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white py-3 rounded-lg font-bold shadow-lg transition-all"
               >
                 <Save className="w-5 h-5" />
                 {editingId ? 'Update Mentor' : 'Add Mentor'}

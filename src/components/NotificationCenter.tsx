@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { 
   X, 
   Check, 
@@ -44,11 +44,11 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
   const getNotificationIcon = (type: NotificationType) => {
     switch (type) {
       case 'message':
-        return <MessageCircle className="w-5 h-5 text-blue-600" />;
+        return <MessageCircle className="w-5 h-5 text-[#0072CE]" />;
       case 'session':
         return <Calendar className="w-5 h-5 text-green-600" />;
       case 'connection':
-        return <UserPlus className="w-5 h-5 text-blue-600" />;
+        return <UserPlus className="w-5 h-5 text-[#0072CE]" />;
       case 'opportunity':
         return <Briefcase className="w-5 h-5 text-orange-600" />;
       case 'expert':
@@ -56,7 +56,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
       case 'webinar':
         return <Video className="w-5 h-5 text-red-600" />;
       case 'request':
-        return <Bell className="w-5 h-5 text-blue-600" />;
+        return <Bell className="w-5 h-5 text-[#0072CE]" />;
       case 'system':
         return <AlertCircle className="w-5 h-5 text-gray-600" />;
       default:
@@ -140,7 +140,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
                 onClick={() => setFilter('all')}
                 className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                   filter === 'all'
-                    ? 'text-blue-600 border-b-2 border-blue-600'
+                    ? 'text-[#0072CE] border-b-2 border-[#0072CE]'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
@@ -150,7 +150,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
                 onClick={() => setFilter('unread')}
                 className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                   filter === 'unread'
-                    ? 'text-blue-600 border-b-2 border-blue-600'
+                    ? 'text-[#0072CE] border-b-2 border-[#0072CE]'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
@@ -164,7 +164,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
                 {unreadCount > 0 && (
                   <button
                     onClick={markAllAsRead}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center space-x-1"
+                    className="text-sm text-[#0072CE] hover:text-[#1A1F5E] font-medium flex items-center space-x-1"
                   >
                     <Check className="w-4 h-4" />
                     <span>Mark all as read</span>
@@ -200,7 +200,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
                     <div
                       key={notification.id}
                       className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
-                        !notification.read ? 'bg-blue-50' : ''
+                        !notification.read ? 'bg-[#F4F4F4]' : ''
                       }`}
                       onClick={() => handleNotificationClick(notification)}
                     >
@@ -237,7 +237,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
                             
                             {/* Unread indicator */}
                             {!notification.read && (
-                              <div className="w-2 h-2 bg-blue-600 rounded-full ml-2 mt-1" />
+                              <div className="w-2 h-2 bg-[#0072CE] rounded-full ml-2 mt-1" />
                             )}
                           </div>
                         </div>
@@ -298,7 +298,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
                       type="checkbox"
                       checked={notificationPreferences.enableBrowserNotifications}
                       onChange={(e) => updatePreferences({ enableBrowserNotifications: e.target.checked })}
-                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                      className="w-4 h-4 text-[#0072CE] rounded focus:ring-[#1A1F5E]/20"
                     />
                   </div>
                 )}
@@ -326,7 +326,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
                       type="checkbox"
                       checked={notificationPreferences[key as keyof typeof notificationPreferences] as boolean}
                       onChange={(e) => updatePreferences({ [key]: e.target.checked })}
-                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                      className="w-4 h-4 text-[#0072CE] rounded focus:ring-[#1A1F5E]/20"
                     />
                   </div>
                 ))}
@@ -339,7 +339,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
                   <select
                     value={notificationPreferences.sessionReminderMinutes}
                     onChange={(e) => updatePreferences({ sessionReminderMinutes: parseInt(e.target.value) })}
-                    className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   >
                     <option value={5}>5 minutes</option>
                     <option value={15}>15 minutes</option>
@@ -357,7 +357,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
                     type="checkbox"
                     checked={notificationPreferences.enableEmailNotifications}
                     onChange={(e) => updatePreferences({ enableEmailNotifications: e.target.checked })}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-[#0072CE] rounded focus:ring-[#1A1F5E]/20"
                   />
                 </div>
               </div>
@@ -367,7 +367,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
             <div className="p-4 border-t border-gray-200">
               <button
                 onClick={() => setShowPreferences(false)}
-                className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="w-full bg-[#0072CE] text-white px-4 py-2 rounded-lg hover:bg-[#1A1F5E] transition-colors font-medium"
               >
                 Done
               </button>

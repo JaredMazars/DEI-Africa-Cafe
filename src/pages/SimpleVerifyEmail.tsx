@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, XCircle, Loader } from 'lucide-react';
 import axios from 'axios';
@@ -53,12 +53,12 @@ const VerifyEmail: React.FC = () => {
   }, [searchParams, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F4F4F4] via-white to-[#F4F4F4] px-4">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 border border-blue-100 text-center">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 border border-[#E5E7EB] text-center">
           {status === 'verifying' && (
             <>
-              <Loader className="w-16 h-16 text-blue-600 animate-spin mx-auto mb-6" />
+              <Loader className="w-16 h-16 text-[#0072CE] animate-spin mx-auto mb-6" />
               <h1 className="text-3xl font-bold text-gray-900 mb-4">Verifying Your Email</h1>
               <p className="text-gray-600">Please wait while we verify your email address...</p>
             </>
@@ -78,7 +78,7 @@ const VerifyEmail: React.FC = () => {
               </div>
               <button
                 onClick={() => navigate('/login')}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-700 transition-all"
+                className="w-full bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white py-3 rounded-lg font-semibold hover:opacity-90 transition-all"
               >
                 Go to Login Now
               </button>
@@ -99,7 +99,7 @@ const VerifyEmail: React.FC = () => {
               </div>
               <button
                 onClick={() => navigate('/register')}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-700 transition-all"
+                className="w-full bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white py-3 rounded-lg font-semibold hover:opacity-90 transition-all"
               >
                 Register Again
               </button>

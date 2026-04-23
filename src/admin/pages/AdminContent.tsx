@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   FileText,
   Video,
@@ -187,7 +187,7 @@ const AdminContent: React.FC = () => {
             resetModal();
             setShowModal(true);
           }}
-          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+          className="flex items-center gap-2 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
         >
           <Plus className="w-5 h-5" />
           Add {activeTab === 'videos' ? 'Video' : 'Article'}
@@ -197,8 +197,8 @@ const AdminContent: React.FC = () => {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-          <div className="inline-flex p-3 rounded-lg bg-blue-100 mb-3">
-            <Video className="w-6 h-6 text-blue-600" />
+          <div className="inline-flex p-3 rounded-lg bg-[#1A1F5E]/10 mb-3">
+            <Video className="w-6 h-6 text-[#0072CE]" />
           </div>
           <p className="text-gray-600 text-sm">Total Videos</p>
           <p className="text-3xl font-bold text-gray-900 mt-1">{videos.length}</p>
@@ -220,7 +220,7 @@ const AdminContent: React.FC = () => {
               onClick={() => setActiveTab('videos')}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                 activeTab === 'videos'
-                  ? 'bg-blue-100 text-blue-700'
+                  ? 'bg-[#1A1F5E]/10 text-[#1A1F5E]'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
@@ -231,7 +231,7 @@ const AdminContent: React.FC = () => {
               onClick={() => setActiveTab('articles')}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
                 activeTab === 'articles'
-                  ? 'bg-blue-100 text-blue-700'
+                  ? 'bg-[#1A1F5E]/10 text-[#1A1F5E]'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
@@ -250,7 +250,7 @@ const AdminContent: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={`Search ${activeTab}...`}
-              className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
             />
           </div>
         </div>
@@ -271,7 +271,7 @@ const AdminContent: React.FC = () => {
                   <h3 className="font-bold text-gray-900 mb-1">{video.title}</h3>
                   <p className="text-sm text-gray-600 mb-2">{video.description}</p>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                    <span className="text-xs bg-[#1A1F5E]/10 text-[#1A1F5E] px-2 py-1 rounded">
                       {video.category}
                     </span>
                     <div className="flex gap-2">
@@ -287,7 +287,7 @@ const AdminContent: React.FC = () => {
                           });
                           setShowModal(true);
                         }}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                        className="p-2 text-[#0072CE] hover:bg-[#1A1F5E]/5 rounded-lg"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
@@ -325,7 +325,7 @@ const AdminContent: React.FC = () => {
                         <span>•</span>
                         <span>{article.readTime}</span>
                         <span>•</span>
-                        <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                        <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-2 py-1 rounded">
                           {article.category}
                         </span>
                       </div>
@@ -345,7 +345,7 @@ const AdminContent: React.FC = () => {
                           });
                           setShowModal(true);
                         }}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                        className="p-2 text-[#0072CE] hover:bg-[#1A1F5E]/5 rounded-lg"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
@@ -390,7 +390,7 @@ const AdminContent: React.FC = () => {
                     type="text"
                     value={videoForm.title}
                     onChange={(e) => setVideoForm({ ...videoForm, title: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   />
                 </div>
                 <div>
@@ -399,7 +399,7 @@ const AdminContent: React.FC = () => {
                     type="url"
                     value={videoForm.youtubeUrl}
                     onChange={(e) => setVideoForm({ ...videoForm, youtubeUrl: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   />
                 </div>
                 <div>
@@ -407,7 +407,7 @@ const AdminContent: React.FC = () => {
                   <textarea
                     value={videoForm.description}
                     onChange={(e) => setVideoForm({ ...videoForm, description: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     rows={3}
                   />
                 </div>
@@ -418,7 +418,7 @@ const AdminContent: React.FC = () => {
                       type="text"
                       value={videoForm.category}
                       onChange={(e) => setVideoForm({ ...videoForm, category: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     />
                   </div>
                   <div>
@@ -427,7 +427,7 @@ const AdminContent: React.FC = () => {
                       type="text"
                       value={videoForm.duration}
                       onChange={(e) => setVideoForm({ ...videoForm, duration: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                       placeholder="28:17"
                     />
                   </div>
@@ -441,7 +441,7 @@ const AdminContent: React.FC = () => {
                   </button>
                   <button
                     onClick={handleVideoSubmit}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-bold"
+                    className="flex-1 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white py-3 rounded-lg font-bold"
                   >
                     <Save className="w-5 h-5 inline mr-2" />
                     {editingId ? 'Update' : 'Add'} Video
@@ -456,7 +456,7 @@ const AdminContent: React.FC = () => {
                     type="text"
                     value={articleForm.title}
                     onChange={(e) => setArticleForm({ ...articleForm, title: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   />
                 </div>
                 <div>
@@ -465,7 +465,7 @@ const AdminContent: React.FC = () => {
                     type="text"
                     value={articleForm.subtitle}
                     onChange={(e) => setArticleForm({ ...articleForm, subtitle: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   />
                 </div>
                 <div>
@@ -473,7 +473,7 @@ const AdminContent: React.FC = () => {
                   <textarea
                     value={articleForm.content}
                     onChange={(e) => setArticleForm({ ...articleForm, content: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     rows={8}
                   />
                 </div>
@@ -484,7 +484,7 @@ const AdminContent: React.FC = () => {
                       type="text"
                       value={articleForm.author}
                       onChange={(e) => setArticleForm({ ...articleForm, author: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     />
                   </div>
                   <div>
@@ -493,7 +493,7 @@ const AdminContent: React.FC = () => {
                       type="text"
                       value={articleForm.readTime}
                       onChange={(e) => setArticleForm({ ...articleForm, readTime: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                       placeholder="8 min"
                     />
                   </div>
@@ -505,7 +505,7 @@ const AdminContent: React.FC = () => {
                       type="text"
                       value={articleForm.category}
                       onChange={(e) => setArticleForm({ ...articleForm, category: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     />
                   </div>
                   <div>
@@ -514,7 +514,7 @@ const AdminContent: React.FC = () => {
                       type="url"
                       value={articleForm.coverImage}
                       onChange={(e) => setArticleForm({ ...articleForm, coverImage: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     />
                   </div>
                 </div>
@@ -527,7 +527,7 @@ const AdminContent: React.FC = () => {
                   </button>
                   <button
                     onClick={handleArticleSubmit}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-bold"
+                    className="flex-1 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white py-3 rounded-lg font-bold"
                   >
                     <Save className="w-5 h-5 inline mr-2" />
                     {editingId ? 'Update' : 'Add'} Article

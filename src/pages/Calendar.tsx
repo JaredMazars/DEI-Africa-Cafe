@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, MapPin, Video } from 'lucide-react';
 import { sessionsAPI } from '../services/api';
@@ -114,11 +114,11 @@ const Calendar: React.FC = () => {
         <div
           key={day}
           className={`h-24 p-2 border border-gray-100 cursor-pointer transition-colors ${
-            isSelected ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
-          } ${isToday ? 'bg-blue-100' : ''}`}
+            isSelected ? 'bg-[#0072CE]/10 border-[#0072CE]/30' : 'hover:bg-gray-50'
+          } ${isToday ? 'bg-[#1A1F5E]/10' : ''}`}
           onClick={() => setSelectedDate(dateString)}
         >
-          <div className={`text-sm font-medium ${isToday ? 'text-blue-600' : 'text-gray-900'}`}>
+          <div className={`text-sm font-medium ${isToday ? 'text-[#0072CE]' : 'text-gray-900'}`}>
             {day}
           </div>
           {daysSessions.map(session => (
@@ -126,10 +126,10 @@ const Calendar: React.FC = () => {
               key={session.id}
               className={`mt-1 p-1 rounded text-xs truncate ${
                 session.status === 'completed'
-                  ? 'bg-blue-100 text-blue-800'
+                  ? 'bg-[#1A1F5E]/10 text-[#1A1F5E]'
                   : session.status === 'cancelled'
                   ? 'bg-red-100 text-red-800'
-                  : 'bg-blue-100 text-blue-800'
+                  : 'bg-[#1A1F5E]/10 text-[#1A1F5E]'
               }`}
             >
               {session.time} - {session.mentor.name}
@@ -159,7 +159,7 @@ const Calendar: React.FC = () => {
         </div>
         <button
           onClick={() => setShowBookingModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+          className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-6 py-2 rounded-lg font-medium transition-colors"
         >
           Book New Session
         </button>
@@ -182,7 +182,7 @@ const Calendar: React.FC = () => {
               </button>
               <button
                 onClick={() => setCurrentDate(new Date())}
-                className="px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-[#0072CE] hover:bg-[#1A1F5E]/5 rounded-lg transition-colors"
               >
                 Today
               </button>
@@ -262,7 +262,7 @@ const Calendar: React.FC = () => {
                       
                       {session.status === 'scheduled' && (
                         <div className="mt-3 flex space-x-2">
-                          <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded text-sm font-medium transition-colors">
+                          <button className="flex-1 bg-[#0072CE] hover:bg-[#1A1F5E] text-white py-1 px-3 rounded text-sm font-medium transition-colors">
                             Join Call
                           </button>
                           <button className="px-3 py-1 text-gray-600 hover:text-gray-800 text-sm transition-colors">
@@ -314,7 +314,7 @@ const Calendar: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Select Mentor</label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]">
                   <option>Choose a mentor...</option>
                   <option>Dr. Emily Rodriguez - Leadership</option>
                   <option>James Wilson - Technical Skills</option>
@@ -326,13 +326,13 @@ const Calendar: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
                 <input
                   type="date"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]">
                   <option>9:00 AM</option>
                   <option>10:00 AM</option>
                   <option>11:00 AM</option>
@@ -344,7 +344,7 @@ const Calendar: React.FC = () => {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Duration</label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]">
                   <option>30 minutes</option>
                   <option>45 minutes</option>
                   <option>60 minutes</option>
@@ -361,7 +361,7 @@ const Calendar: React.FC = () => {
               </button>
               <button
                 onClick={() => setShowBookingModal(false)}
-                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                className="flex-1 px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white rounded-lg transition-colors"
               >
                 Book Session
               </button>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Lock, Eye, EyeOff, CheckCircle, XCircle, Loader, ArrowLeft } from 'lucide-react';
 
@@ -29,7 +29,7 @@ const ResetPassword: React.FC = () => {
 
   const passwordStrength = calculatePasswordStrength(password);
   const strengthLabels = ['Weak', 'Fair', 'Good', 'Strong', 'Very Strong'];
-  const strengthColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500'];
+  const strengthColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-[#F4F4F4]0', 'bg-green-500'];
 
   useEffect(() => {
     if (token) {
@@ -120,9 +120,9 @@ const ResetPassword: React.FC = () => {
 
   if (validating) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-[#F4F4F4] via-white to-[#F4F4F4] flex items-center justify-center p-4">
         <div className="text-center">
-          <Loader className="w-16 h-16 text-blue-600 animate-spin mx-auto mb-4" />
+          <Loader className="w-16 h-16 text-[#0072CE] animate-spin mx-auto mb-4" />
           <p className="text-gray-600">Validating reset link...</p>
         </div>
       </div>
@@ -131,7 +131,7 @@ const ResetPassword: React.FC = () => {
 
   if (!tokenValid) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-[#F4F4F4] via-white to-[#F4F4F4] flex items-center justify-center p-4">
         <div className="max-w-md w-full">
           <div className="text-center mb-8">
             <img 
@@ -148,13 +148,13 @@ const ResetPassword: React.FC = () => {
             <p className="text-gray-600 mb-6">{error}</p>
             <Link
               to="/forgot-password"
-              className="inline-block w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium mb-4"
+              className="inline-block w-full px-6 py-3 bg-[#0072CE] text-white rounded-lg hover:bg-[#1A1F5E] transition-colors font-medium mb-4"
             >
               Request New Reset Link
             </Link>
             <Link
               to="/login"
-              className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium"
+              className="inline-flex items-center text-sm text-[#0072CE] hover:text-[#1A1F5E] font-medium"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Login
@@ -166,7 +166,7 @@ const ResetPassword: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#F4F4F4] via-white to-[#F4F4F4] flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
@@ -197,7 +197,7 @@ const ResetPassword: React.FC = () => {
                     id="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     placeholder="••••••••"
                     required
                   />
@@ -255,7 +255,7 @@ const ResetPassword: React.FC = () => {
                     id="confirmPassword"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     placeholder="••••••••"
                     required
                   />
@@ -287,7 +287,7 @@ const ResetPassword: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading || password !== confirmPassword || passwordStrength < 2}
-                className="w-full flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center px-6 py-3 bg-[#0072CE] text-white rounded-lg hover:bg-[#1A1F5E] transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
@@ -303,7 +303,7 @@ const ResetPassword: React.FC = () => {
               <div className="text-center">
                 <Link
                   to="/login"
-                  className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  className="inline-flex items-center text-sm text-[#0072CE] hover:text-[#1A1F5E] font-medium"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back to Login
@@ -327,7 +327,7 @@ const ResetPassword: React.FC = () => {
               </div>
               <Link
                 to="/login"
-                className="inline-block w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="inline-block w-full px-6 py-3 bg-[#0072CE] text-white rounded-lg hover:bg-[#1A1F5E] transition-colors font-medium"
               >
                 Go to Login Now
               </Link>
@@ -339,7 +339,7 @@ const ResetPassword: React.FC = () => {
         <div className="text-center mt-6">
           <p className="text-sm text-gray-600">
             Need help?{' '}
-            <a href="mailto:support@forvismazars.com" className="text-blue-600 hover:text-blue-700 font-medium">
+            <a href="mailto:support@forvismazars.com" className="text-[#0072CE] hover:text-[#1A1F5E] font-medium">
               Contact Support
             </a>
           </p>

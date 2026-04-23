@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -56,7 +56,7 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F4F4F4] via-white to-[#F4F4F4] px-4">
       <div className="w-full max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 items-center">
         {/* Left Side - Branding */}
         <div className="text-center lg:text-left space-y-8">
@@ -68,7 +68,7 @@ const Register: React.FC = () => {
                 className="h-10"
               />
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-700 to-blue-700 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-[#1A1F5E] to-[#1A1F5E] bg-clip-text text-transparent">
               DEI Cafe
             </h1>
             <p className="text-xl text-gray-700 max-w-md mx-auto lg:mx-0">
@@ -78,21 +78,21 @@ const Register: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="text-center p-4 rounded-xl bg-white/50 backdrop-blur-sm">
-              <div className="w-8 h-8 bg-blue-600 rounded-full mx-auto mb-2 flex items-center justify-center">
+              <div className="w-8 h-8 bg-[#0072CE] rounded-full mx-auto mb-2 flex items-center justify-center">
                 <span className="text-white font-bold text-sm">10K+</span>
               </div>
               <h3 className="font-semibold text-gray-800">Active Members</h3>
               <p className="text-sm text-gray-600">Across Africa</p>
             </div>
             <div className="text-center p-4 rounded-xl bg-white/50 backdrop-blur-sm">
-              <div className="w-8 h-8 bg-blue-600 rounded-full mx-auto mb-2 flex items-center justify-center">
+              <div className="w-8 h-8 bg-[#0072CE] rounded-full mx-auto mb-2 flex items-center justify-center">
                 <span className="text-white font-bold text-sm">54</span>
               </div>
               <h3 className="font-semibold text-gray-800">Countries</h3>
               <p className="text-sm text-gray-600">Connected</p>
             </div>
             <div className="text-center p-4 rounded-xl bg-white/50 backdrop-blur-sm">
-              <div className="w-8 h-8 bg-blue-600 rounded-full mx-auto mb-2 flex items-center justify-center">
+              <div className="w-8 h-8 bg-[#0072CE] rounded-full mx-auto mb-2 flex items-center justify-center">
                 <span className="text-white font-bold text-sm">5K+</span>
               </div>
               <h3 className="font-semibold text-gray-800">Connections</h3>
@@ -103,7 +103,7 @@ const Register: React.FC = () => {
 
         {/* Right Side - Register Form */}
         <div className="w-full max-w-md mx-auto">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 border border-blue-100">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 border border-[#E5E7EB]">
             <div className="text-center mb-8">
               <img 
                 src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Forvis_Mazars_logo.svg/320px-Forvis_Mazars_logo.svg.png" 
@@ -130,7 +130,7 @@ const Register: React.FC = () => {
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] transition-colors"
                   placeholder="Enter your email"
                   required
                 />
@@ -146,7 +146,7 @@ const Register: React.FC = () => {
                     id="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] transition-colors"
                     placeholder="Create a password (min 6 characters)"
                     required
                   />
@@ -169,7 +169,7 @@ const Register: React.FC = () => {
                   id="confirmPassword"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] transition-colors"
                   placeholder="Confirm your password"
                   required
                 />
@@ -178,7 +178,7 @@ const Register: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
+                className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
               >
                 {loading ? (
                   <>
@@ -194,7 +194,7 @@ const Register: React.FC = () => {
             <div className="mt-8 text-center">
               <p className="text-gray-600">
                 Already have an account?{' '}
-                <Link to="/login" className="text-blue-600 hover:text-blue-700 font-semibold">
+                <Link to="/login" className="text-[#0072CE] hover:text-[#1A1F5E] font-semibold">
                   Sign in
                 </Link>
               </p>

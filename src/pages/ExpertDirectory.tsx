@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { Search, MapPin, Users, Star, MessageCircle, Calendar, ChevronDown, Award, Globe, Clock, Send, X, Lock, Unlock, Mail, UserPlus, Bell, CheckCircle, XCircle, AlertCircle, Video } from 'lucide-react';
 import { expertsAPI, questionsAPI } from '../services/api';
@@ -1067,11 +1067,11 @@ const ExpertDirectory: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Professional Header with Forvis Mazars Branding */}
-      <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 text-white">
+      <div className="bg-gradient-to-r from-[#1A1F5E] via-[#0072CE] to-[#1A1F5E] text-white">
         <div className="max-w-[1920px] mx-auto px-12 sm:px-16 lg:px-20 py-12">
           <div className="text-center">
             <h1 className="text-4xl font-bold mb-3 text-white">Expert Directory & Knowledge Exchange</h1>
-            <p className="text-xl text-blue-100 max-w-3xl mx-auto">
+            <p className="text-xl text-white/80 max-w-3xl mx-auto">
               Connect with regional experts and share knowledge across our global network
             </p>
           </div>
@@ -1089,7 +1089,7 @@ const ExpertDirectory: React.FC = () => {
               {!isExpert && (
                 <button
                   onClick={() => setShowBecomeExpertModal(true)}
-                  className="bg-blue-900 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 ml-auto"
+                  className="bg-[#1A1F5E] hover:bg-[#1A1F5E] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 ml-auto"
                 >
                   <Award className="w-4 h-4" />
                   <span>Become an Expert</span>
@@ -1104,7 +1104,7 @@ const ExpertDirectory: React.FC = () => {
               onClick={() => setActiveTab('directory')}
               className={`pb-3 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'directory'
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-[#0072CE] text-[#0072CE]'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -1114,7 +1114,7 @@ const ExpertDirectory: React.FC = () => {
               onClick={() => setActiveTab('myExperts')}
               className={`pb-3 px-1 border-b-2 font-medium text-sm transition-colors relative ${
                 activeTab === 'myExperts'
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-[#0072CE] text-[#0072CE]'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -1122,7 +1122,7 @@ const ExpertDirectory: React.FC = () => {
                 <Users className="w-4 h-4" />
                 <span>My Experts</span>
                 {connectedExperts.length > 0 && (
-                  <span className="bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                  <span className="bg-[#F4F4F4]0 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
                     {connectedExperts.length}
                   </span>
                 )}
@@ -1132,7 +1132,7 @@ const ExpertDirectory: React.FC = () => {
               onClick={() => setActiveTab('forum')}
               className={`pb-3 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'forum'
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-[#0072CE] text-[#0072CE]'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -1146,7 +1146,7 @@ const ExpertDirectory: React.FC = () => {
               onClick={() => setActiveTab('webinars')}
               className={`pb-3 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'webinars'
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-[#0072CE] text-[#0072CE]'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -1156,7 +1156,7 @@ const ExpertDirectory: React.FC = () => {
               onClick={() => setActiveTab('requests')}
               className={`pb-3 px-1 border-b-2 font-medium text-sm transition-colors relative ${
                 activeTab === 'requests'
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-[#0072CE] text-[#0072CE]'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -1192,7 +1192,7 @@ const ExpertDirectory: React.FC = () => {
                     placeholder="Search experts by name, skill, or industry..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] text-sm"
                   />
                 </div>
 
@@ -1203,7 +1203,7 @@ const ExpertDirectory: React.FC = () => {
                     <select
                       value={selectedFilters.expertise}
                       onChange={(e) => setSelectedFilters({...selectedFilters, expertise: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     >
                       <option value="">All Expertise</option>
                       <option value="Tax Advisory">Tax Advisory</option>
@@ -1219,7 +1219,7 @@ const ExpertDirectory: React.FC = () => {
                     <select
                       value={selectedFilters.industry}
                       onChange={(e) => setSelectedFilters({...selectedFilters, industry: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     >
                       <option value="">All Industries</option>
                       <option value="Financial Services">Financial Services</option>
@@ -1235,7 +1235,7 @@ const ExpertDirectory: React.FC = () => {
                     <select
                       value={selectedFilters.location}
                       onChange={(e) => setSelectedFilters({...selectedFilters, location: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     >
                       <option value="">All Regions</option>
                       <option value="Nigeria">Nigeria</option>
@@ -1251,7 +1251,7 @@ const ExpertDirectory: React.FC = () => {
                     <select
                       value={selectedFilters.availability}
                       onChange={(e) => setSelectedFilters({...selectedFilters, availability: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     >
                       <option value="all">All Experts</option>
                       <option value="available">Available for Collaboration</option>
@@ -1259,9 +1259,9 @@ const ExpertDirectory: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-2">Quick Stats</h4>
-                  <div className="space-y-2 text-sm text-blue-700">
+                <div className="mt-6 p-4 bg-[#F4F4F4] rounded-lg">
+                  <h4 className="font-medium text-[#1A1F5E] mb-2">Quick Stats</h4>
+                  <div className="space-y-2 text-sm text-[#1A1F5E]">
                     <div className="flex justify-between">
                       <span>Total Experts:</span>
                       <span className="font-medium">{experts.length}</span>
@@ -1294,12 +1294,12 @@ const ExpertDirectory: React.FC = () => {
                         <div className="flex items-start justify-between">
                           <div>
                             <h3 className="text-xl font-semibold text-gray-900">{expert.name}</h3>
-                            <p className="text-blue-600 font-medium">{expert.title}</p>
+                            <p className="text-[#0072CE] font-medium">{expert.title}</p>
                             <p className="text-gray-600 text-sm">{expert.company}</p>
                           </div>
                           <div className="flex items-center space-x-2">
                             {expert.isAvailable ? (
-                              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Available</span>
+                              <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] text-xs px-2 py-1 rounded-full">Available</span>
                             ) : (
                               <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">Busy</span>
                             )}
@@ -1326,7 +1326,7 @@ const ExpertDirectory: React.FC = () => {
                         {/* Expertise Tags */}
                         <div className="flex flex-wrap gap-2 mt-4">
                           {expert.expertise.map((skill) => (
-                            <span key={skill} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                            <span key={skill} className="bg-[#1A1F5E]/10 text-[#1A1F5E] text-xs px-2 py-1 rounded-full">
                               {skill}
                             </span>
                           ))}
@@ -1350,7 +1350,7 @@ const ExpertDirectory: React.FC = () => {
                         {/* Action Buttons */}
                         <div className="flex space-x-3 mt-4">
                           <button 
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
+                            className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
                             onClick={() => handleConnect(expert.id)}
                           >
                             <UserPlus className="w-4 h-4" />
@@ -1385,7 +1385,7 @@ const ExpertDirectory: React.FC = () => {
                       onClick={() => setCurrentPage(page)}
                       className={`px-4 py-2 rounded-lg transition-colors ${
                         currentPage === page
-                          ? 'bg-blue-600 text-white'
+                          ? 'bg-[#0072CE] text-white'
                           : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
                       }`}
                     >
@@ -1422,7 +1422,7 @@ const ExpertDirectory: React.FC = () => {
                 <p className="text-gray-600 mb-6">Start connecting with experts to get personalized guidance and support</p>
                 <button
                   onClick={() => setActiveTab('directory')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                  className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-6 py-3 rounded-lg font-medium transition-colors"
                 >
                   Browse Expert Directory
                 </button>
@@ -1471,7 +1471,7 @@ const ExpertDirectory: React.FC = () => {
                           {expert.expertise.slice(0, 2).map((skill, index) => (
                             <span
                               key={index}
-                              className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full"
+                              className="px-2 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] text-xs font-medium rounded-full"
                             >
                               {skill}
                             </span>
@@ -1487,7 +1487,7 @@ const ExpertDirectory: React.FC = () => {
                       {/* Microsoft Teams Chat Button */}
                       <button
                         onClick={() => openTeamsChat(expert)}
-                        className="w-full bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                        className="w-full bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
                       >
                         <MessageCircle className="w-5 h-5" />
                         <span>Chat on Teams</span>
@@ -1522,7 +1522,7 @@ const ExpertDirectory: React.FC = () => {
                 onClick={() => setRequestSubTab('connections')}
                 className={`px-6 py-2.5 rounded-md font-medium text-sm transition-colors ${
                   requestSubTab === 'connections'
-                    ? 'bg-white text-blue-600 shadow-sm'
+                    ? 'bg-white text-[#0072CE] shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
@@ -1535,7 +1535,7 @@ const ExpertDirectory: React.FC = () => {
                 onClick={() => setRequestSubTab('meetings')}
                 className={`px-6 py-2.5 rounded-md font-medium text-sm transition-colors ${
                   requestSubTab === 'meetings'
-                    ? 'bg-white text-blue-600 shadow-sm'
+                    ? 'bg-white text-[#0072CE] shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
@@ -1726,7 +1726,7 @@ const ExpertDirectory: React.FC = () => {
                     <div key={request.id} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-start space-x-4 flex-1">
-                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                          <div className="w-12 h-12 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] rounded-full flex items-center justify-center text-white font-bold text-lg">
                             {request.name.split(' ').map(n => n[0]).join('')}
                           </div>
                           <div className="flex-1">
@@ -1752,9 +1752,9 @@ const ExpertDirectory: React.FC = () => {
                               <p className="text-gray-700 italic text-sm">"{request.message}"</p>
                             </div>
 
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                              <div className="text-xs font-semibold text-blue-900 mb-1">Webinar Details:</div>
-                              <div className="text-sm text-blue-800">
+                            <div className="bg-[#F4F4F4] border border-[#0072CE]/30 rounded-lg p-3 mb-4">
+                              <div className="text-xs font-semibold text-[#1A1F5E] mb-1">Webinar Details:</div>
+                              <div className="text-sm text-[#1A1F5E]">
                                 "Cross-Border M&A Strategies" - Dec 18, 2025 @ 3:00 PM CAT
                               </div>
                             </div>
@@ -1879,7 +1879,7 @@ const ExpertDirectory: React.FC = () => {
                 </button>
                 <button 
                   onClick={() => setShowScheduleModal(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
+                  className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
                 >
                   <Calendar className="w-4 h-4" />
                   <span>Schedule Webinar</span>
@@ -1889,7 +1889,7 @@ const ExpertDirectory: React.FC = () => {
 
             {/* Scheduled Meetings List */}
             {showMeetingsList && scheduledMeetings.length > 0 && (
-              <div className="mb-6 bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-200 rounded-xl p-6">
+              <div className="mb-6 bg-gradient-to-r from-green-50 to-[#F4F4F4] border-2 border-green-200 rounded-xl p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-bold text-gray-900 flex items-center space-x-2">
                     <Video className="w-5 h-5 text-green-600" />
@@ -1914,7 +1914,7 @@ const ExpertDirectory: React.FC = () => {
                           <p className="text-sm text-gray-600 mb-3">{meeting.description}</p>
                           <div className="grid grid-cols-2 gap-3 text-xs">
                             <div className="flex items-center space-x-2 text-gray-700">
-                              <Calendar className="w-4 h-4 text-blue-600" />
+                              <Calendar className="w-4 h-4 text-[#0072CE]" />
                               <span>{meeting.date} at {meeting.time}</span>
                             </div>
                             <div className="flex items-center space-x-2 text-gray-700">
@@ -1922,7 +1922,7 @@ const ExpertDirectory: React.FC = () => {
                               <span>{meeting.attendees.length} attendees</span>
                             </div>
                             <div className="flex items-center space-x-2 text-gray-700">
-                              <Award className="w-4 h-4 text-blue-600" />
+                              <Award className="w-4 h-4 text-[#0072CE]" />
                               <span>Expert: {meeting.expert}</span>
                             </div>
                             <div className="flex items-center space-x-2 text-gray-700">
@@ -1937,7 +1937,7 @@ const ExpertDirectory: React.FC = () => {
                                 {meeting.attendees.map((email, idx) => (
                                   <span
                                     key={idx}
-                                    className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full"
+                                    className="text-xs bg-[#1A1F5E]/10 text-[#1A1F5E] px-2 py-1 rounded-full"
                                   >
                                     {email}
                                   </span>
@@ -1949,7 +1949,7 @@ const ExpertDirectory: React.FC = () => {
                         <div className="ml-4 flex flex-col space-y-2">
                           {/* <button
                             onClick={() => window.open(meeting.teamsLink, '_blank')}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center space-x-2 whitespace-nowrap"
+                            className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center space-x-2 whitespace-nowrap"
                           >
                             <Video className="w-4 h-4" />
                             <span>Join Meeting</span>
@@ -2018,19 +2018,19 @@ const ExpertDirectory: React.FC = () => {
 
                         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                           <div className="flex items-center space-x-1">
-                            <Calendar className="w-4 h-4 text-blue-600" />
+                            <Calendar className="w-4 h-4 text-[#0072CE]" />
                             <span className="font-medium">{webinar.date}</span>
                           </div>
                           <div className="flex items-center space-x-1">
-                            <Clock className="w-4 h-4 text-blue-600" />
+                            <Clock className="w-4 h-4 text-[#0072CE]" />
                             <span>{webinar.time}</span>
                           </div>
                           <div className="flex items-center space-x-1">
-                            <MapPin className="w-4 h-4 text-blue-600" />
+                            <MapPin className="w-4 h-4 text-[#0072CE]" />
                             <span>{webinar.region}</span>
                           </div>
                           <div className="flex items-center space-x-1">
-                            <Users className="w-4 h-4 text-blue-600" />
+                            <Users className="w-4 h-4 text-[#0072CE]" />
                             <span className={isFull ? 'text-red-600 font-medium' : ''}>
                               {webinarAttendees[webinar.id] || webinar.attendees}/{webinar.maxAttendees} registered
                             </span>
@@ -2038,7 +2038,7 @@ const ExpertDirectory: React.FC = () => {
                               <span className="ml-2 bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs font-semibold">FULL</span>
                             )}
                           </div>
-                          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">
+                          <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-3 py-1 rounded-full text-xs font-medium">
                             {webinar.topic}
                           </span>
                         </div>
@@ -2049,7 +2049,7 @@ const ExpertDirectory: React.FC = () => {
                           <>
                             <button 
                               onClick={() => handleJoinWebinar(webinar.teamsLink)}
-                              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg flex items-center space-x-2"
+                              className="bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg flex items-center space-x-2"
                             >
                               <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
                                 <path d="M9.5 1.5v3h3v-3h-3zm-4 0v3h3v-3h-3zm-4 3v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm-8 3v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm-4 3v3h3v-3h-3z"/>
@@ -2071,7 +2071,7 @@ const ExpertDirectory: React.FC = () => {
                               className={`${
                                 isFull 
                                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                                  : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg'
+                                  : 'bg-[#0072CE] hover:bg-[#1A1F5E] text-white shadow-md hover:shadow-lg'
                               } px-5 py-2.5 rounded-lg text-sm font-semibold transition-all`}
                             >
                               {isFull ? 'Full' : 'Register Now'}
@@ -2127,12 +2127,12 @@ const ExpertDirectory: React.FC = () => {
                     onClick={() => setNewQuestion({...newQuestion, expertId: ''})}
                     className={`p-4 border-2 rounded-xl text-left transition-all ${
                       !newQuestion.expertId
-                        ? 'border-blue-500 bg-blue-50'
+                        ? 'border-[#0072CE] bg-[#F4F4F4]'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                      <div className="w-10 h-10 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] rounded-full flex items-center justify-center text-white font-bold">
                         <Users className="w-5 h-5" />
                       </div>
                       <div>
@@ -2147,7 +2147,7 @@ const ExpertDirectory: React.FC = () => {
                       onClick={() => setNewQuestion({...newQuestion, expertId: expert.id})}
                       className={`p-4 border-2 rounded-xl text-left transition-all ${
                         newQuestion.expertId === expert.id
-                          ? 'border-blue-500 bg-blue-50'
+                          ? 'border-[#0072CE] bg-[#F4F4F4]'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
@@ -2176,7 +2176,7 @@ const ExpertDirectory: React.FC = () => {
                 <select
                   value={newQuestion.category}
                   onChange={(e) => setNewQuestion({...newQuestion, category: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                 >
                   <option value="">Select a category</option>
                   <option value="Tax & Regulatory">Tax & Regulatory</option>
@@ -2201,7 +2201,7 @@ const ExpertDirectory: React.FC = () => {
                   type="text"
                   value={newQuestion.title}
                   onChange={(e) => setNewQuestion({...newQuestion, title: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   placeholder="What would you like to ask?"
                 />
               </div>
@@ -2215,7 +2215,7 @@ const ExpertDirectory: React.FC = () => {
                   rows={6}
                   value={newQuestion.content}
                   onChange={(e) => setNewQuestion({...newQuestion, content: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   placeholder="Provide detailed context about your question or business scenario...\n\nFor example:\n- What specific challenge are you facing?\n- What have you tried so far?\n- What is your timeline or urgency?"
                 />
               </div>
@@ -2229,7 +2229,7 @@ const ExpertDirectory: React.FC = () => {
                   type="text"
                   value={newQuestion.tags}
                   onChange={(e) => setNewQuestion({...newQuestion, tags: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   placeholder="e.g., tax, Nigeria, cross-border (comma separated)"
                 />
               </div>
@@ -2241,7 +2241,7 @@ const ExpertDirectory: React.FC = () => {
                     type="checkbox"
                     checked={newQuestion.isPrivate}
                     onChange={(e) => setNewQuestion({...newQuestion, isPrivate: e.target.checked})}
-                    className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="mt-1 w-4 h-4 text-[#0072CE] border-gray-300 rounded focus:ring-[#1A1F5E]/20"
                   />
                   <div>
                     <div className="font-semibold text-gray-900">Private Question</div>
@@ -2253,9 +2253,9 @@ const ExpertDirectory: React.FC = () => {
               </div>
 
               {/* Expected Response Time Info */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start space-x-3">
-                <Clock className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                <div className="text-sm text-blue-800">
+              <div className="bg-[#F4F4F4] border border-[#0072CE]/30 rounded-lg p-4 flex items-start space-x-3">
+                <Clock className="w-5 h-5 text-[#0072CE] flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-[#1A1F5E]">
                   <span className="font-semibold">Expected Response Time:</span> Our experts typically respond within 24-48 hours. Urgent questions may be prioritized.
                 </div>
               </div>
@@ -2273,7 +2273,7 @@ const ExpertDirectory: React.FC = () => {
               </button>
               <button
                 onClick={handleAskQuestion}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
               >
                 <Send className="w-5 h-5" />
                 <span>Submit Question</span>
@@ -2297,7 +2297,7 @@ const ExpertDirectory: React.FC = () => {
                   />
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">{selectedExpert.name}</h2>
-                    <p className="text-xl text-blue-600 font-medium">{selectedExpert.title}</p>
+                    <p className="text-xl text-[#0072CE] font-medium">{selectedExpert.title}</p>
                     <p className="text-gray-600">{selectedExpert.company}</p>
                     <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
                       <div className="flex items-center space-x-1">
@@ -2341,7 +2341,7 @@ const ExpertDirectory: React.FC = () => {
                   {selectedExpert.expertise.map((skill, index) => (
                     <span
                       key={index}
-                      className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full"
+                      className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] text-sm font-medium rounded-full"
                     >
                       {skill}
                     </span>
@@ -2355,7 +2355,7 @@ const ExpertDirectory: React.FC = () => {
                   {selectedExpert.industries.map((industry, index) => (
                     <span
                       key={index}
-                      className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full"
+                      className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] text-sm font-medium rounded-full"
                     >
                       {industry}
                     </span>
@@ -2389,7 +2389,7 @@ const ExpertDirectory: React.FC = () => {
                     setShowExpertModal(false);
                     handleConnect(selectedExpert.id);
                   }}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg text-sm font-medium transition-colors"
+                  className="flex-1 bg-[#0072CE] hover:bg-[#1A1F5E] text-white py-3 px-4 rounded-lg text-sm font-medium transition-colors"
                 >
                   Connect
                 </button>
@@ -2416,7 +2416,7 @@ const ExpertDirectory: React.FC = () => {
                   rows={4}
                   value={connectMessage}
                   onChange={(e) => setConnectMessage(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   placeholder="Introduce yourself and explain why you'd like to connect..."
                 />
               </div>
@@ -2434,7 +2434,7 @@ const ExpertDirectory: React.FC = () => {
                 </button>
                 <button
                   onClick={handleSendConnect}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors"
+                  className="flex-1 bg-[#0072CE] hover:bg-[#1A1F5E] text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors"
                 >
                   Send Request
                 </button>
@@ -2461,7 +2461,7 @@ const ExpertDirectory: React.FC = () => {
                   rows={4}
                   value={messageContent}
                   onChange={(e) => setMessageContent(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   placeholder="Type your message here..."
                 />
               </div>
@@ -2479,7 +2479,7 @@ const ExpertDirectory: React.FC = () => {
                 </button>
                 <button
                   onClick={handleSendDirectMessage}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors"
+                  className="flex-1 bg-[#0072CE] hover:bg-[#1A1F5E] text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors"
                 >
                   Send Message
                 </button>
@@ -2508,7 +2508,7 @@ const ExpertDirectory: React.FC = () => {
                     type="text"
                     value={registrationData.name}
                     onChange={(e) => setRegistrationData({...registrationData, name: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     placeholder="Enter your full name"
                   />
                 </div>
@@ -2521,7 +2521,7 @@ const ExpertDirectory: React.FC = () => {
                     type="email"
                     value={registrationData.email}
                     onChange={(e) => setRegistrationData({...registrationData, email: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     placeholder="your.email@company.com"
                   />
                 </div>
@@ -2534,7 +2534,7 @@ const ExpertDirectory: React.FC = () => {
                     type="tel"
                     value={registrationData.phone}
                     onChange={(e) => setRegistrationData({...registrationData, phone: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     placeholder="+234 xxx xxx xxxx"
                   />
                 </div>
@@ -2547,20 +2547,20 @@ const ExpertDirectory: React.FC = () => {
                     type="text"
                     value={registrationData.organization}
                     onChange={(e) => setRegistrationData({...registrationData, organization: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     placeholder="Your company name"
                   />
                 </div>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="bg-[#F4F4F4] border border-[#0072CE]/30 rounded-lg p-4 mb-6">
                 <div className="flex items-start space-x-2">
-                  <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-[#0072CE] mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <div className="text-sm text-blue-800">
+                  <div className="text-sm text-[#1A1F5E]">
                     <p className="font-medium mb-1">What happens next?</p>
-                    <ul className="list-disc list-inside space-y-1 text-blue-700">
+                    <ul className="list-disc list-inside space-y-1 text-[#1A1F5E]">
                       <li>You'll receive a confirmation email with the Teams link</li>
                       <li>Calendar invite will be sent to your email</li>
                       <li>Join 15 minutes early for networking</li>
@@ -2585,7 +2585,7 @@ const ExpertDirectory: React.FC = () => {
                   disabled={!registrationData.name || !registrationData.email}
                   className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
                     registrationData.name && registrationData.email
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                      ? 'bg-[#0072CE] hover:bg-[#1A1F5E] text-white'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                 >
@@ -2607,7 +2607,7 @@ const ExpertDirectory: React.FC = () => {
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">
                     {selectedWebinar.title}
                   </h3>
-                  <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                  <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-3 py-1 rounded-full text-sm font-medium">
                     {selectedWebinar.topic}
                   </span>
                 </div>
@@ -2678,39 +2678,39 @@ const ExpertDirectory: React.FC = () => {
                 <h4 className="text-lg font-semibold text-gray-900 mb-3">What You'll Learn</h4>
                 <ul className="space-y-2 text-gray-700">
                   <li className="flex items-start">
-                    <span className="text-blue-600 mr-2">✓</span>
+                    <span className="text-[#0072CE] mr-2">✓</span>
                     <span>Latest regulatory developments and compliance requirements</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-blue-600 mr-2">✓</span>
+                    <span className="text-[#0072CE] mr-2">✓</span>
                     <span>Practical strategies and real-world case studies</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-blue-600 mr-2">✓</span>
+                    <span className="text-[#0072CE] mr-2">✓</span>
                     <span>Q&A session with industry expert</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-blue-600 mr-2">✓</span>
+                    <span className="text-[#0072CE] mr-2">✓</span>
                     <span>Networking opportunities with peers across Africa</span>
                   </li>
                 </ul>
               </div>
 
               {selectedWebinar.teamsLink && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div className="bg-[#F4F4F4] border border-[#0072CE]/30 rounded-lg p-4 mb-6">
                   <div className="flex items-start space-x-3">
-                    <svg className="w-6 h-6 text-blue-600 flex-shrink-0" viewBox="0 0 16 16" fill="currentColor">
+                    <svg className="w-6 h-6 text-[#0072CE] flex-shrink-0" viewBox="0 0 16 16" fill="currentColor">
                       <path d="M9.5 1.5v3h3v-3h-3zm-4 0v3h3v-3h-3zm-4 3v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm-8 3v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm-4 3v3h3v-3h-3z"/>
                     </svg>
                     <div className="flex-1">
-                      <p className="font-semibold text-blue-900 mb-1">Join via Microsoft Teams</p>
-                      <p className="text-sm text-blue-800 mb-3">
+                      <p className="font-semibold text-[#1A1F5E] mb-1">Join via Microsoft Teams</p>
+                      <p className="text-sm text-[#1A1F5E] mb-3">
                         This webinar will be hosted on Microsoft Teams. Make sure you have the Teams app installed or use the web version.
                       </p>
                       {isWebinarRegistered(selectedWebinar.id) && (
                         <button
                           onClick={() => handleJoinWebinar(selectedWebinar.teamsLink)}
-                          className="text-sm text-blue-700 hover:text-blue-900 font-medium underline"
+                          className="text-sm text-[#1A1F5E] hover:text-[#1A1F5E] font-medium underline"
                         >
                           Click here to copy Teams link
                         </button>
@@ -2733,7 +2733,7 @@ const ExpertDirectory: React.FC = () => {
                 {isWebinarRegistered(selectedWebinar.id) ? (
                   <button
                     onClick={() => handleJoinWebinar(selectedWebinar.teamsLink)}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 px-4 rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
+                    className="flex-1 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white py-3 px-4 rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
                   >
                     <svg className="w-5 h-5" viewBox="0 0 16 16" fill="currentColor">
                       <path d="M9.5 1.5v3h3v-3h-3zm-4 0v3h3v-3h-3zm-4 3v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm-8 3v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm-4 3v3h3v-3h-3z"/>
@@ -2750,7 +2750,7 @@ const ExpertDirectory: React.FC = () => {
                     className={`flex-1 py-3 px-4 rounded-lg text-sm font-semibold transition-all ${
                       selectedWebinar.attendees >= selectedWebinar.maxAttendees
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg'
+                        : 'bg-[#0072CE] hover:bg-[#1A1F5E] text-white shadow-md hover:shadow-lg'
                     }`}
                   >
                     {selectedWebinar.attendees >= selectedWebinar.maxAttendees ? 'Webinar Full' : 'Register Now'}
@@ -2807,7 +2807,7 @@ const ExpertDirectory: React.FC = () => {
                     type="text"
                     value={newWebinar.title}
                     onChange={(e) => setNewWebinar({...newWebinar, title: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     placeholder="e.g., Cross-Border M&A Strategies for West Africa"
                   />
                 </div>
@@ -2820,7 +2820,7 @@ const ExpertDirectory: React.FC = () => {
                     rows={4}
                     value={newWebinar.description}
                     onChange={(e) => setNewWebinar({...newWebinar, description: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     placeholder="Provide a detailed description of what participants will learn..."
                   />
                 </div>
@@ -2834,7 +2834,7 @@ const ExpertDirectory: React.FC = () => {
                       type="date"
                       value={newWebinar.date}
                       onChange={(e) => setNewWebinar({...newWebinar, date: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     />
                   </div>
 
@@ -2846,7 +2846,7 @@ const ExpertDirectory: React.FC = () => {
                       type="time"
                       value={newWebinar.time}
                       onChange={(e) => setNewWebinar({...newWebinar, time: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     />
                   </div>
                 </div>
@@ -2859,7 +2859,7 @@ const ExpertDirectory: React.FC = () => {
                     <select
                       value={newWebinar.topic}
                       onChange={(e) => setNewWebinar({...newWebinar, topic: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     >
                       <option value="">Select topic</option>
                       <option value="Tax & Regulatory">Tax & Regulatory</option>
@@ -2882,7 +2882,7 @@ const ExpertDirectory: React.FC = () => {
                     <select
                       value={newWebinar.region}
                       onChange={(e) => setNewWebinar({...newWebinar, region: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     >
                       <option value="">Select region</option>
                       <option value="West Africa">West Africa</option>
@@ -2903,7 +2903,7 @@ const ExpertDirectory: React.FC = () => {
                     <select
                       value={newWebinar.expert}
                       onChange={(e) => setNewWebinar({...newWebinar, expert: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     >
                       <option value="">Select expert</option>
                       {experts.map((expert) => (
@@ -2921,7 +2921,7 @@ const ExpertDirectory: React.FC = () => {
                     <select
                       value={newWebinar.maxAttendees}
                       onChange={(e) => setNewWebinar({...newWebinar, maxAttendees: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     >
                       <option value="25">25</option>
                       <option value="50">50</option>
@@ -2961,13 +2961,13 @@ const ExpertDirectory: React.FC = () => {
                       onClick={() => setNewWebinar({...newWebinar, isPrivate: true})}
                       className={`p-4 border-2 rounded-lg transition-all ${
                         newWebinar.isPrivate
-                          ? 'border-blue-500 bg-blue-50'
+                          ? 'border-[#0072CE] bg-[#F4F4F4]'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
                       <div className="flex items-center justify-center mb-2">
                         <Lock className={`w-6 h-6 ${
-                          newWebinar.isPrivate ? 'text-blue-600' : 'text-gray-400'
+                          newWebinar.isPrivate ? 'text-[#0072CE]' : 'text-gray-400'
                         }`} />
                       </div>
                       <div className="font-semibold text-gray-900 mb-1">Private Webinar</div>
@@ -2977,14 +2977,14 @@ const ExpertDirectory: React.FC = () => {
                 </div>
 
                 {/* Email Invitations (for all webinars) */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-5">
+                <div className="bg-[#F4F4F4] border border-[#0072CE]/30 rounded-lg p-5">
                   <div className="flex items-center space-x-2 mb-4">
-                    <Mail className="w-5 h-5 text-blue-600" />
-                    <label className="text-sm font-semibold text-blue-900">
+                    <Mail className="w-5 h-5 text-[#0072CE]" />
+                    <label className="text-sm font-semibold text-[#1A1F5E]">
                       Invite Participants via Email (Optional)
                     </label>
                   </div>
-                  <p className="text-xs text-blue-700 mb-3">
+                  <p className="text-xs text-[#1A1F5E] mb-3">
                     Add email addresses to automatically invite people to this Teams meeting.
                   </p>
                     
@@ -3002,7 +3002,7 @@ const ExpertDirectory: React.FC = () => {
                                 addInvitedEmail(emailInput);
                               }
                             }}
-                            className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            className="w-full px-4 py-2 border border-[#0072CE]/40 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] text-sm"
                             placeholder="Type name or email to search..."
                           />
                           
@@ -3014,7 +3014,7 @@ const ExpertDirectory: React.FC = () => {
                                   key={user.id}
                                   type="button"
                                   onClick={() => addInvitedEmail(user.email)}
-                                  className="w-full px-4 py-3 hover:bg-blue-50 flex items-center space-x-3 text-left border-b border-gray-100 last:border-b-0"
+                                  className="w-full px-4 py-3 hover:bg-[#1A1F5E]/5 flex items-center space-x-3 text-left border-b border-gray-100 last:border-b-0"
                                 >
                                   <img
                                     src={user.avatar}
@@ -3025,14 +3025,14 @@ const ExpertDirectory: React.FC = () => {
                                     <div className="font-semibold text-gray-900 text-sm truncate">
                                       {user.name}
                                     </div>
-                                    <div className="text-xs text-blue-600 truncate">
+                                    <div className="text-xs text-[#0072CE] truncate">
                                       {user.email}
                                     </div>
                                     <div className="text-xs text-gray-500 truncate">
                                       {user.role} • {user.organization}
                                     </div>
                                   </div>
-                                  <UserPlus className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                  <UserPlus className="w-4 h-4 text-[#0072CE] flex-shrink-0" />
                                 </button>
                               ))}
                             </div>
@@ -3054,7 +3054,7 @@ const ExpertDirectory: React.FC = () => {
                               alert('Please enter an email address');
                             }
                           }}
-                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors"
+                          className="px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white rounded-lg text-sm font-semibold transition-colors"
                         >
                           Add
                         </button>
@@ -3064,14 +3064,14 @@ const ExpertDirectory: React.FC = () => {
                     {/* Invited Emails List */}
                     {newWebinar.invitedEmails.length > 0 && (
                       <div className="space-y-2">
-                        <div className="text-xs font-semibold text-blue-900 mb-2">
+                        <div className="text-xs font-semibold text-[#1A1F5E] mb-2">
                           Invited ({newWebinar.invitedEmails.length})
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {newWebinar.invitedEmails.map((email, index) => (
                             <div
                               key={index}
-                              className="bg-white border border-blue-300 rounded-full px-3 py-1 flex items-center space-x-2 text-sm"
+                              className="bg-white border border-[#0072CE]/40 rounded-full px-3 py-1 flex items-center space-x-2 text-sm"
                             >
                               <span className="text-gray-700">{email}</span>
                               <button
@@ -3088,11 +3088,11 @@ const ExpertDirectory: React.FC = () => {
                     )}
 
                     {/* Lobby Bypass Settings */}
-                    <div className="mt-5 pt-5 border-t border-blue-200">
-                      <label className="block text-sm font-semibold text-blue-900 mb-3">
+                    <div className="mt-5 pt-5 border-t border-[#0072CE]/30">
+                      <label className="block text-sm font-semibold text-[#1A1F5E] mb-3">
                         Microsoft Teams Lobby Settings
                       </label>
-                      <p className="text-xs text-blue-700 mb-3">
+                      <p className="text-xs text-[#1A1F5E] mb-3">
                         Choose who can bypass the meeting lobby and join directly
                       </p>
                       <select
@@ -3101,14 +3101,14 @@ const ExpertDirectory: React.FC = () => {
                           ...newWebinar, 
                           lobbyBypass: e.target.value as 'everyone' | 'organization' | 'organizationAndFederated' | 'invited'
                         })}
-                        className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white"
+                        className="w-full px-4 py-2 border border-[#0072CE]/40 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] text-sm bg-white"
                       >
                         <option value="invited">Invited People Only</option>
                         <option value="organization">My Organization</option>
                         <option value="organizationAndFederated">My Organization and Trusted Partners</option>
                         <option value="everyone">Everyone (No Lobby)</option>
                       </select>
-                      <p className="text-xs text-blue-600 mt-2">
+                      <p className="text-xs text-[#0072CE] mt-2">
                         {newWebinar.lobbyBypass === 'invited' && '🔒 Most secure - Only invited participants bypass lobby'}
                         {newWebinar.lobbyBypass === 'organization' && '🏢 Organization members bypass lobby'}
                         {newWebinar.lobbyBypass === 'organizationAndFederated' && '🤝 Your org and trusted partners bypass lobby'}
@@ -3190,14 +3190,14 @@ const ExpertDirectory: React.FC = () => {
                     )}
                   </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="bg-[#F4F4F4] border border-[#0072CE]/30 rounded-lg p-4">
                   <div className="flex items-start space-x-3">
-                    <svg className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" viewBox="0 0 16 16" fill="currentColor">
+                    <svg className="w-6 h-6 text-[#0072CE] flex-shrink-0 mt-0.5" viewBox="0 0 16 16" fill="currentColor">
                       <path d="M9.5 1.5v3h3v-3h-3zm-4 0v3h3v-3h-3zm-4 3v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm-8 3v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm-4 3v3h3v-3h-3z"/>
                     </svg>
                     <div className="flex-1">
-                      <p className="font-semibold text-blue-900 mb-1">Microsoft Teams Integration</p>
-                      <p className="text-sm text-blue-800">
+                      <p className="font-semibold text-[#1A1F5E] mb-1">Microsoft Teams Integration</p>
+                      <p className="text-sm text-[#1A1F5E]">
                         A Teams meeting link will be automatically generated for this webinar. 
                         {newWebinar.isPrivate 
                           ? ' Only invited participants and approved access requests will receive the link.'
@@ -3235,7 +3235,7 @@ const ExpertDirectory: React.FC = () => {
                 </button>
                 <button
                   onClick={handleScheduleWebinar}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 px-4 rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
+                  className="flex-1 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white py-3 px-4 rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
                 >
                   <Calendar className="w-5 h-5" />
                   <span>Schedule Webinar</span>
@@ -3253,7 +3253,7 @@ const ExpertDirectory: React.FC = () => {
             <div className="p-8">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] rounded-xl flex items-center justify-center">
                     <Award className="w-6 h-6 text-white" />
                   </div>
                   <div>
@@ -3278,7 +3278,7 @@ const ExpertDirectory: React.FC = () => {
                   <select
                     value={expertApplication.experience}
                     onChange={(e) => setExpertApplication({...expertApplication, experience: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   >
                     <option value="">Select experience level</option>
                     <option value="5-10 years">5-10 years</option>
@@ -3299,7 +3299,7 @@ const ExpertDirectory: React.FC = () => {
                       ...expertApplication,
                       expertise: e.target.value ? [e.target.value, ...expertApplication.expertise.slice(1)] : expertApplication.expertise.slice(1)
                     })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-3"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] mb-3"
                   >
                     <option value="">Select primary expertise</option>
                     <option value="Transfer Pricing">Transfer Pricing</option>
@@ -3328,7 +3328,7 @@ const ExpertDirectory: React.FC = () => {
                     })}
                     placeholder="BEPS Compliance, IFRS, Climate Finance"
                     rows={2}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   />
                 </div>
 
@@ -3343,7 +3343,7 @@ const ExpertDirectory: React.FC = () => {
                       ...expertApplication,
                       industries: e.target.value ? [e.target.value, ...expertApplication.industries.slice(1)] : expertApplication.industries.slice(1)
                     })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-3"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] mb-3"
                   >
                     <option value="">Select primary industry</option>
                     <option value="Financial Services">Financial Services</option>
@@ -3372,7 +3372,7 @@ const ExpertDirectory: React.FC = () => {
                     })}
                     placeholder="Insurance, Private Equity"
                     rows={2}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   />
                 </div>
 
@@ -3386,7 +3386,7 @@ const ExpertDirectory: React.FC = () => {
                     onChange={(e) => setExpertApplication({...expertApplication, motivation: e.target.value})}
                     placeholder="I am passionate about sharing my knowledge and helping others navigate complex tax regulations in Africa. I believe..."
                     rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   />
                 </div>
 
@@ -3401,17 +3401,17 @@ const ExpertDirectory: React.FC = () => {
                     onChange={(e) => setExpertApplication({...expertApplication, achievements: e.target.value})}
                     placeholder="CPA, ACCA certified. Published articles on African tax frameworks. Led transfer pricing projects for Fortune 500 companies..."
                     rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   />
                 </div>
 
                 {/* Info Box */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="bg-[#F4F4F4] border border-[#0072CE]/30 rounded-lg p-4">
                   <div className="flex items-start space-x-3">
-                    <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5" />
-                    <div className="text-sm text-blue-900">
+                    <CheckCircle className="w-5 h-5 text-[#0072CE] mt-0.5" />
+                    <div className="text-sm text-[#1A1F5E]">
                       <p className="font-semibold mb-1">What happens next?</p>
-                      <ul className="space-y-1 text-blue-800">
+                      <ul className="space-y-1 text-[#1A1F5E]">
                         <li>• Our team will review your application within 2-3 business days</li>
                         <li>• We may contact you for additional information or an interview</li>
                         <li>• Once approved, you'll get access to expert features and be listed in the directory</li>
@@ -3431,7 +3431,7 @@ const ExpertDirectory: React.FC = () => {
                 </button>
                 <button
                   onClick={handleSubmitExpertApplication}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 px-4 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
+                  className="flex-1 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white py-3 px-4 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
                 >
                   <Award className="w-5 h-5" />
                   <span>Submit Application</span>

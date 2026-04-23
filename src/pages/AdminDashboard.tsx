@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Users, Video, LogOut, Shield, Plus, Edit, Trash2, 
@@ -147,9 +147,9 @@ const AdminDashboard: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-[#F4F4F4] via-white to-[#F4F4F4]">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-900 to-blue-900 text-white shadow-2xl">
+      <div className="bg-gradient-to-r from-[#1A1F5E] to-[#1A1F5E] text-white shadow-2xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3 sm:gap-4">
@@ -158,7 +158,7 @@ const AdminDashboard: React.FC = () => {
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold">Admin Dashboard</h1>
-                <p className="text-blue-200 text-xs sm:text-sm">DEI Africa Café Management</p>
+                <p className="text-white/70 text-xs sm:text-sm">DEI Africa Café Management</p>
               </div>
             </div>
             <button
@@ -187,7 +187,7 @@ const AdminDashboard: React.FC = () => {
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`flex items-center gap-2 px-6 py-4 font-medium transition-all border-b-2 ${
                     activeTab === tab.id
-                      ? 'border-blue-600 text-blue-600'
+                      ? 'border-[#0072CE] text-[#0072CE]'
                       : 'border-transparent text-gray-600 hover:text-gray-900'
                   }`}
                 >
@@ -216,7 +216,7 @@ const AdminDashboard: React.FC = () => {
                   setEditingMentor(null);
                   setNewMentor({ name: '', email: '', phone: '', expertise: '', bio: '', photo: '' });
                 }}
-                className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                className="flex items-center gap-2 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
               >
                 <Plus className="w-5 h-5" />
                 Add New Mentor
@@ -253,14 +253,14 @@ const AdminDashboard: React.FC = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search mentors by name, email, or expertise..."
-                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                 />
               </div>
             </div>
 
             {/* Add/Edit Mentor Form */}
             {(showAddMentor || editingMentor) && (
-              <div className="bg-gradient-to-br from-blue-50 to-blue-50 rounded-2xl p-8 border-2 border-blue-200 shadow-xl">
+              <div className="bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] rounded-2xl p-8 border-2 border-[#0072CE]/30 shadow-xl">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-2xl font-bold text-gray-900">
                     {editingMentor ? 'Edit Mentor' : 'Add New Mentor'}
@@ -284,7 +284,7 @@ const AdminDashboard: React.FC = () => {
                       type="text"
                       value={newMentor.name}
                       onChange={(e) => setNewMentor({ ...newMentor, name: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                       placeholder="Dr. Emily Rodriguez"
                     />
                   </div>
@@ -295,7 +295,7 @@ const AdminDashboard: React.FC = () => {
                       type="email"
                       value={newMentor.email}
                       onChange={(e) => setNewMentor({ ...newMentor, email: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                       placeholder="email@deiafrica.com"
                     />
                   </div>
@@ -306,7 +306,7 @@ const AdminDashboard: React.FC = () => {
                       type="tel"
                       value={newMentor.phone}
                       onChange={(e) => setNewMentor({ ...newMentor, phone: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                       placeholder="+27 11 555 0101"
                     />
                   </div>
@@ -317,7 +317,7 @@ const AdminDashboard: React.FC = () => {
                       type="url"
                       value={newMentor.photo}
                       onChange={(e) => setNewMentor({ ...newMentor, photo: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                       placeholder="https://example.com/photo.jpg (optional)"
                     />
                   </div>
@@ -328,7 +328,7 @@ const AdminDashboard: React.FC = () => {
                       type="text"
                       value={newMentor.expertise}
                       onChange={(e) => setNewMentor({ ...newMentor, expertise: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                       placeholder="Leadership, Strategy, Career Development"
                     />
                   </div>
@@ -338,7 +338,7 @@ const AdminDashboard: React.FC = () => {
                     <textarea
                       value={newMentor.bio}
                       onChange={(e) => setNewMentor({ ...newMentor, bio: e.target.value })}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                       rows={4}
                       placeholder="Brief professional background and expertise..."
                     />
@@ -358,7 +358,7 @@ const AdminDashboard: React.FC = () => {
                   </button>
                   <button
                     onClick={() => editingMentor ? handleUpdateMentor(editingMentor) : handleAddMentor()}
-                    className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white py-3 rounded-lg font-bold shadow-lg transition-all"
+                    className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white py-3 rounded-lg font-bold shadow-lg transition-all"
                   >
                     <Save className="w-5 h-5" />
                     {editingMentor ? 'Update Mentor' : 'Add Mentor'}
@@ -375,7 +375,7 @@ const AdminDashboard: React.FC = () => {
                     <img
                       src={mentor.photo}
                       alt={mentor.name}
-                      className="w-24 h-24 rounded-xl object-cover border-4 border-blue-100"
+                      className="w-24 h-24 rounded-xl object-cover border-4 border-[#E5E7EB]"
                     />
                     
                     <div className="flex-1">
@@ -398,7 +398,7 @@ const AdminDashboard: React.FC = () => {
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleEditClick(mentor)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="p-2 text-[#0072CE] hover:bg-[#1A1F5E]/5 rounded-lg transition-colors"
                             title="Edit mentor"
                           >
                             <Edit className="w-5 h-5" />
@@ -419,7 +419,7 @@ const AdminDashboard: React.FC = () => {
                         {mentor.expertise.map((skill, idx) => (
                           <span
                             key={idx}
-                            className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium"
+                            className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] rounded-full text-sm font-medium"
                           >
                             {skill}
                           </span>
@@ -471,7 +471,7 @@ const AdminDashboard: React.FC = () => {
             <p className="text-gray-600 mb-6">Upload videos and create articles for mentees</p>
             <button
               onClick={() => navigate('/admin/content')}
-              className="bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-bold shadow-lg"
+              className="bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white px-6 py-3 rounded-lg font-bold shadow-lg"
             >
               Go to Content Manager
             </button>

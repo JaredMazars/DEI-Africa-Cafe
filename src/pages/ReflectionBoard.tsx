@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   BookOpen, Plus, Search, Filter, Star, MessageCircle, Heart, User, 
@@ -240,12 +240,12 @@ const ReflectionBoard: React.FC = () => {
 
           {/* Quick Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
-              <div className="text-3xl font-bold text-blue-900">{reflections.length}</div>
+            <div className="text-center p-4 bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] rounded-lg">
+              <div className="text-3xl font-bold text-[#1A1F5E]">{reflections.length}</div>
               <div className="text-sm text-gray-600">Total Reflections</div>
             </div>
-            <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
-              <div className="text-3xl font-bold text-blue-900">
+            <div className="text-center p-4 bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] rounded-lg">
+              <div className="text-3xl font-bold text-[#1A1F5E]">
                 {reflections.filter(r => r.userRole === 'mentee').length}
               </div>
               <div className="text-sm text-gray-600">From Mentees</div>
@@ -294,8 +294,8 @@ const ReflectionBoard: React.FC = () => {
                         reflection.isAnonymous 
                           ? 'bg-gray-200' 
                           : reflection.userRole === 'mentor'
-                          ? 'bg-gradient-to-br from-blue-500 to-blue-600'
-                          : 'bg-gradient-to-br from-blue-500 to-blue-600'
+                          ? 'bg-gradient-to-br from-[#0072CE] to-[#1A1F5E]'
+                          : 'bg-gradient-to-br from-[#0072CE] to-[#1A1F5E]'
                       }`}>
                         {reflection.isAnonymous ? (
                           <User className="w-6 h-6 text-gray-500" />
@@ -312,8 +312,8 @@ const ReflectionBoard: React.FC = () => {
                           </h4>
                           <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                             reflection.userRole === 'mentor'
-                              ? 'bg-blue-100 text-blue-700'
-                              : 'bg-blue-100 text-blue-700'
+                              ? 'bg-[#1A1F5E]/10 text-[#1A1F5E]'
+                              : 'bg-[#1A1F5E]/10 text-[#1A1F5E]'
                           }`}>
                             {reflection.userRole === 'mentor' ? '👨‍🏫 Mentor' : '👨‍🎓 Mentee'}
                           </span>
@@ -480,8 +480,8 @@ const ReflectionBoard: React.FC = () => {
                         comment.isAnonymous 
                           ? 'bg-gray-200' 
                           : comment.userRole === 'mentor'
-                          ? 'bg-blue-500'
-                          : 'bg-blue-500'
+                          ? 'bg-[#F4F4F4]0'
+                          : 'bg-[#F4F4F4]0'
                       }`}>
                         {comment.isAnonymous ? (
                           <User className="w-5 h-5 text-gray-500" />
@@ -499,8 +499,8 @@ const ReflectionBoard: React.FC = () => {
                             </span>
                             <span className={`text-xs px-2 py-1 rounded-full ${
                               comment.userRole === 'mentor'
-                                ? 'bg-blue-100 text-blue-700'
-                                : 'bg-blue-100 text-blue-700'
+                                ? 'bg-[#1A1F5E]/10 text-[#1A1F5E]'
+                                : 'bg-[#1A1F5E]/10 text-[#1A1F5E]'
                             }`}>
                               {comment.userRole}
                             </span>

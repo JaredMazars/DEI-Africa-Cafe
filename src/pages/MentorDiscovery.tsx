@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Search, Filter, Star, MapPin, Briefcase, Clock, CheckCircle, TrendingUp, Heart } from 'lucide-react';
 import { mockAPI } from '../services/mockData';
 
@@ -170,7 +170,7 @@ export default function MentorDiscovery() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-900 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-[#1A1F5E] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading mentors...</p>
         </div>
       </div>
@@ -180,11 +180,11 @@ export default function MentorDiscovery() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Professional Header with Forvis Mazars Branding */}
-      <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 text-white">
+      <div className="bg-gradient-to-r from-[#1A1F5E] via-[#0072CE] to-[#1A1F5E] text-white">
         <div className="max-w-[1920px] mx-auto px-12 sm:px-16 lg:px-20 py-12">
           <div className="text-center">
             <h1 className="text-4xl font-bold mb-3 text-white">Professional Mentorship Network</h1>
-            <p className="text-xl text-blue-100 max-w-3xl mx-auto">
+            <p className="text-xl text-white/80 max-w-3xl mx-auto">
               Connect with experienced professionals from Forvis Mazars. 
               Find mentors who align with your career goals and professional development needs.
             </p>
@@ -204,7 +204,7 @@ export default function MentorDiscovery() {
                   placeholder="Search by name, role, or expertise..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 focus:border-transparent transition-all"
+                  className="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 focus:border-[#1A1F5E] transition-all"
                 />
               </div>
             </div>
@@ -214,7 +214,7 @@ export default function MentorDiscovery() {
                 <select
                   value={selectedExpertise}
                   onChange={(e) => setSelectedExpertise(e.target.value)}
-                  className="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 focus:border-transparent appearance-none bg-white transition-all"
+                  className="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 focus:border-[#1A1F5E] appearance-none bg-white transition-all"
                 >
                   {expertiseOptions.map(option => (
                     <option key={option} value={option}>
@@ -230,7 +230,7 @@ export default function MentorDiscovery() {
                 <select
                   value={selectedLocation}
                   onChange={(e) => setSelectedLocation(e.target.value)}
-                  className="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 focus:border-transparent appearance-none bg-white transition-all"
+                  className="w-full pl-12 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 focus:border-[#1A1F5E] appearance-none bg-white transition-all"
                 >
                   {locationOptions.map(option => (
                     <option key={option} value={option}>
@@ -246,17 +246,17 @@ export default function MentorDiscovery() {
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <span className="text-sm text-gray-600">Active filters:</span>
               {searchQuery && (
-                <span className="px-3 py-1 bg-blue-100 text-blue-900 rounded-lg text-sm font-medium">
+                <span className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] rounded-lg text-sm font-medium">
                   Search: {searchQuery}
                 </span>
               )}
               {selectedExpertise !== 'all' && (
-                <span className="px-3 py-1 bg-blue-100 text-blue-900 rounded-lg text-sm font-medium">
+                <span className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] rounded-lg text-sm font-medium">
                   {selectedExpertise}
                 </span>
               )}
               {selectedLocation !== 'all' && (
-                <span className="px-3 py-1 bg-blue-100 text-blue-900 rounded-lg text-sm font-medium">
+                <span className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] rounded-lg text-sm font-medium">
                   {selectedLocation}
                 </span>
               )}
@@ -266,7 +266,7 @@ export default function MentorDiscovery() {
                   setSelectedExpertise('all');
                   setSelectedLocation('all');
                 }}
-                className="text-sm text-blue-900 hover:text-blue-800 font-medium"
+                className="text-sm text-[#1A1F5E] hover:text-[#1A1F5E] font-medium"
               >
                 Clear all
               </button>
@@ -294,7 +294,7 @@ export default function MentorDiscovery() {
                   isAnimating ? 'ring-4 ring-green-400 ring-opacity-50' : ''
                 }`}
               >
-                <div className="relative h-48 bg-gradient-to-br from-blue-900 to-blue-800">
+                <div className="relative h-48 bg-gradient-to-br from-[#1A1F5E] to-[#0072CE]">
                   <img
                     src={mentor.image}
                     alt={mentor.name}
@@ -320,14 +320,14 @@ export default function MentorDiscovery() {
 
                 <div className="p-6">
                   <div className="mb-4">
-                    <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-blue-900 transition-colors">
+                    <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-[#1A1F5E] transition-colors">
                       {mentor.name}
                     </h3>
                     <p className="text-sm text-gray-600 flex items-center space-x-1">
                       <Briefcase className="w-4 h-4" />
                       <span>{mentor.role}</span>
                     </p>
-                    <p className="text-sm text-blue-900 font-medium">{mentor.company}</p>
+                    <p className="text-sm text-[#1A1F5E] font-medium">{mentor.company}</p>
                   </div>
 
                   <div className="flex items-center space-x-1 text-sm text-gray-500 mb-3">
@@ -351,7 +351,7 @@ export default function MentorDiscovery() {
                       {mentor.expertise.slice(0, 3).map((exp, idx) => (
                         <span
                           key={idx}
-                          className="px-3 py-1 bg-blue-50 text-blue-900 rounded-lg text-xs font-medium border border-blue-200"
+                          className="px-3 py-1 bg-[#F4F4F4] text-[#1A1F5E] rounded-lg text-xs font-medium border border-[#0072CE]/30"
                         >
                           {exp}
                         </span>
@@ -380,12 +380,12 @@ export default function MentorDiscovery() {
                     ) : (
                       <button 
                         onClick={(e) => handleConnect(mentor.id, e)}
-                        className="flex-1 bg-blue-900 hover:bg-blue-800 text-white py-2.5 rounded-lg font-semibold transition-all shadow-sm"
+                        className="flex-1 bg-[#1A1F5E] hover:bg-[#1A1F5E] text-white py-2.5 rounded-lg font-semibold transition-all shadow-sm"
                       >
                         Connect
                       </button>
                     )}
-                    <button className="px-4 py-2.5 border-2 border-blue-900 text-blue-900 hover:bg-blue-50 rounded-lg font-semibold transition-all">
+                    <button className="px-4 py-2.5 border-2 border-[#1A1F5E] text-[#1A1F5E] hover:bg-[#1A1F5E]/5 rounded-lg font-semibold transition-all">
                       View
                     </button>
                   </div>
@@ -408,7 +408,7 @@ export default function MentorDiscovery() {
                 setSelectedExpertise('all');
                 setSelectedLocation('all');
               }}
-              className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+              className="px-6 py-3 bg-[#0072CE] text-white rounded-xl hover:bg-[#1A1F5E] transition-colors font-medium"
             >
               Clear Filters
             </button>
@@ -431,7 +431,7 @@ export default function MentorDiscovery() {
                 onClick={() => setCurrentPage(page)}
                 className={`px-4 py-2 rounded-lg transition-colors ${
                   currentPage === page
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-[#0072CE] text-white'
                     : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
                 }`}
               >

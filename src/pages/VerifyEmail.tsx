@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { CheckCircle, XCircle, Mail, Loader, ArrowLeft } from 'lucide-react';
 
@@ -93,7 +93,7 @@ const VerifyEmail: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#F4F4F4] via-white to-[#F4F4F4] flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
@@ -110,8 +110,8 @@ const VerifyEmail: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-xl p-8">
           {status === 'verifying' && (
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-100 rounded-full mb-6">
-                <Loader className="w-10 h-10 text-blue-600 animate-spin" />
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-[#1A1F5E]/10 rounded-full mb-6">
+                <Loader className="w-10 h-10 text-[#0072CE] animate-spin" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Verifying Your Email</h2>
               <p className="text-gray-600">
@@ -134,7 +134,7 @@ const VerifyEmail: React.FC = () => {
               </div>
               <Link
                 to="/login"
-                className="inline-flex items-center justify-center w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="inline-flex items-center justify-center w-full px-6 py-3 bg-[#0072CE] text-white rounded-lg hover:bg-[#1A1F5E] transition-colors font-medium"
               >
                 Go to Login Now
               </Link>
@@ -159,7 +159,7 @@ const VerifyEmail: React.FC = () => {
                 <button
                   onClick={handleResendVerification}
                   disabled={resendLoading}
-                  className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center mb-4"
+                  className="w-full px-6 py-3 bg-[#0072CE] text-white rounded-lg hover:bg-[#1A1F5E] transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center mb-4"
                 >
                   {resendLoading ? (
                     <>
@@ -177,7 +177,7 @@ const VerifyEmail: React.FC = () => {
 
               <Link
                 to="/login"
-                className="inline-flex items-center justify-center text-blue-600 hover:text-blue-700 font-medium"
+                className="inline-flex items-center justify-center text-[#0072CE] hover:text-[#1A1F5E] font-medium"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Login
@@ -198,7 +198,7 @@ const VerifyEmail: React.FC = () => {
                   <button
                     onClick={handleResendVerification}
                     disabled={resendLoading}
-                    className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
+                    className="w-full px-6 py-3 bg-[#0072CE] text-white rounded-lg hover:bg-[#1A1F5E] transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
                   >
                     {resendLoading ? (
                       <>
@@ -223,7 +223,7 @@ const VerifyEmail: React.FC = () => {
                 
                 <Link
                   to="/login"
-                  className="inline-flex items-center justify-center text-blue-600 hover:text-blue-700 font-medium"
+                  className="inline-flex items-center justify-center text-[#0072CE] hover:text-[#1A1F5E] font-medium"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back to Login
@@ -237,7 +237,7 @@ const VerifyEmail: React.FC = () => {
         <div className="text-center mt-6">
           <p className="text-sm text-gray-600">
             Need help?{' '}
-            <a href="mailto:support@forvismazars.com" className="text-blue-600 hover:text-blue-700 font-medium">
+            <a href="mailto:support@forvismazars.com" className="text-[#0072CE] hover:text-[#1A1F5E] font-medium">
               Contact Support
             </a>
           </p>

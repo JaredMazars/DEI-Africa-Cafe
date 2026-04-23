@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Camera, MapPin, Mail, Star, Award, TrendingUp, Users, ArrowRight, Calendar, Briefcase } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSimpleAuth } from '../contexts/SimpleAuthContext';
@@ -104,7 +104,7 @@ const Profile: React.FC = () => {
                 className="w-32 h-40 rounded-lg object-cover object-top border-4 border-white shadow-lg"
                 style={{ aspectRatio: '4/5' }}
               />
-              <button className="absolute bottom-2 right-2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg shadow-lg transition-colors">
+              <button className="absolute bottom-2 right-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white p-2 rounded-lg shadow-lg transition-colors">
                 <Camera className="w-4 h-4" />
               </button>
             </div>
@@ -137,7 +137,6 @@ const Profile: React.FC = () => {
       {/* Navigation Tabs */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8">
         <div className="flex space-x-8 px-6">
-          {[
           {[
             { key: 'overview', label: 'Overview' },
             { key: 'connections', label: 'Connections' },
@@ -243,7 +242,7 @@ const Profile: React.FC = () => {
                 </div>
               </div>
               <h3 className="text-2xl text-white font-bold mb-3 text-center">Mentorship Activities</h3>
-              <p className="text-blue-50 text-base mb-6 text-center leading-relaxed">
+              <p className="text-white/90 text-base mb-6 text-center leading-relaxed">
                 Explore interactive tools to strengthen your mentorship journey
               </p>
               <button
@@ -306,14 +305,14 @@ const Profile: React.FC = () => {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-                  <Users className="w-6 h-6 text-blue-600" />
+                  <Users className="w-6 h-6 text-[#0072CE]" />
                   My Mentors
                 </h2>
                 <p className="text-gray-600 mt-1">People who guide and support my growth</p>
               </div>
               <button
                 onClick={() => navigate('/mentorship-activities')}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all"
+                className="flex items-center gap-2 px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white rounded-lg font-medium transition-all"
               >
                 View All
                 <ArrowRight className="w-4 h-4" />
@@ -345,7 +344,7 @@ const Profile: React.FC = () => {
                 <p className="text-gray-600">No mentors yet. Find mentors to guide your journey!</p>
                 <button
                   onClick={() => navigate('/mentors')}
-                  className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
+                  className="mt-4 px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white rounded-lg font-medium"
                 >
                   Discover Mentors
                 </button>
@@ -358,14 +357,14 @@ const Profile: React.FC = () => {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-                  <Users className="w-6 h-6 text-blue-600" />
+                  <Users className="w-6 h-6 text-[#0072CE]" />
                   My Mentees
                 </h2>
                 <p className="text-gray-600 mt-1">People I'm guiding and supporting</p>
               </div>
               <button
                 onClick={() => navigate('/my-mentees')}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all"
+                className="flex items-center gap-2 px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white rounded-lg font-medium transition-all"
               >
                 View All
                 <ArrowRight className="w-4 h-4" />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { BookOpen, Plus, Edit, Trash2, Save, X, Search, Link as LinkIcon } from 'lucide-react';
 import { getData, setData, STORAGE_KEYS } from '../../services/dataStore';
 import { logAuditAction } from '../../services/auditLogger';
@@ -102,7 +102,7 @@ const AdminResources: React.FC = () => {
         </div>
         <button
           onClick={() => { resetModal(); setShowModal(true); }}
-          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+          className="flex items-center gap-2 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
         >
           <Plus className="w-5 h-5" />
           Add Resource
@@ -125,7 +125,7 @@ const AdminResources: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search resources..."
-            className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
           />
         </div>
       </div>
@@ -138,9 +138,9 @@ const AdminResources: React.FC = () => {
                 <h3 className="font-bold text-gray-900 mb-2">{resource.title}</h3>
                 <p className="text-sm text-gray-600 mb-3">{resource.description}</p>
                 <div className="flex items-center gap-4 text-xs">
-                  <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">{resource.type}</span>
-                  <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">{resource.category}</span>
-                  <a href={resource.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:underline">
+                  <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-2 py-1 rounded">{resource.type}</span>
+                  <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-2 py-1 rounded">{resource.category}</span>
+                  <a href={resource.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#0072CE] hover:underline">
                     <LinkIcon className="w-3 h-3" />
                     View Resource
                   </a>
@@ -153,7 +153,7 @@ const AdminResources: React.FC = () => {
                     setFormData({ title: resource.title, description: resource.description, type: resource.type, category: resource.category, url: resource.url });
                     setShowModal(true);
                   }}
-                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                  className="p-2 text-[#0072CE] hover:bg-[#1A1F5E]/5 rounded-lg"
                 >
                   <Edit className="w-5 h-5" />
                 </button>
@@ -185,29 +185,29 @@ const AdminResources: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Title *</label>
-                <input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                <input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" />
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
-                <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" rows={3} />
+                <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" rows={3} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Type</label>
-                  <input type="text" value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                  <input type="text" value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Category</label>
-                  <input type="text" value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                  <input type="text" value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-2">URL *</label>
-                <input type="url" value={formData.url} onChange={(e) => setFormData({ ...formData, url: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                <input type="url" value={formData.url} onChange={(e) => setFormData({ ...formData, url: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" />
               </div>
               <div className="flex gap-4 mt-6">
                 <button onClick={resetModal} className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-bold">Cancel</button>
-                <button onClick={handleSubmit} className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-bold"><Save className="w-5 h-5 inline mr-2" />{editingId ? 'Update' : 'Add'}</button>
+                <button onClick={handleSubmit} className="flex-1 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white py-3 rounded-lg font-bold"><Save className="w-5 h-5 inline mr-2" />{editingId ? 'Update' : 'Add'}</button>
               </div>
             </div>
           </div>
