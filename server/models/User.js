@@ -45,7 +45,8 @@ class User {
 
     static async findByEmail(email) {
         try {
-            const query = `SELECT * FROM users WHERE email = '${email}' AND is_active = 1`;
+            // Check ALL users (including inactive) to properly detect duplicates on registration
+            const query = `SELECT * FROM users WHERE email = '${email}'`;
             const result = await executeQuery(query);
             return result.recordset.length > 0 ? new User(result.recordset[0]) : null;
         } catch (error) {

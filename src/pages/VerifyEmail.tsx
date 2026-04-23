@@ -23,7 +23,7 @@ const VerifyEmail: React.FC = () => {
 
   const verifyEmail = async (verificationToken: string) => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/verify-email', {
+      const response = await fetch('/api/auth/verify-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ const VerifyEmail: React.FC = () => {
     setResendSuccess(false);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/resend-verification', {
+      const response = await fetch('/api/auth/resend-verification', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -100,7 +100,7 @@ const VerifyEmail: React.FC = () => {
           <img 
             src="/assets/forvis-mazars-logo.png.png" 
             alt="Forvis Mazars"
-            className="h-12 mx-auto mb-4"
+            className="h-10 sm:h-14 lg:h-16 mx-auto mb-4 object-contain"
           />
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Email Verification</h1>
           <p className="text-gray-600">DEI Cafe</p>

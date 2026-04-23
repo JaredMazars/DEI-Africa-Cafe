@@ -134,8 +134,8 @@ export default function SimpleOnboardingForm() {
 
           {/* Header */}
           <div className="mb-8">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Forvis_Mazars_logo.svg/320px-Forvis_Mazars_logo.svg.png"
-              alt="Forvis Mazars" className="h-8 mb-4" />
+            <img src="/assets/forvis-mazars-logo.png.png"
+              alt="Forvis Mazars" className="h-10 sm:h-14 lg:h-16 object-contain mb-4" />
             <div className="h-1 w-12 bg-[#E83E2D] rounded-full mb-3" />
             <h1 className="text-3xl font-bold text-[#1A1F5E] mb-1">Set up your profile</h1>
             <p className="text-[#8C8C8C]">Help us personalise your DEI Cafe experience</p>

@@ -36,9 +36,9 @@ const SimpleLogin: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-center lg:justify-start space-x-3">
               <img 
-                src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Forvis_Mazars_logo.svg/320px-Forvis_Mazars_logo.svg.png" 
+                src="/assets/forvis-mazars-logo.png.png" 
                 alt="Forvis Mazars"
-                className="h-10"
+                className="h-10 sm:h-14 lg:h-20 object-contain"
               />
             </div>
             <h1 className="text-4xl font-bold text-[#1A1F5E]">

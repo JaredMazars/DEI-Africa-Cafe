@@ -55,9 +55,9 @@ const SimpleRegister: React.FC = () => {
         <div className="text-center lg:text-left space-y-8">
           <div className="space-y-4">
             <img
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Forvis_Mazars_logo.svg/320px-Forvis_Mazars_logo.svg.png"
+              src="/assets/forvis-mazars-logo.png.png"
               alt="Forvis Mazars"
-              className="h-10 mx-auto lg:mx-0"
+              className="h-10 sm:h-14 lg:h-20 object-contain mx-auto lg:mx-0"
             />
             <div className="h-1 w-12 bg-[#E83E2D] rounded-full mx-auto lg:mx-0" />
             <h1 className="text-4xl font-bold text-[#1A1F5E]">DEI Cafe</h1>

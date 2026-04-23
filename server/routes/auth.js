@@ -201,6 +201,13 @@ router.post('/register', [
 
     } catch (error) {
         console.error('Registration error:', error);
+        // SQL Server unique constraint violation (duplicate email)
+        if (error.number === 2627 || error.number === 2601 || (error.message && error.message.includes('UNIQUE'))) {
+            return res.status(409).json({
+                success: false,
+                message: 'An account with this email already exists.'
+            });
+        }
         res.status(500).json({
             success: false,
             message: 'Server error during registration'

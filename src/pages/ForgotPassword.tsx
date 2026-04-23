@@ -54,7 +54,7 @@ const ForgotPassword: React.FC = () => {
           <img 
             src="/assets/forvis-mazars-logo.png.png" 
             alt="Forvis Mazars"
-            className="h-12 mx-auto mb-4"
+            className="h-10 sm:h-14 lg:h-16 mx-auto mb-4 object-contain"
           />
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Forgot Password?</h1>
           <p className="text-gray-600">No worries, we'll send you reset instructions</p>

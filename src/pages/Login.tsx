@@ -56,9 +56,9 @@ const Login: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-center lg:justify-start space-x-3">
               <img 
-                src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Forvis_Mazars_logo.svg/320px-Forvis_Mazars_logo.svg.png" 
+                src="/assets/forvis-mazars-logo.png.png" 
                 alt="Forvis Mazars"
-                className="h-10"
+                className="h-10 sm:h-14 lg:h-20 object-contain"
               />
             </div>
             <h1 className="text-4xl font-bold bg-gradient-to-r from-[#1A1F5E] to-[#1A1F5E] bg-clip-text text-transparent">
@@ -99,9 +99,9 @@ const Login: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-2xl p-8 border border-[#E5E7EB]">
             <div className="text-center mb-8">
               <img 
-                src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Forvis_Mazars_logo.svg/320px-Forvis_Mazars_logo.svg.png" 
+                src="/assets/forvis-mazars-logo.png.png" 
                 alt="Forvis Mazars"
-                className="h-8 mx-auto mb-4"
+                className="h-10 sm:h-12 lg:h-14 mx-auto mb-4 object-contain"
               />
               <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
               <p className="text-gray-600 mt-2">Sign in to continue your journey</p>

@@ -54,7 +54,7 @@ const Navigation = () => {
               <img 
                 src="/assets/forvis-mazars-logo.png.png" 
                 alt="Forvis Mazars"
-                className="h-8 sm:h-10 object-contain flex-shrink-0"
+                className="h-8 sm:h-12 lg:h-14 object-contain flex-shrink-0"
               />
               <div className="hidden sm:block min-w-0">
                 <h1 className="text-base sm:text-xl font-bold text-gray-900 whitespace-nowrap truncate">

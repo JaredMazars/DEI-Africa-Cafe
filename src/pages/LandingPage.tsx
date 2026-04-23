@@ -11,9 +11,9 @@ const LandingPage: React.FC = () => {
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-3">
               <img 
-                src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Forvis_Mazars_logo.svg/320px-Forvis_Mazars_logo.svg.png" 
+                src="/assets/forvis-mazars-logo.png.png" 
                 alt="Forvis Mazars"
-                className="h-8"
+                className="h-8 sm:h-10 lg:h-12 object-contain"
               />
               <span className="text-gray-300">|</span>
               <h1 className="text-xl font-bold text-gray-800">

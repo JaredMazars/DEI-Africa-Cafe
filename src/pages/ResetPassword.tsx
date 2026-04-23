@@ -43,7 +43,7 @@ const ResetPassword: React.FC = () => {
 
   const validateToken = async (resetToken: string) => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/validate-reset-token', {
+      const response = await fetch('/api/auth/validate-reset-token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ const ResetPassword: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/reset-password', {
+      const response = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -137,7 +137,7 @@ const ResetPassword: React.FC = () => {
             <img 
               src="/assets/forvis-mazars-logo.png.png" 
               alt="Forvis Mazars"
-              className="h-12 mx-auto mb-4"
+              className="h-10 sm:h-14 lg:h-16 mx-auto mb-4 object-contain"
             />
           </div>
           <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
@@ -173,7 +173,7 @@ const ResetPassword: React.FC = () => {
           <img 
             src="/assets/forvis-mazars-logo.png.png" 
             alt="Forvis Mazars"
-            className="h-12 mx-auto mb-4"
+            className="h-10 sm:h-14 lg:h-16 mx-auto mb-4 object-contain"
           />
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Reset Password</h1>
           <p className="text-gray-600">Enter your new password</p>

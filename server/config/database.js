@@ -1,8 +1,13 @@
 import sql from 'mssql';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { DefaultAzureCredential } from '@azure/identity';
 
-dotenv.config();
+// Always resolve .env relative to this file (server/.env) regardless of CWD
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 // Check if using Managed Identity (Azure production) or SQL Auth (local dev)
 const useManagedIdentity = process.env.USE_MANAGED_IDENTITY === 'true';
