@@ -1,108 +1,85 @@
-import React, { useState } from 'react';
-import { Camera, MapPin, Briefcase, Mail, Phone, Calendar, Star, Award, TrendingUp, Users, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Camera, MapPin, Mail, Star, Award, TrendingUp, Users, ArrowRight, Calendar, Briefcase } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useSimpleAuth } from '../contexts/SimpleAuthContext';
+
+interface Connection {
+  id: string;
+  expert_id: string;
+  requester_id: string;
+  status: string;
+  expert_name?: string;
+  expert_title?: string;
+  requester_name?: string;
+  requester_email?: string;
+}
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
+  const { currentUser } = useSimpleAuth();
   const [activeTab, setActiveTab] = useState('overview');
+  const [connections, setConnections] = useState<Connection[]>([]);
+  const [loadingConnections, setLoadingConnections] = useState(true);
 
-  // Hardcoded user data
+  // Real user from auth context
   const user = {
-    name: 'Jason Nessat',
+    name: currentUser?.profile?.name || currentUser?.email?.split('@')[0] || 'User',
     avatar: '',
-    email: 'Jason.Nessat@Mazars.co.za',
-    phone: '+27 (123) 456-7890',
-    location: 'Cape Town, South Africa',
-    role: 'Mentee',
-    bio: 'Passionate about learning and professional development.',
-    expertise: ['Leadership', 'Project Management', 'Communication']
+    email: currentUser?.email || '',
+    location: currentUser?.profile?.location || '',
+    role: currentUser?.role || 'mentee',
+    bio: currentUser?.profile?.bio || 'Passionate about professional development and meaningful connections.',
+    expertise: currentUser?.profile?.expertise || [],
+    desired_expertise: currentUser?.profile?.desired_expertise || [],
+    experience: currentUser?.profile?.experience || '',
+    availability: currentUser?.profile?.availability || '',
   };
 
+  useEffect(() => {
+    const fetchConnections = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/connections', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setConnections(data.data?.connections || []);
+        }
+      } catch { /* silent */ } finally {
+        setLoadingConnections(false);
+      }
+    };
+    fetchConnections();
+  }, []);
+
+  const userId = currentUser?.id;
+  // Connections where I am the mentee (requester)
+  const myMentors = connections.filter(
+    c => c.requester_id === userId && c.status === 'accepted'
+  );
+  // Connections where I am the expert/mentor — matched via mentor_user_id returned by getConnectionsWithDetails
+  const myMentees = connections.filter(
+    c => (c as any).mentor_user_id === userId && c.status === 'accepted'
+  );
+  const pendingConnections = connections.filter(c => c.status === 'pending');
+
   const achievements = [
-    { icon: Star, title: 'Top Rated Mentee', description: '4.9/5 average rating from mentors' },
-    { icon: Award, title: 'Quick Learner', description: 'Completed 15 courses this year' },
-    { icon: TrendingUp, title: 'Growth Focused', description: '50+ hours of mentoring sessions' }
-  ];
-
-  // Mock mentors data
-  const myMentors = [
-    {
-      id: 'mentor-1',
-      name: 'Sarah Johnson',
-      role: 'Senior Strategy Consultant',
-      image: 'https://randomuser.me/api/portraits/women/44.jpg',
-      expertise: ['Leadership', 'Strategy'],
-      sessionsCompleted: 8,
-      relationshipStatus: 'active'
-    },
-    {
-      id: 'mentor-2',
-      name: 'Dr. Kwame Mensah',
-      role: 'Technology Director',
-      image: 'https://randomuser.me/api/portraits/men/32.jpg',
-      expertise: ['Tech Leadership', 'AI/ML'],
-      sessionsCompleted: 12,
-      relationshipStatus: 'active'
-    }
-  ];
-
-  // Mock mentees data
-  const myMentees = [
-    {
-      id: 'mentee-1',
-      name: 'James Okafor',
-      role: 'Junior Consultant',
-      image: 'https://randomuser.me/api/portraits/men/22.jpg',
-      focusAreas: ['Leadership', 'Communication'],
-      sessionsCompleted: 8,
-      progressScore: 75
-    },
-    {
-      id: 'mentee-2',
-      name: 'Aisha Mohammed',
-      role: 'Analyst',
-      image: 'https://randomuser.me/api/portraits/women/32.jpg',
-      focusAreas: ['Data Analysis', 'Career Growth'],
-      sessionsCompleted: 12,
-      progressScore: 88
-    }
-  ];
-
-  const completedSessions = [
-    {
-      mentor: 'Dr. Emily Rodriguez',
-      topic: 'Leadership Development',
-      date: '2024-01-10',
-      rating: 5,
-      feedback: 'Excellent session with great insights on team management.'
-    },
-    {
-      mentor: 'James Wilson',
-      topic: 'Technical Skills Review',
-      date: '2024-01-08',
-      rating: 5,
-      feedback: 'Very helpful guidance on system architecture patterns.'
-    },
-    {
-      mentor: 'Sarah Johnson',
-      topic: 'Career Planning',
-      date: '2024-01-05',
-      rating: 4,
-      feedback: 'Great advice on career progression and goal setting.'
-    }
+    { icon: Star, title: 'Community Member', description: 'Active participant in DEI Cafe' },
+    { icon: Award, title: 'Profile Complete', description: 'Set up your full professional profile' },
+    { icon: TrendingUp, title: 'Connected', description: `${connections.filter(c=>c.status==='accepted').length} active connections` }
   ];
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Professional Header with Forvis Mazars Branding */}
-      <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 text-white">
-        <div className="max-w-[1920px] mx-auto px-12 sm:px-16 lg:px-20 py-12">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold mb-3 text-white">My Profile</h1>
-            <p className="text-xl text-blue-100 max-w-3xl mx-auto">
-              Manage your professional profile and track your development
-            </p>
-          </div>
+      {/* Header */}
+      <div className="bg-[#1A1F5E] text-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="h-1 w-12 bg-[#E83E2D] rounded-full mb-4" />
+          <h1 className="text-4xl font-bold mb-2">My Profile</h1>
+          <p className="text-white/70 text-base">
+            Manage your professional profile and track your development
+          </p>
         </div>
       </div>
 
@@ -110,7 +87,7 @@ const Profile: React.FC = () => {
       {/* Profile Header */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
         {/* Cover Photo */}
-        <div className="h-32 bg-gradient-to-r from-blue-900 to-blue-800 relative">
+        <div className="h-32 bg-gradient-to-r from-[#1A1F5E] to-[#0072CE] relative">
           <button className="absolute bottom-4 right-4 bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-700 px-3 py-1 rounded-lg text-sm font-medium transition-colors">
             <Camera className="w-4 h-4 inline mr-1" />
             Edit Cover
@@ -134,20 +111,23 @@ const Profile: React.FC = () => {
             
             <div className="flex-1 pt-16">
               <h1 className="text-2xl font-bold text-gray-900">{user.name}</h1>
-              <p className="text-gray-600">Audit Manager</p>
-              <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
-                <div className="flex items-center space-x-1">
+              {user.role && (
+                <p className="text-[#8C8C8C] capitalize">
+                  {user.role === 'both' ? 'Mentor & Mentee' : user.role}
+                </p>
+              )}
+              {user.location && (
+                <div className="flex items-center space-x-1 mt-2 text-sm text-[#8C8C8C]">
                   <MapPin className="w-4 h-4" />
-                  <span>Cape Town, South Africa</span>
+                  <span>{user.location}</span>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <Calendar className="w-4 h-4" />
-                  <span>Joined January 2024</span>
-                </div>
-              </div>
+              )}
             </div>
             
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+            <button
+              onClick={() => setActiveTab('settings')}
+              className="bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white px-6 py-2 rounded-full font-medium transition-all shadow-lg"
+            >
               Edit Profile
             </button>
           </div>
@@ -158,19 +138,19 @@ const Profile: React.FC = () => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8">
         <div className="flex space-x-8 px-6">
           {[
+          {[
             { key: 'overview', label: 'Overview' },
             { key: 'connections', label: 'Connections' },
-            { key: 'sessions', label: 'Sessions' },
             { key: 'achievements', label: 'Achievements' },
             { key: 'settings', label: 'Settings' }
           ].map(tab => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`py-4 px-2 border-b-2 transition-colors ${
+              className={`py-4 px-2 border-b-2 transition-colors font-medium ${
                 activeTab === tab.key
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-[#E83E2D] text-[#1A1F5E]'
+                  : 'border-transparent text-[#8C8C8C] hover:text-[#333333]'
               }`}
             >
               {tab.label}
@@ -184,61 +164,79 @@ const Profile: React.FC = () => {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* About */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">About</h2>
-              <p className="text-gray-600 leading-relaxed mb-4">
-                I'm a passionate professional focused on continuous learning and growth. Currently seeking mentorship 
-                in leadership development, technical skills, and career advancement. I believe in the power of 
-                meaningful connections and knowledge sharing.
+            <div className="bg-white rounded-xl shadow-sm border border-[#E5E7EB] p-6">
+              <h2 className="text-xl font-semibold text-[#333333] mb-4">About</h2>
+              <p className="text-[#8C8C8C] leading-relaxed mb-4">
+                {user.bio || 'No bio added yet. Add one in Settings.'}
               </p>
-              <div className="flex flex-wrap gap-2">
-                {['Leadership', 'Product Management', 'Analytics', 'Team Building'].map(skill => (
-                  <span key={skill} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                    {skill}
-                  </span>
-                ))}
-              </div>
+              {user.expertise.length > 0 && (
+                <div>
+                  <p className="text-sm font-semibold text-[#333333] mb-2">My Expertise</p>
+                  <div className="flex flex-wrap gap-2">
+                    {user.expertise.map(skill => (
+                      <span key={skill} className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] rounded-full text-sm font-medium">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {user.desired_expertise.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-sm font-semibold text-[#333333] mb-2">Looking to Learn</p>
+                  <div className="flex flex-wrap gap-2">
+                    {user.desired_expertise.map(skill => (
+                      <span key={skill} className="px-3 py-1 bg-[#0072CE]/10 text-[#0072CE] rounded-full text-sm font-medium">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Recent Activity */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Activity</h2>
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Star className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-900">Completed session with Dr. Emily Rodriguez</p>
-                    <p className="text-xs text-gray-500">2 days ago</p>
-                  </div>
+            {/* Connection Summary */}
+            <div className="bg-white rounded-xl shadow-sm border border-[#E5E7EB] p-6">
+              <h2 className="text-xl font-semibold text-[#333333] mb-4">Connection Summary</h2>
+              {loadingConnections ? (
+                <p className="text-[#8C8C8C] text-sm">Loading connections…</p>
+              ) : connections.length === 0 ? (
+                <div className="text-center py-6">
+                  <Users className="w-10 h-10 text-[#8C8C8C] mx-auto mb-2" />
+                  <p className="text-[#8C8C8C] text-sm">No connections yet. Explore mentors to get started.</p>
+                  <button onClick={() => navigate('/mentors')} className="mt-3 text-[#0072CE] text-sm font-medium hover:text-[#E83E2D] transition-colors">
+                    Find Mentors →
+                  </button>
                 </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Award className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-900">Earned "Quick Learner" achievement</p>
-                    <p className="text-xs text-gray-500">1 week ago</p>
-                  </div>
+              ) : (
+                <div className="space-y-3">
+                  {connections.slice(0, 4).map(c => (
+                    <div key={c.id} className="flex items-center justify-between p-3 bg-[#F4F4F4] rounded-2xl">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-[#1A1F5E] flex items-center justify-center text-white text-sm font-bold">
+                          {((c as any).mentor_name || (c as any).mentee_name || '?')[0]}
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-[#333333]">{(c as any).mentor_name || (c as any).mentee_name}</p>
+                          <p className="text-xs text-[#8C8C8C]">{(c as any).mentor_title || ''}</p>
+                        </div>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
+                        c.status === 'accepted' ? 'bg-green-100 text-green-700' :
+                        c.status === 'pending'  ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-[#8C8C8C]/10 text-[#8C8C8C]'
+                      }`}>{c.status}</span>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Briefcase className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-900">Joined DEI Africa Cafe community</p>
-                    <p className="text-xs text-gray-500">2 weeks ago</p>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Mentorship Activities CTA - ENHANCED */}
-            <div className="bg-blue-600 rounded-2xl shadow-2xl p-8 text-white transform hover:scale-105 transition-all duration-300 border-4 border-blue-400">
+            {/* Mentorship Activities CTA */}
+            <div className="bg-gradient-to-br from-[#1A1F5E] to-[#0072CE] rounded-3xl shadow-2xl p-8 text-white hover:scale-[1.02] transition-all duration-300">
               <div className="flex items-center justify-center mb-4">
                 <div className="bg-white/20 backdrop-blur-sm rounded-full p-4">
                   <Award className="w-10 h-10 text-white" />
@@ -250,7 +248,7 @@ const Profile: React.FC = () => {
               </p>
               <button
                 onClick={() => navigate('/mentorship-activities')}
-                className="w-full bg-white text-blue-600 hover:bg-blue-50 px-6 py-4 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2"
+                className="w-full bg-white text-[#1A1F5E] hover:bg-[#F4F4F4] px-6 py-4 rounded-2xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg flex items-center justify-center space-x-2"
               >
                 <span>Explore Activities</span>
                 <TrendingUp className="w-5 h-5" />
@@ -263,35 +261,37 @@ const Profile: React.FC = () => {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
-                  <Mail className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm text-gray-600">{user.email}</span>
-                </div>
+                <Mail className="w-4 h-4 text-[#8C8C8C]" />
+                <span className="text-sm text-[#333333]">{user.email}</span>
+              </div>
+              {user.location && (
                 <div className="flex items-center space-x-3">
-                  <Phone className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm text-gray-600">+1 (555) 123-4567</span>
+                  <MapPin className="w-4 h-4 text-[#8C8C8C]" />
+                  <span className="text-sm text-[#333333]">{user.location}</span>
                 </div>
+              )}
               </div>
             </div>
 
             {/* Stats */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Stats</h3>
+            <div className="bg-white rounded-xl shadow-sm border border-[#E5E7EB] p-6">
+              <h3 className="text-lg font-semibold text-[#333333] mb-4">Stats</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Sessions Completed</span>
-                  <span className="text-sm font-semibold text-gray-900">24</span>
+                  <span className="text-sm text-[#8C8C8C]">My Mentors</span>
+                  <span className="text-sm font-semibold text-[#1A1F5E]">{myMentors.length}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Mentors Connected</span>
-                  <span className="text-sm font-semibold text-gray-900">8</span>
+                  <span className="text-sm text-[#8C8C8C]">My Mentees</span>
+                  <span className="text-sm font-semibold text-[#1A1F5E]">{myMentees.length}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Resources Accessed</span>
-                  <span className="text-sm font-semibold text-gray-900">45</span>
+                  <span className="text-sm text-[#8C8C8C]">Pending Requests</span>
+                  <span className="text-sm font-semibold text-[#1A1F5E]">{pendingConnections.length}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Average Rating</span>
-                  <span className="text-sm font-semibold text-gray-900">4.9/5</span>
+                  <span className="text-sm text-[#8C8C8C]">Total Connections</span>
+                  <span className="text-sm font-semibold text-[#1A1F5E]">{connections.filter(c=>c.status==='accepted').length}</span>
                 </div>
               </div>
             </div>
@@ -321,30 +321,20 @@ const Profile: React.FC = () => {
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">
-              {myMentors.map((mentor) => (
+              {myMentors.map((c) => (
                 <div
-                  key={mentor.id}
-                  onClick={() => navigate(`/mentorship-activities/${mentor.id}`)}
-                  className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:shadow-lg hover:border-blue-300 cursor-pointer transition-all"
+                  key={c.id}
+                  className="flex items-center gap-4 p-4 border border-[#E5E7EB] rounded-2xl hover:shadow-lg hover:border-[#1A1F5E]/30 cursor-pointer transition-all"
                 >
-                  <img
-                    src={mentor.image}
-                    alt={mentor.name}
-                    className="w-16 h-16 rounded-full border-2 border-blue-200"
-                  />
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">{mentor.name}</h3>
-                    <p className="text-sm text-gray-600">{mentor.role}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
-                        {mentor.sessionsCompleted} sessions
-                      </span>
-                      <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
-                        {mentor.relationshipStatus}
-                      </span>
-                    </div>
+                  <div className="w-14 h-14 rounded-full bg-[#1A1F5E] flex items-center justify-center text-white text-xl font-bold">
+                    {((c as any).mentor_name || '?')[0]}
                   </div>
-                  <ArrowRight className="w-5 h-5 text-gray-400" />
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-[#333333]">{(c as any).mentor_name || 'Mentor'}</h3>
+                    <p className="text-sm text-[#8C8C8C]">{(c as any).mentor_title || ''}</p>
+                    <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full mt-1 inline-block">accepted</span>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-[#8C8C8C]" />
                 </div>
               ))}
             </div>
@@ -383,30 +373,20 @@ const Profile: React.FC = () => {
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">
-              {myMentees.map((mentee) => (
+              {myMentees.map((c) => (
                 <div
-                  key={mentee.id}
-                  onClick={() => navigate(`/mentor-view/mentee/${mentee.id}`)}
-                  className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:shadow-lg hover:border-blue-300 cursor-pointer transition-all"
+                  key={c.id}
+                  className="flex items-center gap-4 p-4 border border-[#E5E7EB] rounded-2xl hover:shadow-lg hover:border-[#1A1F5E]/30 cursor-pointer transition-all"
                 >
-                  <img
-                    src={mentee.image}
-                    alt={mentee.name}
-                    className="w-16 h-16 rounded-full border-2 border-blue-200"
-                  />
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">{mentee.name}</h3>
-                    <p className="text-sm text-gray-600">{mentee.role}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
-                        {mentee.sessionsCompleted} sessions
-                      </span>
-                      <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded-full">
-                        {mentee.progressScore}% progress
-                      </span>
-                    </div>
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] flex items-center justify-center text-white text-xl font-bold">
+                    {((c as any).mentee_name || '?')[0]}
                   </div>
-                  <ArrowRight className="w-5 h-5 text-gray-400" />
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-[#333333]">{(c as any).mentee_name || 'Mentee'}</h3>
+                    <p className="text-sm text-[#8C8C8C]">{(c as any).mentee_location || ''}</p>
+                    <span className="text-xs px-2 py-1 bg-[#0072CE]/10 text-[#0072CE] rounded-full mt-1 inline-block">active</span>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-[#8C8C8C]" />
                 </div>
               ))}
             </div>
@@ -421,72 +401,44 @@ const Profile: React.FC = () => {
 
           {/* Connection Stats */}
           <div className="grid md:grid-cols-3 gap-4">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+            <div className="bg-gradient-to-br from-[#1A1F5E] to-[#0072CE] rounded-3xl p-6 text-white shadow-xl">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-blue-900">Total Mentors</h3>
-                <Users className="w-5 h-5 text-blue-600" />
+                <h3 className="text-sm font-medium text-white/80">My Mentors</h3>
+                <Users className="w-5 h-5 text-white/60" />
               </div>
-              <p className="text-3xl font-bold text-blue-900">{myMentors.length}</p>
+              <p className="text-3xl font-bold">{myMentors.length}</p>
             </div>
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+            <div className="bg-gradient-to-br from-[#1A1F5E] to-[#0072CE] rounded-3xl p-6 text-white shadow-xl">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-blue-900">Total Mentees</h3>
-                <Users className="w-5 h-5 text-blue-600" />
+                <h3 className="text-sm font-medium text-white/80">My Mentees</h3>
+                <Users className="w-5 h-5 text-white/60" />
               </div>
-              <p className="text-3xl font-bold text-blue-900">{myMentees.length}</p>
+              <p className="text-3xl font-bold">{myMentees.length}</p>
             </div>
-            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
+            <div className="bg-gradient-to-br from-[#1A1F5E] to-[#0072CE] rounded-3xl p-6 text-white shadow-xl">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-green-900">Total Connections</h3>
-                <Award className="w-5 h-5 text-green-600" />
+                <h3 className="text-sm font-medium text-white/80">Pending</h3>
+                <Award className="w-5 h-5 text-white/60" />
               </div>
-              <p className="text-3xl font-bold text-green-900">{myMentors.length + myMentees.length}</p>
+              <p className="text-3xl font-bold">{pendingConnections.length}</p>
             </div>
           </div>
         </div>
       )}
 
-      {activeTab === 'sessions' && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Completed Sessions</h2>
-          <div className="space-y-6">
-            {completedSessions.map((session, index) => (
-              <div key={index} className="border-b border-gray-100 pb-6 last:border-b-0">
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{session.topic}</h3>
-                    <p className="text-sm text-gray-600">with {session.mentor}</p>
-                    <p className="text-xs text-gray-500">{session.date}</p>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-4 h-4 ${
-                          i < session.rating ? 'text-blue-400 fill-current' : 'text-gray-300'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600">{session.feedback}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+
 
       {activeTab === 'achievements' && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Achievements</h2>
+        <div className="bg-white rounded-3xl shadow-xl border border-[#E5E7EB] p-6">
+          <h2 className="text-xl font-semibold text-[#333333] mb-6">Achievements</h2>
           <div className="grid md:grid-cols-3 gap-6">
             {achievements.map((achievement, index) => (
-              <div key={index} className="text-center p-6 border border-gray-200 rounded-lg">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <achievement.icon className="w-8 h-8 text-blue-600" />
+              <div key={index} className="text-center p-6 border border-[#E5E7EB] rounded-3xl">
+                <div className="w-16 h-16 bg-[#1A1F5E]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <achievement.icon className="w-8 h-8 text-[#1A1F5E]" />
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-2">{achievement.title}</h3>
-                <p className="text-sm text-gray-600">{achievement.description}</p>
+                <h3 className="font-semibold text-[#333333] mb-2">{achievement.title}</h3>
+                <p className="text-sm text-[#8C8C8C]">{achievement.description}</p>
               </div>
             ))}
           </div>
@@ -494,38 +446,43 @@ const Profile: React.FC = () => {
       )}
 
       {activeTab === 'settings' && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Account Settings</h2>
+        <div className="bg-white rounded-3xl shadow-xl border border-[#E5E7EB] p-6">
+          <h2 className="text-xl font-semibold text-[#333333] mb-6">Account Settings</h2>
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+              <label className="block text-sm font-semibold text-[#333333] mb-2">Full Name</label>
               <input
                 type="text"
                 defaultValue={user.name}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <label className="block text-sm font-semibold text-[#333333] mb-2">Email</label>
               <input
                 type="email"
                 defaultValue={user.email}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+              <label className="block text-sm font-semibold text-[#333333] mb-2">Bio</label>
               <textarea
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Tell us about yourself..."
+                defaultValue={user.bio}
+                className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
+                placeholder="Tell us about yourself…"
               />
             </div>
+            <div className="bg-[#F4F4F4] rounded-2xl p-4 text-sm text-[#8C8C8C]">
+              <Briefcase className="w-4 h-4 inline mr-1" />
+              To update role, expertise or language preferences, please complete the onboarding form again via your account.
+            </div>
             <div className="flex space-x-4">
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+              <button className="bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white px-8 py-3 rounded-full font-semibold shadow-lg hover:opacity-90 transition-all">
                 Save Changes
               </button>
-              <button className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2 rounded-lg font-medium transition-colors">
+              <button className="border-2 border-[#1A1F5E] text-[#1A1F5E] px-8 py-3 rounded-full font-semibold hover:bg-[#1A1F5E] hover:text-white transition-all">
                 Cancel
               </button>
             </div>

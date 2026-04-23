@@ -1,410 +1,241 @@
-import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Users, Calendar, Target, Star, Clock, 
-  Search, MapPin, TrendingUp,
-  MessageSquare, Plus, BarChart3
-} from 'lucide-react';
+import { Users, Calendar, Target, Search, MapPin, Loader, Clock, MessageSquare } from 'lucide-react';
+import { useSimpleAuth } from '../contexts/SimpleAuthContext';
 
-interface Mentee {
+interface ConnectionWithDetails {
   id: string;
-  name: string;
-  role: string;
-  company: string;
-  location: string;
-  image: string;
-  relationshipStatus: 'active' | 'pending' | 'completed';
-  startDate: string;
-  sessionsCompleted: number;
-  nextSession?: string;
-  goalsActive: number;
-  goalsCompleted: number;
-  lastActivity: string;
-  progressScore: number; // 0-100
-  focusAreas: string[];
+  requester_id: string;
+  expert_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  message?: string;
+  created_at: string;
+  updated_at: string;
+  mentee_name?: string;
+  mentee_location?: string;
+  mentee_bio?: string;
+  mentor_user_id?: string;
 }
 
 const MyMentees: React.FC = () => {
   const navigate = useNavigate();
+  const { currentUser } = useSimpleAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'pending' | 'completed'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all');
+  const [connections, setConnections] = useState<ConnectionWithDetails[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Mock data - in real app, fetch from API
-  const mentees: Mentee[] = [
-    {
-      id: 'mentee-1',
-      name: 'James Okafor',
-      role: 'Junior Consultant',
-      company: 'Forvis Mazars',
-      location: 'Lagos, Nigeria',
-      image: 'https://randomuser.me/api/portraits/men/22.jpg',
-      relationshipStatus: 'active',
-      startDate: '2025-01-15',
-      sessionsCompleted: 8,
-      nextSession: '2026-01-20',
-      goalsActive: 3,
-      goalsCompleted: 2,
-      lastActivity: '1 day ago',
-      progressScore: 75,
-      focusAreas: ['Leadership', 'Communication', 'Project Management']
-    },
-    {
-      id: 'mentee-2',
-      name: 'Aisha Mohammed',
-      role: 'Analyst',
-      company: 'Forvis Mazars',
-      location: 'Abuja, Nigeria',
-      image: 'https://randomuser.me/api/portraits/women/32.jpg',
-      relationshipStatus: 'active',
-      startDate: '2024-11-20',
-      sessionsCompleted: 12,
-      nextSession: '2026-01-18',
-      goalsActive: 2,
-      goalsCompleted: 5,
-      lastActivity: '3 days ago',
-      progressScore: 88,
-      focusAreas: ['Data Analysis', 'Technical Skills', 'Career Growth']
-    },
-    {
-      id: 'mentee-3',
-      name: 'David Mensah',
-      role: 'Associate',
-      company: 'Forvis Mazars',
-      location: 'Accra, Ghana',
-      image: 'https://randomuser.me/api/portraits/men/45.jpg',
-      relationshipStatus: 'pending',
-      startDate: '2026-01-10',
-      sessionsCompleted: 1,
-      goalsActive: 1,
-      goalsCompleted: 0,
-      lastActivity: '1 week ago',
-      progressScore: 20,
-      focusAreas: ['Software Development', 'Code Review']
-    },
-    {
-      id: 'mentee-4',
-      name: 'Grace Mwangi',
-      role: 'Senior Associate',
-      company: 'Forvis Mazars',
-      location: 'Nairobi, Kenya',
-      image: 'https://randomuser.me/api/portraits/women/55.jpg',
-      relationshipStatus: 'completed',
-      startDate: '2024-06-15',
-      sessionsCompleted: 24,
-      goalsActive: 0,
-      goalsCompleted: 8,
-      lastActivity: '2 months ago',
-      progressScore: 100,
-      focusAreas: ['Leadership', 'Strategic Planning']
-    }
-  ];
+  useEffect(() => {
+    const fetchConnections = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/connections', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error('Failed to load connections');
+        const data = await res.json();
+        const all: ConnectionWithDetails[] = data.data?.connections || [];
+        // mentor_user_id is the users.id of the expert on this connection
+        setConnections(all.filter(c => (c as any).mentor_user_id === currentUser?.id));
+      } catch {
+        setError('Could not load your mentees. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (currentUser?.id) fetchConnections();
+  }, [currentUser?.id]);
 
-  const filteredMentees = mentees.filter(mentee => {
-    const matchesSearch = mentee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         mentee.focusAreas.some(area => area.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesFilter = filterStatus === 'all' || mentee.relationshipStatus === filterStatus;
+  const filtered = connections.filter(c => {
+    const name = (c.mentee_name || '').toLowerCase();
+    const matchesSearch = name.includes(searchQuery.toLowerCase());
+    const matchesFilter = filterStatus === 'all' || c.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
 
-  const activeMentees = mentees.filter(m => m.relationshipStatus === 'active').length;
-  const totalSessions = mentees.reduce((sum, m) => sum + m.sessionsCompleted, 0);
-  const totalGoals = mentees.reduce((sum, m) => sum + m.goalsActive, 0);
-  const avgProgress = Math.round(mentees.reduce((sum, m) => sum + m.progressScore, 0) / mentees.length);
+  const accepted = connections.filter(c => c.status === 'accepted').length;
+  const pending  = connections.filter(c => c.status === 'pending').length;
 
-  const handleMenteeClick = (menteeId: string) => {
-    // Navigate to mentor view of mentee's activities
-    navigate(`/mentor-view/mentee/${menteeId}`);
+  const statusColors: Record<string, string> = {
+    accepted: 'bg-green-100 text-green-700',
+    pending:  'bg-yellow-100 text-yellow-700',
+    rejected: 'bg-[#8C8C8C]/10 text-[#8C8C8C]',
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'completed':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
+  const handleAccept = async (connectionId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`/api/connections/${connectionId}/status`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'accepted' }),
+      });
+      setConnections(prev => prev.map(c => c.id === connectionId ? { ...c, status: 'accepted' } : c));
+    } catch { /* silent */ }
   };
 
-  const getProgressColor = (score: number) => {
-    if (score >= 80) return 'bg-green-500';
-    if (score >= 50) return 'bg-yellow-500';
-    return 'bg-orange-500';
+  const handleReject = async (connectionId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      await fetch(`/api/connections/${connectionId}/status`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'rejected' }),
+      });
+      setConnections(prev => prev.map(c => c.id === connectionId ? { ...c, status: 'rejected' } : c));
+    } catch { /* silent */ }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-blue-50 pt-20 pb-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#F4F4F4] via-white to-[#F4F4F4] pt-20 pb-12 px-4">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-600 bg-clip-text text-transparent mb-2">
-                My Mentees
-              </h1>
-              <p className="text-gray-600">
-                Guide and support your mentees on their professional journey
-              </p>
-            </div>
-            <button
-              onClick={() => navigate('/mentor-content')}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white rounded-xl font-semibold shadow-lg transition-all duration-200 transform hover:scale-105"
-            >
-              <Plus className="w-5 h-5" />
-              Manage Content
-            </button>
-          </div>
-
-          {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-blue-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm mb-1">Active Mentees</p>
-                  <p className="text-3xl font-bold text-blue-600">{activeMentees}</p>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Users className="w-6 h-6 text-blue-600" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-green-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm mb-1">Total Sessions</p>
-                  <p className="text-3xl font-bold text-green-600">{totalSessions}</p>
-                </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Calendar className="w-6 h-6 text-green-600" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-blue-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm mb-1">Active Goals</p>
-                  <p className="text-3xl font-bold text-blue-600">{totalGoals}</p>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Target className="w-6 h-6 text-blue-600" />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-orange-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm mb-1">Avg Progress</p>
-                  <p className="text-3xl font-bold text-orange-600">{avgProgress}%</p>
-                </div>
-                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-orange-600" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Search and Filter */}
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search mentees by name or focus area..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => setFilterStatus('all')}
-                className={`px-4 py-3 rounded-xl font-medium transition-all ${
-                  filterStatus === 'all'
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:border-blue-300'
-                }`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setFilterStatus('active')}
-                className={`px-4 py-3 rounded-xl font-medium transition-all ${
-                  filterStatus === 'active'
-                    ? 'bg-green-600 text-white shadow-lg'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:border-green-300'
-                }`}
-              >
-                Active
-              </button>
-              <button
-                onClick={() => setFilterStatus('pending')}
-                className={`px-4 py-3 rounded-xl font-medium transition-all ${
-                  filterStatus === 'pending'
-                    ? 'bg-yellow-600 text-white shadow-lg'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:border-yellow-300'
-                }`}
-              >
-                Pending
-              </button>
-              <button
-                onClick={() => setFilterStatus('completed')}
-                className={`px-4 py-3 rounded-xl font-medium transition-all ${
-                  filterStatus === 'completed'
-                    ? 'bg-gray-600 text-white shadow-lg'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-300'
-                }`}
-              >
-                Completed
-              </button>
-            </div>
-          </div>
+        <div className="mb-10">
+          <div className="h-1 w-12 bg-[#E83E2D] rounded-full mb-4" />
+          <h1 className="text-4xl font-bold text-[#1A1F5E]">My Mentees</h1>
+          <p className="text-[#8C8C8C] mt-2 text-base leading-relaxed">
+            Guide and support your mentees on their professional journey
+          </p>
         </div>
 
-        {/* Mentees Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredMentees.map((mentee) => (
-            <div
-              key={mentee.id}
-              onClick={() => handleMenteeClick(mentee.id)}
-              className="bg-white rounded-2xl shadow-lg border border-gray-200 hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:scale-[1.02] overflow-hidden"
-            >
-              {/* Card Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-blue-600 p-6 text-white">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={mentee.image}
-                      alt={mentee.name}
-                      className="w-16 h-16 rounded-full border-4 border-white shadow-lg"
-                    />
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-xl font-bold">{mentee.name}</h3>
-                      </div>
-                      <p className="text-blue-100 text-sm">{mentee.role}</p>
-                    </div>
-                  </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusBadge(mentee.relationshipStatus)}`}>
-                    {mentee.relationshipStatus.charAt(0).toUpperCase() + mentee.relationshipStatus.slice(1)}
-                  </span>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {[
+            { label: 'Active Mentees', value: accepted, icon: Users },
+            { label: 'Pending Requests', value: pending, icon: Clock },
+            { label: 'Total Mentees', value: connections.length, icon: Target },
+          ].map(({ label, value, icon: Icon }) => (
+            <div key={label} className="bg-gradient-to-br from-[#1A1F5E] to-[#0072CE] text-white rounded-3xl shadow-xl p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white/70 text-sm mb-1">{label}</p>
+                  <p className="text-3xl font-bold">{value}</p>
                 </div>
-
-                <div className="flex items-center gap-4 text-sm text-blue-100">
-                  <div className="flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    <span>{mentee.location}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    <span>{mentee.lastActivity}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Card Body */}
-              <div className="p-6">
-                {/* Progress Bar */}
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">Overall Progress</span>
-                    <span className="text-sm font-bold text-gray-900">{mentee.progressScore}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className={`${getProgressColor(mentee.progressScore)} h-2 rounded-full transition-all duration-300`}
-                      style={{ width: `${mentee.progressScore}%` }}
-                    />
-                  </div>
-                </div>
-
-                {/* Focus Areas */}
-                <div className="mb-4">
-                  <p className="text-sm text-gray-600 mb-2 font-medium">Focus Areas:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {mentee.focusAreas.slice(0, 3).map((area, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium"
-                      >
-                        {area}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Stats Grid */}
-                <div className="grid grid-cols-3 gap-4 mb-4 py-4 border-t border-b border-gray-200">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-blue-600">{mentee.sessionsCompleted}</p>
-                    <p className="text-xs text-gray-600">Sessions</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-green-600">{mentee.goalsActive}</p>
-                    <p className="text-xs text-gray-600">Active</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-blue-600">{mentee.goalsCompleted}</p>
-                    <p className="text-xs text-gray-600">Completed</p>
-                  </div>
-                </div>
-
-                {/* Quick Info */}
-                <div className="space-y-2 mb-4">
-                  {mentee.nextSession && (
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <Calendar className="w-4 h-4 text-green-600" />
-                      <span className="font-medium">Next Session:</span>
-                      <span>{new Date(mentee.nextSession).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 text-sm text-gray-700">
-                    <Star className="w-4 h-4 text-yellow-600" />
-                    <span className="font-medium">Since:</span>
-                    <span>{new Date(mentee.startDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/messages?mentee=${mentee.id}`);
-                    }}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-blue-200 hover:bg-blue-50 text-blue-700 rounded-xl font-semibold transition-all duration-200"
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                    Message
-                  </button>
-                  <button
-                    onClick={() => handleMenteeClick(mentee.id)}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg"
-                  >
-                    <BarChart3 className="w-4 h-4" />
-                    View Progress
-                  </button>
+                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                  <Icon className="w-6 h-6 text-white" />
                 </div>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Empty State */}
-        {filteredMentees.length === 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
-            <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No mentees found</h3>
-            <p className="text-gray-600 mb-6">
+        <div className="flex flex-col md:flex-row gap-4 mb-8">
+          <div className="flex-1 relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8C8C8C] w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Search mentees by name…"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 border-2 border-[#E5E7EB] rounded-2xl text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
+            />
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {(['all', 'accepted', 'pending', 'rejected'] as const).map(status => (
+              <button
+                key={status}
+                onClick={() => setFilterStatus(status)}
+                className={`px-4 py-2 rounded-full font-semibold text-sm transition-all border-2 ${
+                  filterStatus === status
+                    ? 'bg-[#1A1F5E] text-white border-[#1A1F5E] shadow-lg'
+                    : 'bg-white text-[#333333] border-[#E5E7EB] hover:border-[#1A1F5E]'
+                }`}
+              >
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <Loader className="w-8 h-8 text-[#1A1F5E] animate-spin mr-3" />
+            <span className="text-[#8C8C8C]">Loading your mentees…</span>
+          </div>
+        )}
+        {error && (
+          <div className="bg-[#E83E2D]/10 border border-[#E83E2D]/30 text-[#E83E2D] px-5 py-4 rounded-2xl mb-6">{error}</div>
+        )}
+
+        {!loading && !error && filtered.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {filtered.map(c => (
+              <div key={c.id} className="bg-white rounded-3xl shadow-xl border border-[#E5E7EB] hover:shadow-2xl transition-all duration-300 overflow-hidden">
+                <div className="bg-gradient-to-r from-[#1A1F5E] to-[#0072CE] p-6 text-white">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-full bg-white/20 border-4 border-white/40 flex items-center justify-center text-2xl font-bold">
+                        {(c.mentee_name || '?')[0]}
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold">{c.mentee_name || 'Mentee'}</h3>
+                        {c.mentee_location && <p className="text-white/70 text-sm">{c.mentee_location}</p>}
+                      </div>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColors[c.status] || statusColors.rejected}`}>
+                      {c.status.charAt(0).toUpperCase() + c.status.slice(1)}
+                    </span>
+                  </div>
+                  {c.mentee_location && (
+                    <div className="flex items-center gap-1 text-sm text-white/70">
+                      <MapPin className="w-4 h-4" />
+                      <span>{c.mentee_location}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="p-6">
+                  {c.mentee_bio && (
+                    <p className="text-sm text-[#8C8C8C] leading-relaxed mb-4 line-clamp-2">{c.mentee_bio}</p>
+                  )}
+                  <div className="flex items-center gap-2 text-sm text-[#8C8C8C] mb-4">
+                    <Calendar className="w-4 h-4" />
+                    <span>Requested {new Date(c.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  </div>
+                  {c.message && (
+                    <div className="bg-[#F4F4F4] rounded-2xl p-3 mb-4">
+                      <p className="text-xs text-[#8C8C8C] italic">"{c.message}"</p>
+                    </div>
+                  )}
+                  {c.status === 'pending' ? (
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={() => handleReject(c.id)}
+                        className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#E83E2D] text-[#E83E2D] rounded-full font-semibold hover:bg-[#E83E2D] hover:text-white transition-all"
+                      >
+                        Decline
+                      </button>
+                      <button
+                        onClick={() => handleAccept(c.id)}
+                        className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white rounded-full font-semibold hover:opacity-90 transition-all shadow-lg"
+                      >
+                        Accept
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => navigate(`/messages`)}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white rounded-full font-semibold transition-all hover:opacity-90 hover:scale-[1.02] shadow-lg"
+                    >
+                      <MessageSquare className="w-5 h-5" /> Message Mentee
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!loading && !error && filtered.length === 0 && (
+          <div className="text-center py-20">
+            <div className="w-20 h-20 bg-[#1A1F5E]/10 rounded-3xl flex items-center justify-center mx-auto mb-4">
+              <Users className="w-10 h-10 text-[#1A1F5E]" />
+            </div>
+            <h3 className="text-xl font-bold text-[#1A1F5E] mb-2">
+              {searchQuery || filterStatus !== 'all' ? 'No mentees match your search' : 'No mentees yet'}
+            </h3>
+            <p className="text-[#8C8C8C] mb-6">
               {searchQuery || filterStatus !== 'all'
-                ? 'Try adjusting your search or filters'
-                : 'Start your mentorship journey by accepting mentee requests'}
+                ? 'Try adjusting your search or filter.'
+                : 'Mentees will appear here once they send you a connection request.'}
             </p>
           </div>
         )}
