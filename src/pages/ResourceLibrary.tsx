@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { Search, BookOpen, Play, FileText, Download, Star, Bookmark, Eye, Clock, TrendingUp, Grid, List } from 'lucide-react';
-import { mockAPI } from '../services/mockData';
+import { resourcesAPI } from '../services/api';
 
 interface Resource {
   id: string;
@@ -39,9 +39,10 @@ const ResourceLibrary: React.FC = () => {
 
   const loadResources = async () => {
     try {
-      const response = await mockAPI.getResourcesExpanded();
-      setResources(response.data);
-      setFilteredResources(response.data);
+      const response = await resourcesAPI.getResources();
+      const list = response.data?.resources || [];
+      setResources(list);
+      setFilteredResources(list);
     } catch (error) {
       console.error('Failed to load resources:', error);
     } finally {
@@ -307,7 +308,9 @@ const ResourceLibrary: React.FC = () => {
                             <button className="px-4 py-2 bg-[#1A1F5E] hover:bg-[#1A1F5E] text-white rounded-lg font-medium transition-colors">
                               View
                             </button>
-                            <button className="p-2 border border-[#1A1F5E] text-[#1A1F5E] hover:bg-[#1A1F5E]/5 rounded-lg transition-colors">
+                            <button className="p-2 border border-[#1A1F5E] text-[#1A1F5E] hover:bg-[#1A1F5E]/5 rounded-lg transition-colors"
+                              onClick={() => { resourcesAPI.recordDownload(resource.id); window.open(resource.url, '_blank'); }}
+                            >
                               <Download className="w-5 h-5" />
                             </button>
                           </div>

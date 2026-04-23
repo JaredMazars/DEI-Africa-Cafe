@@ -363,4 +363,71 @@ export const adminAPI = {
       body: JSON.stringify({ is_active: isActive }),
     });
   },
+
+  createMentor: async (mentorData: any) => {
+    return apiRequest('/admin/mentors', { method: 'POST', body: JSON.stringify(mentorData) });
+  },
+
+  updateMentor: async (id: string, mentorData: any) => {
+    return apiRequest(`/admin/mentors/${id}`, { method: 'PUT', body: JSON.stringify(mentorData) });
+  },
+
+  deleteMentor: async (id: string) => {
+    return apiRequest(`/admin/mentors/${id}`, { method: 'DELETE' });
+  },
+};
+
+// Resources API
+export const resourcesAPI = {
+  getResources: async (filters?: { category?: string; type?: string; search?: string }) => {
+    const params = new URLSearchParams();
+    if (filters?.category) params.append('category', filters.category);
+    if (filters?.type) params.append('type', filters.type);
+    if (filters?.search) params.append('search', filters.search);
+    return apiRequest(`/resources?${params.toString()}`);
+  },
+
+  createResource: async (resourceData: any) => {
+    return apiRequest('/resources', { method: 'POST', body: JSON.stringify(resourceData) });
+  },
+
+  recordDownload: async (id: string) => {
+    return apiRequest(`/resources/${id}/download`, { method: 'PUT' });
+  },
+
+  deleteResource: async (id: string) => {
+    return apiRequest(`/resources/${id}`, { method: 'DELETE' });
+  },
+};
+
+// Reflections API
+export const reflectionsAPI = {
+  getReflections: async (filters?: { category?: string; search?: string }) => {
+    const params = new URLSearchParams();
+    if (filters?.category && filters.category !== 'all') params.append('category', filters.category);
+    if (filters?.search) params.append('search', filters.search);
+    return apiRequest(`/reflections?${params.toString()}`);
+  },
+
+  createReflection: async (reflectionData: any) => {
+    return apiRequest('/reflections', { method: 'POST', body: JSON.stringify(reflectionData) });
+  },
+
+  getComments: async (reflectionId: string) => {
+    return apiRequest(`/reflections/${reflectionId}/comments`);
+  },
+
+  addComment: async (reflectionId: string, content: string, isAnonymous: boolean) => {
+    return apiRequest(`/reflections/${reflectionId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({ content, isAnonymous }),
+    });
+  },
+
+  react: async (reflectionId: string, emoji: string) => {
+    return apiRequest(`/reflections/${reflectionId}/react`, {
+      method: 'PUT',
+      body: JSON.stringify({ emoji }),
+    });
+  },
 };

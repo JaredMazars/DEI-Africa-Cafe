@@ -836,64 +836,34 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
   const [mentorData, setMentorData] = useState<any>(null);
 
   useEffect(() => {
-    // Fetch mentor-specific data based on mentorId
-    // For now, using mock data
-    const mockMentors: Record<string, any> = {
-      'mentor-1': {
-        id: 'mentor-1',
-        name: 'Sarah Johnson',
-        role: 'Senior Strategy Consultant',
-        company: 'Forvis Mazars',
-        location: 'Lagos, Nigeria',
-        image: 'https://randomuser.me/api/portraits/women/44.jpg',
-        expertise: ['Business Strategy', 'Leadership', 'Digital Transformation'],
-        relationshipStartDate: '2025-01-15',
-        sessionsCompleted: 8,
-        nextSession: '2026-01-20'
-      },
-      'mentor-2': {
-        id: 'mentor-2',
-        name: 'Dr. Kwame Mensah',
-        role: 'Technology Director',
-        company: 'Forvis Mazars',
-        location: 'Accra, Ghana',
-        image: 'https://randomuser.me/api/portraits/men/32.jpg',
-        expertise: ['Software Engineering', 'AI/ML', 'Tech Leadership'],
-        relationshipStartDate: '2024-11-20',
-        sessionsCompleted: 12,
-        nextSession: '2026-01-18'
-      },
-      'mentor-3': {
-        id: 'mentor-3',
-        name: 'Amina Hassan',
-        role: 'Finance Partner',
-        company: 'Forvis Mazars',
-        location: 'Nairobi, Kenya',
-        image: 'https://randomuser.me/api/portraits/women/68.jpg',
-        expertise: ['Financial Planning', 'Risk Management', 'Investment Strategy'],
-        relationshipStartDate: '2026-01-10',
-        sessionsCompleted: 1,
-        nextSession: '2026-01-22'
-      },
-      'mentor-4': {
-        id: 'mentor-4',
-        name: 'Michael Okonkwo',
-        role: 'Marketing Director',
-        company: 'Forvis Mazars',
-        location: 'Johannesburg, South Africa',
-        image: 'https://randomuser.me/api/portraits/men/52.jpg',
-        expertise: ['Brand Strategy', 'Digital Marketing', 'Growth Hacking'],
-        relationshipStartDate: '2024-06-15',
-        sessionsCompleted: 24
-      }
-    };
-
-    if (mentorId && mockMentors[mentorId]) {
-      setMentorData(mockMentors[mentorId]);
-    } else {
-      // Default to first mentor if no ID or invalid ID
-      setMentorData(mockMentors['mentor-1']);
-    }
+    // Fetch mentor data from real API
+    const token = localStorage.getItem('token');
+    fetch('/api/matching/mentors', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then(data => {
+        const raw: any[] = data.data?.mentors || [];
+        if (raw.length === 0) return;
+        // If a mentorId param is given, find matching; else use first
+        const found = mentorId
+          ? raw.find((m: any) => m.id === mentorId || m.user_id === mentorId)
+          : raw[0];
+        const m = found || raw[0];
+        setMentorData({
+          id: m.id,
+          name: m.name,
+          role: m.title || 'Professional',
+          company: 'Forvis Mazars',
+          location: m.location || '',
+          image: m.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=1A1F5E&color=fff&size=200`,
+          expertise: Array.isArray(m.expertise) ? m.expertise : [],
+        });
+      })
+      .catch(() => {
+        // Fallback: show generic mentor card
+        setMentorData({ id: mentorId || '', name: 'Your Mentor', role: 'Professional', company: 'Forvis Mazars', location: '', image: '', expertise: [] });
+      });
   }, [mentorId]);
 
   const [activeTab, setActiveTab] = useState<'goals' | 'progress' | 'learning' | 'feedback' | 'development' | 'activities' | 'resources' | 'reflections'>('activities');

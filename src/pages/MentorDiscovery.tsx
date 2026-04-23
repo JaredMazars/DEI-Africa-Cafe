@@ -1,6 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
 import { Search, Filter, Star, MapPin, Briefcase, Clock, CheckCircle, TrendingUp, Heart } from 'lucide-react';
-import { mockAPI } from '../services/mockData';
 
 interface Mentor {
   id: string;
@@ -16,6 +15,7 @@ interface Mentor {
   totalMentees: number;
   image: string;
   verified: boolean;
+  matchScore?: number;
 }
 
 export default function MentorDiscovery() {
@@ -41,9 +41,30 @@ export default function MentorDiscovery() {
 
   const loadMentors = async () => {
     try {
-      const response = await mockAPI.getMentors();
-      setMentors(response.data);
-      setFilteredMentors(response.data);
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/matching/mentors', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      const raw: any[] = data.data?.mentors || [];
+      const list: Mentor[] = raw.map((m: any) => ({
+        id: m.id,
+        name: m.name,
+        role: m.title || 'Professional',
+        company: 'Forvis Mazars',
+        location: m.location || '',
+        expertise: Array.isArray(m.expertise) ? m.expertise : [],
+        bio: m.bio || '',
+        availability: m.availability || 'Flexible',
+        languages: Array.isArray(m.languages) ? m.languages : [],
+        rating: m.averageRating || 0,
+        totalMentees: m.activeMenteeCount || 0,
+        image: m.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=1A1F5E&color=fff&size=200`,
+        verified: true,
+        matchScore: m.matchScore,
+      }));
+      setMentors(list);
+      setFilteredMentors(list);
     } catch (error) {
       console.error('Failed to load mentors:', error);
     } finally {
@@ -158,9 +179,9 @@ export default function MentorDiscovery() {
     });
   };
 
-  const calculateMatchScore = () => {
-    const baseScore = 70 + Math.random() * 25;
-    return Math.round(baseScore);
+  const calculateMatchScore = (mentor: Mentor) => {
+    if (mentor.matchScore && mentor.matchScore > 0) return Math.min(100, 70 + mentor.matchScore * 10);
+    return 70 + Math.floor(Math.random() * 20);
   };
 
   const expertiseOptions = ['all', 'Audit & Assurance', 'Consulting', 'Financial Advisory', 'Tax', 'Sustainability', 'Legal Services', 'Technology & Digital', 'Risk Consulting', 'Private Client Services'];
@@ -282,7 +303,7 @@ export default function MentorDiscovery() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredMentors.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((mentor) => {
-            const matchScore = calculateMatchScore();
+            const matchScore = calculateMatchScore(mentor);
             const isSaved = savedMentors.has(mentor.id);
             const isConnected = connectedMentors.has(mentor.id);
             const isAnimating = animatingMentor === mentor.id;

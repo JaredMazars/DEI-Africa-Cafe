@@ -10,9 +10,9 @@ import {
   Mail,
   Phone,
   Award,
-  Users
+  Users,
+  AlertCircle
 } from 'lucide-react';
-import { getData, setData, STORAGE_KEYS } from '../../services/dataStore';
 import { logAuditAction } from '../../services/auditLogger';
 
 interface Mentor {
@@ -30,11 +30,15 @@ interface Mentor {
   status: 'active' | 'inactive';
 }
 
+const API = '/api/admin';
+
 const AdminMentors: React.FC = () => {
   const [mentors, setMentors] = useState<Mentor[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -48,82 +52,74 @@ const AdminMentors: React.FC = () => {
     loadMentors();
   }, []);
 
-  const loadMentors = () => {
-    const storedMentors = getData(STORAGE_KEYS.MENTORS, []) as Mentor[];
-    // Convert app mentor format to admin format if needed
-    const formattedMentors = storedMentors.map((m: any) => ({
-      id: m.id,
-      name: m.name,
-      email: m.email || '',
-      phone: m.phone || '',
-      expertise: m.expertise || [],
-      bio: m.bio || '',
-      photo: m.image || m.photo || '',
-      rating: m.rating || 0,
-      totalMentees: m.totalMentees || 0,
-      sessionsCompleted: m.sessionsCompleted || 0,
-      joinedDate: m.joinedDate || new Date().toISOString().split('T')[0],
-      status: m.status || 'active'
-    }));
-    setMentors(formattedMentors);
+  const getToken = () => localStorage.getItem('adminToken') || localStorage.getItem('token') || '';
+
+  const loadMentors = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const res = await fetch(`${API}/mentors`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+      const raw: any[] = data.data?.mentors || [];
+      const list: Mentor[] = raw.map((m: any) => ({
+        id: m.expert_id || m.id,
+        name: m.name || '',
+        email: m.email || '',
+        phone: m.phone || '',
+        expertise: m.expertise_list ? m.expertise_list.split(', ').filter(Boolean) : [],
+        bio: m.bio || '',
+        photo: m.profile_image_url || m.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=1A1F5E&color=fff&size=200`,
+        rating: parseFloat(m.average_rating) || 0,
+        totalMentees: parseInt(m.active_mentee_count) || 0,
+        sessionsCompleted: parseInt(m.sessions_completed) || 0,
+        joinedDate: m.created_at ? new Date(m.created_at).toISOString().split('T')[0] : '',
+        status: m.is_available ? 'active' : 'inactive',
+      }));
+      setMentors(list);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load mentors');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.name || !formData.email || !formData.bio) {
       alert('Please fill in all required fields (Name, Email, and Bio)');
       return;
     }
-
-    if (editingId) {
-      // Update
-      const updatedMentors = mentors.map(m =>
-        m.id === editingId
-          ? {
-              ...m,
-              name: formData.name,
-              email: formData.email,
-              phone: formData.phone,
-              expertise: formData.expertise.split(',').map(e => e.trim()).filter(e => e),
-              bio: formData.bio,
-              photo: formData.photo || m.photo,
-              image: formData.photo || m.photo // Keep both for compatibility
-            }
-          : m
-      );
-      setMentors(updatedMentors);
-      setData(STORAGE_KEYS.MENTORS, updatedMentors);
-      logAuditAction('UPDATED', 'Mentor', `${formData.name} (${formData.email})`);
-    } else {
-      // Create
-      const photoUrl = formData.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name)}&size=200`;
-      const newMentor: any = {
-        id: `mentor-${Date.now()}`,
+    try {
+      const body = {
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
         expertise: formData.expertise.split(',').map(e => e.trim()).filter(e => e),
         bio: formData.bio,
-        photo: photoUrl,
-        image: photoUrl, // Keep both for compatibility
-        rating: 0,
-        totalMentees: 0,
-        sessionsCompleted: 0,
-        joinedDate: new Date().toISOString().split('T')[0],
-        status: 'active',
-        verified: true,
-        role: 'Mentor',
-        company: 'DEI Africa',
-        location: 'Africa',
-        availability: 'Flexible',
-        languages: ['English']
+        photo: formData.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name)}&size=200`,
       };
-      const updatedMentors = [...mentors, newMentor];
-      setMentors(updatedMentors);
-      setData(STORAGE_KEYS.MENTORS, updatedMentors);
-      logAuditAction('CREATED', 'Mentor', `${formData.name} (${formData.email})`);
+      if (editingId) {
+        await fetch(`${API}/mentors/${editingId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+          body: JSON.stringify(body),
+        });
+        logAuditAction('UPDATED', 'Mentor', `${formData.name}`);
+      } else {
+        await fetch(`${API}/mentors`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+          body: JSON.stringify(body),
+        });
+        logAuditAction('CREATED', 'Mentor', `${formData.name}`);
+      }
+      resetForm();
+      await loadMentors();
+    } catch (err: any) {
+      alert('Failed to save mentor: ' + (err.message || 'Unknown error'));
     }
-
-    resetForm();
   };
 
   const handleEdit = (mentor: Mentor) => {
@@ -139,13 +135,18 @@ const AdminMentors: React.FC = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this mentor? This action cannot be undone.')) {
-      const mentor = mentors.find(m => m.id === id);
-      const updatedMentors = mentors.filter(m => m.id !== id);
-      setMentors(updatedMentors);
-      setData(STORAGE_KEYS.MENTORS, updatedMentors);
-      logAuditAction('DELETED', 'Mentor', `${mentor?.name} (${mentor?.email})`);
+  const handleDelete = async (id: string) => {
+    const mentor = mentors.find(m => m.id === id);
+    if (!confirm(`Are you sure you want to delete ${mentor?.name}? This cannot be undone.`)) return;
+    try {
+      await fetch(`${API}/mentors/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      logAuditAction('DELETED', 'Mentor', mentor?.name || id);
+      await loadMentors();
+    } catch (err: any) {
+      alert('Failed to delete: ' + (err.message || 'Unknown error'));
     }
   };
 
@@ -170,10 +171,7 @@ const AdminMentors: React.FC = () => {
           <p className="text-gray-600 mt-1">Add, edit, and manage mentors in the system</p>
         </div>
         <button
-          onClick={() => {
-            resetForm();
-            setShowModal(true);
-          }}
+          onClick={() => { resetForm(); setShowModal(true); }}
           className="flex items-center gap-2 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
         >
           <Plus className="w-5 h-5" />
@@ -181,19 +179,27 @@ const AdminMentors: React.FC = () => {
         </button>
       </div>
 
+      {error && (
+        <div className="flex items-center gap-3 bg-[#E83E2D]/10 border border-[#E83E2D]/30 text-[#E83E2D] px-5 py-4 rounded-2xl">
+          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <span>{error}</span>
+          <button onClick={loadMentors} className="ml-auto underline font-semibold">Retry</button>
+        </div>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
-          { label: 'Total Mentors', value: mentors.length, icon: UserCog, color: 'blue' },
-          { label: 'Active Mentors', value: mentors.filter(m => m.status === 'active').length, icon: Award, color: 'green' },
-          { label: 'Total Sessions', value: mentors.reduce((acc, m) => acc + m.sessionsCompleted, 0), icon: UserCog, color: 'blue' },
-          { label: 'Total Mentees', value: mentors.reduce((acc, m) => acc + m.totalMentees, 0), icon: Users, color: 'orange' }
+          { label: 'Total Mentors', value: loading ? '…' : mentors.length, icon: UserCog },
+          { label: 'Active Mentors', value: loading ? '…' : mentors.filter(m => m.status === 'active').length, icon: Award },
+          { label: 'Total Sessions', value: loading ? '…' : mentors.reduce((acc, m) => acc + m.sessionsCompleted, 0), icon: UserCog },
+          { label: 'Total Mentees', value: loading ? '…' : mentors.reduce((acc, m) => acc + m.totalMentees, 0), icon: Users },
         ].map((stat, idx) => {
           const Icon = stat.icon;
           return (
             <div key={idx} className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <div className={`inline-flex p-3 rounded-lg bg-${stat.color}-100 mb-3`}>
-                <Icon className={`w-6 h-6 text-${stat.color}-600`} />
+              <div className="inline-flex p-3 rounded-lg bg-[#1A1F5E]/10 mb-3">
+                <Icon className="w-6 h-6 text-[#1A1F5E]" />
               </div>
               <p className="text-gray-600 text-sm">{stat.label}</p>
               <p className="text-3xl font-bold text-gray-900 mt-1">{stat.value}</p>

@@ -56,21 +56,15 @@ export default function Dashboard() {
             pendingConnections: statsResponse.data.pendingConnections || 0,
             totalSessions: statsResponse.data.totalSessions || 0,
             completedSessions: statsResponse.data.completedSessions || 0,
-            totalRevenue: 125000,
-            monthlyGrowth: 23.5
+            totalRevenue: statsResponse.data.totalRevenue || 0,
+            monthlyGrowth: statsResponse.data.monthlyGrowth || 0
           },
           userMetrics: {
             mentors: statsResponse.data.totalMentors || 0,
             mentees: statsResponse.data.totalMentees || 0,
-            verifiedExperts: 456,
-            premiumUsers: 234,
-            usersByCountry: [
-              { country: 'Nigeria', count: 789, growth: 15.2 },
-              { country: 'South Africa', count: 654, growth: 12.8 },
-              { country: 'Kenya', count: 432, growth: 18.5 },
-              { country: 'Ghana', count: 321, growth: 22.1 },
-              { country: 'Egypt', count: 298, growth: 8.7 }
-            ]
+            verifiedExperts: statsResponse.data.verifiedExperts || 0,
+            premiumUsers: statsResponse.data.premiumUsers || 0,
+            usersByCountry: statsResponse.data.usersByCountry || []
           }
         });
 

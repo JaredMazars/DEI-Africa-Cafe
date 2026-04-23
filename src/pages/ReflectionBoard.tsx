@@ -1,10 +1,11 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   BookOpen, Plus, Search, Filter, Star, MessageCircle, Heart, User, 
   ArrowLeft, MoreHorizontal, ThumbsUp, X, Lightbulb, Target, 
   MessageSquare, TrendingUp, Users, AlertCircle, CheckCircle
 } from 'lucide-react';
+import { reflectionsAPI } from '../services/api';
 
 interface Reflection {
   id: string;
@@ -42,9 +43,61 @@ const ReflectionBoard: React.FC = () => {
   const [selectedReflection, setSelectedReflection] = useState<Reflection | null>(null);
   const [newComment, setNewComment] = useState('');
   const [commentAnonymous, setCommentAnonymous] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Mock reflections data
-  const [reflections, setReflections] = useState<Reflection[]>([
+  const [reflections, setReflections] = useState<Reflection[]>([]);
+
+  useEffect(() => {
+    loadReflections();
+  }, [filterCategory]);
+
+  const loadReflections = async () => {
+    try {
+      setLoading(true);
+      const res = await reflectionsAPI.getReflections({
+        category: filterCategory !== 'all' ? filterCategory : undefined,
+        search: searchTerm || undefined,
+      });
+      const raw: any[] = res.data?.reflections || [];
+      const list: Reflection[] = raw.map((r: any) => ({
+        id: r.id,
+        userId: r.user_id || '',
+        userName: r.userName || 'Anonymous',
+        userRole: (r.userRole as 'mentor' | 'mentee') || 'mentee',
+        avatar: r.avatar,
+        category: r.category,
+        title: r.title,
+        content: r.content,
+        keyTakeaways: r.keyTakeaways || [],
+        tags: r.tags || [],
+        rating: r.rating,
+        isAnonymous: !!r.is_anonymous,
+        timestamp: new Date(r.created_at),
+        reactions: r.reactions || {},
+        comments: [],
+      }));
+      setReflections(list);
+    } catch (err) {
+      console.error('Failed to load reflections:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadComments = async (reflection: Reflection) => {
+    const res = await reflectionsAPI.getComments(reflection.id);
+    const raw: any[] = res.data?.comments || [];
+    const comments: Comment[] = raw.map((c: any) => ({
+      id: c.id,
+      userId: c.user_id || '',
+      userName: c.userName || 'Anonymous',
+      userRole: (c.userRole as 'mentor' | 'mentee') || 'mentee',
+      content: c.content,
+      timestamp: new Date(c.created_at),
+      isAnonymous: !!c.is_anonymous,
+    }));
+    setSelectedReflection({ ...reflection, comments });
+  };
     {
       id: '1',
       userId: '1',
@@ -128,53 +181,40 @@ const ReflectionBoard: React.FC = () => {
   ];
 
   const filteredReflections = reflections.filter(reflection => {
-    const matchesSearch = reflection.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         reflection.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         reflection.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesCategory = filterCategory === 'all' || reflection.category === filterCategory;
-    return matchesSearch && matchesCategory;
+    const matchesSearch = !searchTerm ||
+      reflection.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      reflection.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      reflection.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    return matchesSearch;
   });
 
-  const addReaction = (reflectionId: string, emoji: string) => {
-    setReflections(prev => prev.map(r => {
-      if (r.id === reflectionId) {
-        return {
-          ...r,
-          reactions: {
-            ...r.reactions,
-            [emoji]: (r.reactions[emoji] || 0) + 1
-          }
-        };
+  const addReaction = async (reflectionId: string, emoji: string) => {
+    try {
+      const res = await reflectionsAPI.react(reflectionId, emoji);
+      const updated = res.data?.reactions;
+      if (updated) {
+        setReflections(prev => prev.map(r =>
+          r.id === reflectionId ? { ...r, reactions: updated } : r
+        ));
+        if (selectedReflection?.id === reflectionId) {
+          setSelectedReflection(prev => prev ? { ...prev, reactions: updated } : null);
+        }
       }
-      return r;
-    }));
+    } catch {}
   };
 
-  const addComment = (reflectionId: string) => {
+  const addComment = async (reflectionId: string) => {
     if (!newComment.trim()) return;
-
-    const comment: Comment = {
-      id: Date.now().toString(),
-      userId: 'current-user',
-      userName: commentAnonymous ? 'Anonymous' : 'Current User',
-      userRole: 'mentee',
-      content: newComment.trim(),
-      timestamp: new Date(),
-      isAnonymous: commentAnonymous
-    };
-
-    setReflections(prev => prev.map(r => {
-      if (r.id === reflectionId) {
-        return {
-          ...r,
-          comments: [...r.comments, comment]
-        };
-      }
-      return r;
-    }));
-
-    setNewComment('');
-    setCommentAnonymous(false);
+    try {
+      await reflectionsAPI.addComment(reflectionId, newComment.trim(), commentAnonymous);
+      setNewComment('');
+      setCommentAnonymous(false);
+      // Reload comments
+      const reflection = reflections.find(r => r.id === reflectionId);
+      if (reflection) await loadComments(reflection);
+    } catch (err) {
+      console.error('Failed to post comment', err);
+    }
   };
 
   const availableEmojis = ['👍', '💡', '🙏', '🤝', '💭', '🌱', '❤️', '🔥', '🎯', '✨', '👏', '💪', '🎉', '🌟'];
@@ -182,11 +222,11 @@ const ReflectionBoard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-600 text-white">
+      <div className="bg-gradient-to-r from-[#1A1F5E] via-[#0072CE] to-[#1A1F5E] text-white">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-12">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center space-x-2 text-orange-100 hover:text-white mb-4 transition-colors"
+            className="flex items-center space-x-2 text-white/70 hover:text-white mb-4 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
             <span>Back</span>
@@ -194,7 +234,7 @@ const ReflectionBoard: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold mb-3">Reflection Board</h1>
-              <p className="text-xl text-orange-100 max-w-3xl">
+              <p className="text-xl text-white/80 max-w-3xl">
                 Share insights, learn from others, and grow together through mentorship reflections
               </p>
             </div>
@@ -278,7 +318,7 @@ const ReflectionBoard: React.FC = () => {
               </p>
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
+                className="bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
               >
                 Create First Reflection
               </button>
@@ -393,8 +433,8 @@ const ReflectionBoard: React.FC = () => {
                       ))}
                     </div>
                     <button
-                      onClick={() => setSelectedReflection(reflection)}
-                      className="text-gray-600 hover:text-orange-600 text-sm font-medium flex items-center space-x-1"
+                      onClick={() => loadComments(reflection)}
+                      className="text-gray-600 hover:text-[#0072CE] text-sm font-medium flex items-center space-x-1"
                     >
                       <MessageCircle className="w-4 h-4" />
                       <span>{reflection.comments.length} {reflection.comments.length === 1 ? 'comment' : 'comments'}</span>
@@ -421,7 +461,7 @@ const ReflectionBoard: React.FC = () => {
                       </div>
                     </div>
                     <button
-                      onClick={() => setSelectedReflection(reflection)}
+                      onClick={() => loadComments(reflection)}
                       className="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       <MessageCircle className="w-5 h-5 text-gray-600" />

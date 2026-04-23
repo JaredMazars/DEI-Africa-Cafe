@@ -97,18 +97,34 @@ class User {
 
     static async getUserStats() {
         try {
-            const query = `
-                SELECT 
-                    COUNT(*) as total_users,
-                    SUM(CASE WHEN role = 'mentor' OR is_mentor = 1 THEN 1 ELSE 0 END) as total_mentors,
-                    SUM(CASE WHEN role = 'mentee' OR is_mentee = 1 THEN 1 ELSE 0 END) as total_mentees,
-                    COUNT(CASE WHEN created_at >= DATEADD(month, -1, GETDATE()) THEN 1 END) as new_users_this_month
-                FROM users
-                WHERE is_active = 1
-            `;
-            
-            const result = await executeQuery(query);
-            return result.recordset[0];
+            const [statsResult, countryResult] = await Promise.all([
+                executeQuery(`
+                    SELECT 
+                        COUNT(*) as total_users,
+                        SUM(CASE WHEN role = 'mentor' OR is_mentor = 1 THEN 1 ELSE 0 END) as total_mentors,
+                        SUM(CASE WHEN role = 'mentee' OR is_mentee = 1 THEN 1 ELSE 0 END) as total_mentees,
+                        COUNT(CASE WHEN created_at >= DATEADD(month, -1, GETDATE()) THEN 1 END) as new_users_this_month,
+                        COUNT(CASE WHEN created_at >= DATEADD(month, -2, GETDATE()) AND created_at < DATEADD(month, -1, GETDATE()) THEN 1 END) as prev_month_users
+                    FROM users WHERE is_active = 1
+                `),
+                executeQuery(`
+                    SELECT TOP 10
+                        location as country,
+                        COUNT(*) as count
+                    FROM users
+                    WHERE is_active = 1 AND location IS NOT NULL AND location <> ''
+                    GROUP BY location
+                    ORDER BY count DESC
+                `)
+            ]);
+            const stats = statsResult.recordset[0];
+            const prevMonth = stats.prev_month_users || 0;
+            const currMonth = stats.new_users_this_month || 0;
+            stats.monthly_growth = prevMonth > 0
+                ? Math.round(((currMonth - prevMonth) / prevMonth) * 100 * 10) / 10
+                : 0;
+            stats.users_by_country = countryResult.recordset;
+            return stats;
         } catch (error) {
             console.error('Error getting user stats:', error);
             throw error;
