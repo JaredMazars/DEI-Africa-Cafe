@@ -10,7 +10,6 @@ import {
   Bell,
   Settings,
   Briefcase,
-  Target,
   Award,
   LogOut,
   Trophy

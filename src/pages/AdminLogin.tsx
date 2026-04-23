@@ -2,14 +2,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Shield, Lock, Mail, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
-function decodeJWT(token: string): Record<string, unknown> | null {
-  try {
-    return JSON.parse(atob(token.split('.')[1]));
-  } catch {
-    return null;
-  }
-}
-
 const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');

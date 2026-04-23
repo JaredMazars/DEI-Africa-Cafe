@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Eye, EyeOff, Loader, Building2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -11,7 +11,6 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   
   const { login } = useAuth();
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

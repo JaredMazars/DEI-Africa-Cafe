@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useEffect } from 'react';
-import { Search, MapPin, Users, Star, MessageCircle, Calendar, Filter, ChevronDown, Award, Globe, Clock, Send, X, Lock, Unlock, Mail, UserPlus, Bell, CheckCircle, XCircle, AlertCircle, Video, ChevronRight } from 'lucide-react';
+import { Search, MapPin, Users, Star, MessageCircle, Calendar, ChevronDown, Award, Globe, Clock, Send, X, Lock, Unlock, Mail, UserPlus, Bell, CheckCircle, XCircle, AlertCircle, Video } from 'lucide-react';
 import { expertsAPI, questionsAPI } from '../services/api';
 
 interface Expert {
@@ -115,7 +115,7 @@ interface ExpertApplication {
 
 const ExpertDirectory: React.FC = () => {
   // Check if user is an expert from localStorage
-  const [isExpert, setIsExpert] = useState(() => {
+  const [isExpert] = useState(() => {
     const currentUser = localStorage.getItem('currentUser');
     if (currentUser) {
       const userData = JSON.parse(currentUser);
@@ -141,7 +141,6 @@ const ExpertDirectory: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'directory' | 'myExperts' | 'forum' | 'webinars' | 'requests'>('directory');
   const [connectedExperts, setConnectedExperts] = useState<Expert[]>([]);
   const [expertConversations, setExpertConversations] = useState<{[key: string]: any[]}>({});
-  const [showFilters, setShowFilters] = useState(false);
   const [showAskModal, setShowAskModal] = useState(false);
   const [newQuestion, setNewQuestion] = useState({ title: '', content: '', tags: '', expertId: '', category: '', isPrivate: false });
   const [showExpertModal, setShowExpertModal] = useState(false);
@@ -160,9 +159,9 @@ const ExpertDirectory: React.FC = () => {
       return saved ? JSON.parse(saved) : [];
     } catch { return []; }
   });
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [experts, setExperts] = useState<Expert[]>([]);
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [, setQuestions] = useState<Question[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -1009,11 +1008,6 @@ const ExpertDirectory: React.FC = () => {
       // Open Teams in new tab to create the meeting
       window.open(teamsLink, '_blank');
       
-      const lobbyText = newWebinar.lobbyBypass === 'invited' ? 'Invited People Only' :
-                        newWebinar.lobbyBypass === 'organization' ? 'My Organization' :
-                        newWebinar.lobbyBypass === 'organizationAndFederated' ? 'My Organization and Trusted Partners' :
-                        'Everyone (No Lobby)';
-      
       alert(`Teams Meeting Created! 📅\n\n"${newWebinar.title}"\n\nDate: ${newWebinar.date} at ${newWebinar.time}\nExpert: ${newWebinar.expert}\nAttendees: ${newWebinar.invitedEmails.length} people\n\n✓ Teams opening with details\n${newWebinar.invitedEmails.length > 0 ? '✓ Attendees: ' + newWebinar.invitedEmails.join(', ') : '⚠️ No attendees added'}\n\n🔍 Check browser console to see the full URL!`);
       
       // Reset form
@@ -1037,11 +1031,6 @@ const ExpertDirectory: React.FC = () => {
     } else {
       alert('Please fill in all required fields (Title, Date, Time, Topic, Region, and Expert)');
     }
-  };
-
-  const handleSendMessage = (expert: Expert) => {
-    setSelectedExpert(expert);
-    setShowMessageModal(true);
   };
 
   const handleSendConnect = () => {

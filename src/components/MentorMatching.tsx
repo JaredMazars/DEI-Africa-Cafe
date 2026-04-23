@@ -27,8 +27,8 @@ const containerVariants = {
 
 const cardVariants = {
   initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } },
-};
+  animate: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' as const } },
+} as const;
 
 const MentorMatching: React.FC = () => {
   const { currentUser } = useSimpleAuth();
@@ -486,7 +486,7 @@ const MentorMatching: React.FC = () => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              onClick={e => e.stopPropagation()}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
               className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl"
             >
               <div className="h-2 bg-gradient-to-r from-[#1A1F5E] to-[#0072CE] rounded-t-3xl" />
