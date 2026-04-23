@@ -411,7 +411,7 @@ router.post('/verify-email', async (req, res) => {
         // Verify the token
         let decoded;
         try {
-            decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+            decoded = jwt.verify(token, process.env.JWT_SECRET || 'demo-secret-key-change-in-production');
         } catch (err) {
             if (err.name === 'TokenExpiredError') {
                 return res.status(400).json({
@@ -482,7 +482,7 @@ router.post('/resend-verification', async (req, res) => {
         // Generate new verification token (expires in 24 hours)
         const verificationToken = jwt.sign(
             { email, type: 'email-verification' },
-            process.env.JWT_SECRET || 'your-secret-key',
+            process.env.JWT_SECRET || 'demo-secret-key-change-in-production',
             { expiresIn: '24h' }
         );
 
@@ -528,7 +528,7 @@ router.post('/forgot-password', async (req, res) => {
         // Generate password reset token (expires in 1 hour)
         const resetToken = jwt.sign(
             { userId: user.user_id, email: user.email, type: 'password-reset' },
-            process.env.JWT_SECRET || 'your-secret-key',
+            process.env.JWT_SECRET || 'demo-secret-key-change-in-production',
             { expiresIn: '1h' }
         );
 
@@ -563,7 +563,7 @@ router.post('/validate-reset-token', async (req, res) => {
 
         // Verify the token
         try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'demo-secret-key-change-in-production');
             
             // Check if token is for password reset
             if (decoded.type !== 'password-reset') {
@@ -631,7 +631,7 @@ router.post('/reset-password', async (req, res) => {
         // Verify the token
         let decoded;
         try {
-            decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+            decoded = jwt.verify(token, process.env.JWT_SECRET || 'demo-secret-key-change-in-production');
             
             // Check if token is for password reset
             if (decoded.type !== 'password-reset') {
