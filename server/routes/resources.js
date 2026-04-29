@@ -41,7 +41,7 @@ router.post('/', auth, async (req, res) => {
         const uploaderName = userRes.recordset[0]?.name || 'Unknown';
 
         const ins = await executeQuery(`
-            INSERT INTO resources (title, type, category, url, description, uploaded_by, uploader_name, created_at, updated_at)
+            INSERT INTO resources (title, type, category, url, description, uploaded_by, uploader_name, is_active, created_at, updated_at)
             OUTPUT INSERTED.id
             VALUES (
                 '${title.replace(/'/g, "''")}',
@@ -49,7 +49,7 @@ router.post('/', auth, async (req, res) => {
                 '${(category || 'General').replace(/'/g, "''")}',
                 '${url.replace(/'/g, "''")}',
                 ${description ? `'${description.replace(/'/g, "''")}'` : 'NULL'},
-                '${userId}', '${uploaderName}',
+                '${userId}', '${uploaderName}', 1,
                 GETDATE(), GETDATE()
             )
         `);
