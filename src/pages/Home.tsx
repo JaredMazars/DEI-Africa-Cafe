@@ -301,10 +301,10 @@ const Home: React.FC = () => {
         {/* My Connections */}
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-11 h-11 bg-[#1A1F5E]/10 rounded-xl flex items-center justify-center">
-              <Users className="w-5 h-5 text-[#1A1F5E]" />
+            <div className="w-11 h-11 bg-[#F4F4F4] rounded-xl flex items-center justify-center">
+              <Users className="w-5 h-5 text-[#8C8C8C]" />
             </div>
-            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#1A1F5E]/10 text-[#1A1F5E]">Network</span>
+            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#F4F4F4] text-[#8C8C8C]">Network</span>
           </div>
           <p className="text-3xl font-bold text-[#1A1F5E]">{stats.totalConnections}</p>
           <p className="text-sm font-semibold text-[#333333] mt-1">My Connections</p>
@@ -318,10 +318,10 @@ const Home: React.FC = () => {
         {/* Upcoming Sessions */}
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-11 h-11 bg-[#0072CE]/10 rounded-xl flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-[#0072CE]" />
+            <div className="w-11 h-11 bg-[#F4F4F4] rounded-xl flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-[#8C8C8C]" />
             </div>
-            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#0072CE]/10 text-[#0072CE]">Scheduled</span>
+            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#F4F4F4] text-[#8C8C8C]">Scheduled</span>
           </div>
           <p className="text-3xl font-bold text-[#1A1F5E]">{stats.upcomingSessions}</p>
           <p className="text-sm font-semibold text-[#333333] mt-1">Upcoming Sessions</p>
@@ -333,10 +333,10 @@ const Home: React.FC = () => {
         {/* Sessions Completed */}
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-11 h-11 bg-green-100 rounded-xl flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-green-600" />
+            <div className="w-11 h-11 bg-[#F4F4F4] rounded-xl flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 text-[#8C8C8C]" />
             </div>
-            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-700">Progress</span>
+            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#F4F4F4] text-[#8C8C8C]">Progress</span>
           </div>
           <p className="text-3xl font-bold text-[#1A1F5E]">{stats.totalSessions}</p>
           <p className="text-sm font-semibold text-[#333333] mt-1">Sessions Completed</p>
@@ -346,10 +346,10 @@ const Home: React.FC = () => {
         {/* Registered Webinars */}
         <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-11 h-11 bg-[#E83E2D]/10 rounded-xl flex items-center justify-center">
-              <Video className="w-5 h-5 text-[#E83E2D]" />
+            <div className="w-11 h-11 bg-[#F4F4F4] rounded-xl flex items-center justify-center">
+              <Video className="w-5 h-5 text-[#8C8C8C]" />
             </div>
-            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#E83E2D]/10 text-[#E83E2D]">Live</span>
+            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#F4F4F4] text-[#8C8C8C]">Live</span>
           </div>
           <p className="text-3xl font-bold text-[#1A1F5E]">{registeredSessions.length}</p>
           <p className="text-sm font-semibold text-[#333333] mt-1">Registered Webinars</p>
