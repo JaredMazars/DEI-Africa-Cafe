@@ -74,13 +74,26 @@ const ResourceLibrary: React.FC = () => {
 
   const handleResourceOpen = (resource: Resource) => {
     resourcesAPI.recordDownload(resource.id);
-    if (resource.type.toLowerCase() === 'pdf' && resource.url.startsWith('/uploads/')) {
-      const a = document.createElement('a');
-      a.href = resource.url;
-      a.download = resource.title.replace(/[^a-z0-9]/gi, '_') + '.pdf';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+    if (resource.type.toLowerCase() === 'pdf') {
+      if (resource.url.startsWith('/uploads/')) {
+        // Locally hosted — direct download
+        const a = document.createElement('a');
+        a.href = resource.url;
+        a.download = resource.title.replace(/[^a-z0-9]/gi, '_') + '.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        // External URL — proxy through server to avoid cross-origin block
+        const filename = resource.title.replace(/[^a-z0-9]/gi, '_');
+        const proxyUrl = `/api/resources/proxy-pdf?url=${encodeURIComponent(resource.url)}&filename=${encodeURIComponent(filename)}`;
+        const a = document.createElement('a');
+        a.href = proxyUrl;
+        a.download = filename + '.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
     } else {
       window.open(resource.url, '_blank');
     }

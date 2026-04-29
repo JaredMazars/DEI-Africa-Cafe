@@ -1,4 +1,6 @@
 import express from 'express';
+import https from 'https';
+import http from 'http';
 import auth from '../middleware/auth.js';
 import { executeQuery } from '../config/database.js';
 
@@ -57,6 +59,50 @@ router.post('/', auth, async (req, res) => {
     } catch (error) {
         console.error('Error creating resource:', error);
         res.status(500).json({ success: false, message: 'Failed to create resource' });
+    }
+});
+
+// ── GET /api/resources/proxy-pdf — server-side proxy for external PDFs ────────
+router.get('/proxy-pdf', auth, async (req, res) => {
+    try {
+        const { url, filename } = req.query;
+        if (!url) return res.status(400).json({ success: false, message: 'url required' });
+
+        // Only allow http/https URLs
+        let parsedUrl;
+        try { parsedUrl = new URL(url); } catch { return res.status(400).json({ success: false, message: 'Invalid URL' }); }
+        if (!['http:', 'https:'].includes(parsedUrl.protocol)) return res.status(400).json({ success: false, message: 'Invalid protocol' });
+
+        const proto = parsedUrl.protocol === 'https:' ? https : http;
+        const safeFilename = (filename || 'document').replace(/[^a-z0-9_\-\.]/gi, '_');
+
+        const request = proto.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (upstream) => {
+            // Follow redirects (up to 3 hops)
+            if ([301,302,303,307,308].includes(upstream.statusCode) && upstream.headers.location) {
+                const loc = upstream.headers.location;
+                const redirProto = loc.startsWith('https') ? https : http;
+                redirProto.get(loc, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (redir) => {
+                    res.setHeader('Content-Type', redir.headers['content-type'] || 'application/pdf');
+                    res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}.pdf"`);
+                    redir.pipe(res);
+                }).on('error', () => res.status(502).json({ success: false, message: 'Redirect fetch failed' }));
+                return;
+            }
+            if (upstream.statusCode !== 200) {
+                return res.status(502).json({ success: false, message: `Upstream returned ${upstream.statusCode}` });
+            }
+            res.setHeader('Content-Type', upstream.headers['content-type'] || 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}.pdf"`);
+            if (upstream.headers['content-length']) res.setHeader('Content-Length', upstream.headers['content-length']);
+            upstream.pipe(res);
+        });
+        request.on('error', (err) => {
+            console.error('Proxy PDF error:', err.message);
+            if (!res.headersSent) res.status(502).json({ success: false, message: 'Failed to fetch PDF' });
+        });
+    } catch (error) {
+        console.error('Proxy PDF error:', error);
+        if (!res.headersSent) res.status(500).json({ success: false, message: 'Proxy error' });
     }
 });
 
