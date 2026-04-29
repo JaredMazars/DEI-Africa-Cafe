@@ -55,7 +55,8 @@ const Navigation = () => {
 
   const navigationItems = [
     { path: '/home', label: 'Home' },
-    { path: '/mentors', label: 'Mentor Discovery' },
+    // Mentor Discovery only relevant for mentees (or both) — mentors don't need to find mentors
+    ...(isMentee ? [{ path: '/mentors', label: 'Mentor Discovery' }] : []),
     { path: '/experts', label: 'Expert Directory' },
     { path: '/collaboration', label: 'Collaboration Hub' },
     { path: '/resources', label: 'Resource Library' },

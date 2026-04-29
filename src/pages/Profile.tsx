@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, MapPin, Mail, Star, Award, TrendingUp, Users, ArrowRight, CheckCircle, X } from 'lucide-react';
+import { Camera, MapPin, Mail, Star, Award, TrendingUp, Users, ArrowRight, CheckCircle, X, Briefcase, User, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSimpleAuth } from '../contexts/SimpleAuthContext';
 
@@ -31,10 +31,31 @@ interface Connection {
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
-  const { currentUser, updateUserProfile } = useSimpleAuth();
+  const { currentUser, updateUserProfile, switchRole } = useSimpleAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loadingConnections, setLoadingConnections] = useState(true);
+
+  // Role switcher state
+  const [roleSwitching, setRoleSwitching] = useState(false);
+  const [roleSwitchSuccess, setRoleSwitchSuccess] = useState('');
+  const [roleSwitchError, setRoleSwitchError] = useState('');
+
+  const handleRoleSwitch = async (newRole: 'mentor' | 'mentee' | 'both') => {
+    if (newRole === (currentUser?.role || 'mentee')) return;
+    setRoleSwitching(true);
+    setRoleSwitchError('');
+    setRoleSwitchSuccess('');
+    try {
+      await switchRole(newRole);
+      setRoleSwitchSuccess(`Role updated to ${newRole === 'both' ? 'Mentor & Mentee' : newRole.charAt(0).toUpperCase() + newRole.slice(1)}.`);
+      setTimeout(() => setRoleSwitchSuccess(''), 4000);
+    } catch (err: any) {
+      setRoleSwitchError(err.message || 'Could not update role.');
+    } finally {
+      setRoleSwitching(false);
+    }
+  };
 
   // Editable expertise state (Settings tab)
   const [editExpertise, setEditExpertise] = useState<string[]>(currentUser?.profile?.expertise || []);
@@ -112,7 +133,7 @@ const Profile: React.FC = () => {
   const myMentors = connections.filter(
     c => c.requester_id === userId && c.status === 'accepted'
   );
-  // Connections where I am the expert/mentor � matched via mentor_user_id returned by getConnectionsWithDetails
+  // Connections where I am the expert/mentor � matched via mentor_user_id returned by getConnectionsWithDetails
   const myMentees = connections.filter(
     c => (c as any).mentor_user_id === userId && c.status === 'accepted'
   );
@@ -254,7 +275,7 @@ const Profile: React.FC = () => {
             <div className="bg-white -xl shadow-sm border border-[#E5E7EB] p-6">
               <h2 className="text-xl font-semibold text-[#333333] mb-4">Connection Summary</h2>
               {loadingConnections ? (
-                <p className="text-[#8C8C8C] text-sm">Loading connections�</p>
+                <p className="text-[#8C8C8C] text-sm">Loading connections�</p>
               ) : connections.length === 0 ? (
                 <div className="text-center py-6">
                   <Users className="w-10 h-10 text-[#8C8C8C] mx-auto mb-2" />
@@ -504,6 +525,56 @@ const Profile: React.FC = () => {
         <div className="bg-white -3xl shadow-xl border border-[#E5E7EB] p-6">
           <h2 className="text-xl font-semibold text-[#333333] mb-6">Account Settings</h2>
           <div className="space-y-6">
+
+            {/* ── Role Switcher ──────────────────────────────────────────── */}
+            <div className="border-2 border-[#E5E7EB] -2xl p-5">
+              <div className="flex items-center gap-2 mb-1">
+                <Shield className="w-4 h-4 text-[#1A1F5E]" />
+                <label className="text-sm font-semibold text-[#333333]">Account Type</label>
+              </div>
+              <p className="text-xs text-[#8C8C8C] mb-4">Switch how you participate. You cannot remove a role if you have active connections under it.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {([
+                  { value: 'mentee' as const, Icon: User,      label: 'Mentee',       desc: 'Seeking guidance' },
+                  { value: 'mentor' as const, Icon: Briefcase, label: 'Mentor',       desc: 'Sharing expertise' },
+                  { value: 'both'   as const, Icon: Users,     label: 'Both',         desc: 'Mentor & mentee' },
+                ] as const).map(({ value, Icon, label, desc }) => {
+                  const current = (currentUser?.role || 'mentee') as string;
+                  const isActive = current === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      disabled={roleSwitching || isActive}
+                      onClick={() => handleRoleSwitch(value)}
+                      className={`p-4 -xl border-2 text-left transition-all ${
+                        isActive
+                          ? 'border-[#1A1F5E] bg-[#1A1F5E]/5 cursor-default'
+                          : 'border-[#E5E7EB] hover:border-[#1A1F5E]/40 hover:bg-[#F4F4F4]'
+                      } disabled:opacity-60`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <Icon className={`w-4 h-4 ${isActive ? 'text-[#1A1F5E]' : 'text-[#8C8C8C]'}`} />
+                        <span className={`text-sm font-semibold ${isActive ? 'text-[#1A1F5E]' : 'text-[#333333]'}`}>{label}</span>
+                        {isActive && <span className="ml-auto text-[10px] font-bold bg-[#1A1F5E] text-white px-2 py-0.5 -full">Current</span>}
+                      </div>
+                      <p className="text-xs text-[#8C8C8C]">{desc}</p>
+                    </button>
+                  );
+                })}
+              </div>
+              {roleSwitching && <p className="text-sm text-[#8C8C8C] mt-3">Updating role…</p>}
+              {roleSwitchSuccess && (
+                <div className="flex items-center gap-2 mt-3 bg-green-50 border border-green-200 text-green-700 px-4 py-2 -xl text-sm">
+                  <CheckCircle className="w-4 h-4" />{roleSwitchSuccess}
+                </div>
+              )}
+              {roleSwitchError && (
+                <div className="flex items-center gap-2 mt-3 bg-[#E83E2D]/10 border border-[#E83E2D]/30 text-[#E83E2D] px-4 py-2 -xl text-sm">
+                  <X className="w-4 h-4" />{roleSwitchError}
+                </div>
+              )}
+            </div>
             <div>
               <label className="block text-sm font-semibold text-[#333333] mb-2">Full Name</label>
               <input
@@ -526,7 +597,7 @@ const Profile: React.FC = () => {
                 rows={4}
                 defaultValue={user.bio}
                 className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
-                placeholder="Tell us about yourself�"
+                placeholder="Tell us about yourself�"
               />
             </div>
             {/* My Expertise editor */}
@@ -601,7 +672,7 @@ const Profile: React.FC = () => {
                 disabled={savingExpertise}
                 className="bg-[#1A1F5E] text-white px-8 py-3 -full font-semibold shadow-lg hover:opacity-90 transition-all disabled:opacity-50"
               >
-                {savingExpertise ? 'Saving�' : 'Save Changes'}
+                {savingExpertise ? 'Saving�' : 'Save Changes'}
               </button>
               <button
                 type="button"

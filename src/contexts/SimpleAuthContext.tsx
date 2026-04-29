@@ -39,6 +39,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<string>;
   logout: () => void;
   updateUserProfile: (profile: Partial<UserProfile>) => void;
+  switchRole: (newRole: 'mentor' | 'mentee' | 'both') => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -145,6 +146,28 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     });
   };
 
+  const switchRole = async (newRole: 'mentor' | 'mentee' | 'both') => {
+    const token = localStorage.getItem('token');
+    const res = await fetch('/api/auth/switch-role', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ newRole }),
+    });
+    const data = await safeJson(res);
+    if (!res.ok || !data.success) throw new Error(data.message || 'Failed to update role.');
+    // Update local state
+    setCurrentUser(prev => {
+      if (!prev) return prev;
+      const merged: CurrentUser = {
+        ...prev,
+        role: newRole,
+        profile: prev.profile ? { ...prev.profile, role: newRole } : prev.profile,
+      };
+      localStorage.setItem('currentUser', JSON.stringify(merged));
+      return merged;
+    });
+  };
+
   const logout = () => {
     setIsAuthenticated(false);
     setCurrentUser(null);
@@ -156,7 +179,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, currentUser, login, logout, updateUserProfile }}>
+    <AuthContext.Provider value={{ isAuthenticated, currentUser, login, logout, updateUserProfile, switchRole }}>
       {children}
     </AuthContext.Provider>
   );

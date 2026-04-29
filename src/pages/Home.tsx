@@ -1,6 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { dashboardAPI, connectionsAPI, sessionsAPI, expertWebinarsAPI } from '../services/api';
+import { useSimpleAuth } from '../contexts/SimpleAuthContext';
 import { 
   Users, 
   MessageSquare, 
@@ -89,6 +90,12 @@ interface Activity {
 }
 
 const Home: React.FC = () => {
+  const { currentUser } = useSimpleAuth();
+  const userRole: string = (currentUser as any)?.role || 'mentee';
+  const isMentor = userRole === 'mentor' || userRole === 'both';
+  const isMentee = userRole === 'mentee' || userRole === 'both' || !userRole;
+  const displayName = currentUser?.profile?.name || currentUser?.email?.split('@')[0] || 'User';
+
   const [activeTab, setActiveTab] = useState('overview');
   const [connectionTab, setConnectionTab] = useState<'all' | 'mentors' | 'mentees' | 'experts'>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -271,10 +278,14 @@ const Home: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl text-white font-bold mb-2">
-              Welcome back, User! 👋
+              Welcome back, {displayName}! 👋
             </h1>
             <p className="text-white/80 text-lg">
-              Continue your learning journey with your mentors
+              {isMentor && !isMentee
+                ? 'You’re making a difference — your mentees are counting on you'
+                : isMentee && !isMentor
+                ? 'Continue your learning journey with your mentors'
+                : 'You’re both guiding others and growing yourself'}
             </p>
           </div>
           <div className="hidden md:block">
@@ -469,6 +480,7 @@ const Home: React.FC = () => {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {isMentee && (
         <button className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB] hover:shadow-xl transition-shadow text-left group">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-[#1A1F5E]/10 -xl flex items-center justify-center group-hover:bg-[#0072CE]/20 transition-colors">
@@ -479,6 +491,19 @@ const Home: React.FC = () => {
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Find New Mentors</h3>
           <p className="text-gray-600 text-sm">Discover experienced professionals in your field</p>
         </button>
+        )}
+        {isMentor && (
+        <button className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB] hover:shadow-xl transition-shadow text-left group">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-[#1A1F5E]/10 -xl flex items-center justify-center group-hover:bg-[#0072CE]/20 transition-colors">
+              <Users className="w-6 h-6 text-[#0072CE]" />
+            </div>
+            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-[#0072CE] transition-colors" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">My Mentees</h3>
+          <p className="text-gray-600 text-sm">View and manage connections with your mentees</p>
+        </button>
+        )}
 
         <button className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB] hover:shadow-xl transition-shadow text-left group">
           <div className="flex items-center justify-between mb-4">
@@ -602,6 +627,7 @@ const Home: React.FC = () => {
           >
             All ({connections.length + expertConnections.length})
           </button>
+          {isMentee && (
           <button
             onClick={() => setConnectionTab('mentors')}
             className={`px-6 py-2.5 -lg font-medium text-sm transition-all ${
@@ -612,6 +638,8 @@ const Home: React.FC = () => {
           >
             Mentors ({connections.filter(c => c.role === 'mentor').length})
           </button>
+          )}
+          {isMentor && (
           <button
             onClick={() => setConnectionTab('mentees')}
             className={`px-6 py-2.5 -lg font-medium text-sm transition-all ${
@@ -622,6 +650,7 @@ const Home: React.FC = () => {
           >
             Mentees ({connections.filter(c => c.role === 'mentee').length})
           </button>
+          )}
           <button
             onClick={() => setConnectionTab('experts')}
             className={`px-6 py-2.5 -lg font-medium text-sm transition-all ${

@@ -786,4 +786,91 @@ router.get('/users/search', auth, async (req, res) => {
     }
 });
 
+// Switch role — with safeguard against data loss
+// Blocks switching AWAY from mentor if user has active mentee connections
+// Blocks switching AWAY from mentee if user has active mentor connections
+router.put('/switch-role', auth, async (req, res) => {
+    try {
+        const { newRole } = req.body;
+        const userId = req.user.user_id;
+
+        if (!['mentor', 'mentee', 'both'].includes(newRole)) {
+            return res.status(400).json({ success: false, message: 'Invalid role. Must be mentor, mentee, or both.' });
+        }
+
+        // Fetch current role
+        const currentResult = await executeQuery(`SELECT role, is_mentor, is_mentee FROM users WHERE id = '${userId}'`);
+        if (!currentResult.recordset.length) {
+            return res.status(404).json({ success: false, message: 'User not found.' });
+        }
+        const current = currentResult.recordset[0];
+        const wasmentor = current.is_mentor === true || current.is_mentor === 1;
+        const wasmentee = current.is_mentee === true || current.is_mentee === 1;
+        const willBeMentor = newRole === 'mentor' || newRole === 'both';
+        const willBeMentee = newRole === 'mentee' || newRole === 'both';
+
+        // Safeguard: switching away from mentor — check for active mentee connections
+        if (wasmentor && !willBeMentor) {
+            const expertCheck = await executeQuery(
+                `SELECT TOP 1 e.id FROM experts e WHERE CAST(e.user_id AS NVARCHAR(100)) = '${userId}'`
+            );
+            if (expertCheck.recordset.length > 0) {
+                const expertId = expertCheck.recordset[0].id;
+                const activeCheck = await executeQuery(
+                    `SELECT COUNT(*) as cnt FROM connections WHERE CAST(expert_id AS NVARCHAR(100)) = '${expertId}' AND status = 'active'`
+                );
+                if (activeCheck.recordset[0].cnt > 0) {
+                    return res.status(409).json({
+                        success: false,
+                        blocked: 'mentor',
+                        message: 'You have active mentees depending on you. Please complete or transfer those relationships before removing your mentor role.'
+                    });
+                }
+            }
+        }
+
+        // Safeguard: switching away from mentee — check for active mentor connections
+        if (wasmentee && !willBeMentee) {
+            const activeCheck = await executeQuery(
+                `SELECT COUNT(*) as cnt FROM connections WHERE CAST(requester_id AS NVARCHAR(100)) = '${userId}' AND status = 'active'`
+            );
+            if (activeCheck.recordset[0].cnt > 0) {
+                return res.status(409).json({
+                    success: false,
+                    blocked: 'mentee',
+                    message: 'You have active mentor relationships. Please complete or end those connections before removing your mentee role.'
+                });
+            }
+        }
+
+        // Apply the role change
+        await executeQuery(`
+            UPDATE users SET
+                role = '${newRole}',
+                is_mentor = ${willBeMentor ? 1 : 0},
+                is_mentee = ${willBeMentee ? 1 : 0},
+                updated_at = GETDATE()
+            WHERE id = '${userId}'
+        `);
+
+        // Also update profile record if it exists
+        await executeQuery(`
+            UPDATE user_profiles SET
+                can_mentor = ${willBeMentor ? 1 : 0},
+                can_be_mentored = ${willBeMentee ? 1 : 0},
+                updated_at = GETDATE()
+            WHERE CAST(user_id AS NVARCHAR(100)) = '${userId}'
+        `);
+
+        res.json({
+            success: true,
+            message: `Role updated to ${newRole} successfully.`,
+            data: { role: newRole }
+        });
+    } catch (err) {
+        console.error('PUT /auth/switch-role error:', err);
+        res.status(500).json({ success: false, message: 'Failed to update role.' });
+    }
+});
+
 export default router;

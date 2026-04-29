@@ -42,7 +42,7 @@ const SimpleRegister: React.FC = () => {
   };
 
   const stats = [
-    { icon: Users, value: '10K+', label: 'Active Members', sub: 'Across Africa' },
+    { icon: Users, value: '10K', label: 'Active Members', sub: 'Across Africa' },
     { icon: Globe, value: '54', label: 'Countries', sub: 'Connected' },
     { icon: Network, value: '5K+', label: 'Connections', sub: 'Made' },
   ];
@@ -51,7 +51,7 @@ const SimpleRegister: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F4F4F4] via-white to-[#F4F4F4] px-4 py-12">
       <div className="w-full max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
 
-        {/* Left Side – Branding */}
+        {/* Left Side ï¿½ Branding */}
         <div className="text-center lg:text-left space-y-8">
           <div className="space-y-4">
             <img
@@ -80,7 +80,7 @@ const SimpleRegister: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Side – Register Form */}
+        {/* Right Side ï¿½ Register Form */}
         <div className="w-full max-w-md mx-auto">
           <div className="bg-white -3xl shadow-xl p-8 border-t-4 border-t-[#1A1F5E] border border-[#E5E7EB]">
             <div className="text-center mb-8">

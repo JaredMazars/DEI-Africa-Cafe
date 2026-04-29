@@ -55,7 +55,7 @@ const Login: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="text-center p-4 -xl bg-white/50 backdrop-blur-sm">
               <div className="w-8 h-8 bg-[#F4F4F4] -full mx-auto mb-2 flex items-center justify-center">
-                <span className="text-white font-bold text-sm">10K+</span>
+                <span className="text-white font-bold text-sm">10K</span>
               </div>
               <h3 className="font-semibold text-gray-800">Active Members</h3>
               <p className="text-sm text-gray-600">Across Africa</p>
