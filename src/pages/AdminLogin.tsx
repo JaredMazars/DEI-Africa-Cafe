@@ -52,7 +52,7 @@ const AdminLogin: React.FC = () => {
       <div className="w-full max-w-md relative z-10">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-[#E83E2D] to-[#c0321f] -2xl shadow-2xl mb-4">
+          <div className="inline-flex items-center justify-center w-20 h-20 -2xl shadow-2xl mb-4">
             <Shield className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">Admin Portal</h1>
@@ -128,7 +128,7 @@ const AdminLogin: React.FC = () => {
             onClick={() => navigate('/')}
             className="text-white/50 hover:text-white text-sm transition-colors"
           >
-            ΓåÉ Back to Main Site
+            Back to Main Site
           </button>
         </div>
       </div>
