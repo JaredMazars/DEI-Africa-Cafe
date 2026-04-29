@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Mail, Lock, Building2, Users, ArrowRight, AlertCircle } from 'lucide-react';
 
@@ -30,7 +30,7 @@ export function LoginPage() {
         <div className="text-center lg:text-left space-y-8">
           <div className="space-y-4">
             <div className="flex items-center justify-center lg:justify-start space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-[#1A1F5E] -xl flex items-center justify-center">
                 <Building2 className="w-7 h-7 text-white" />
               </div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-[#1A1F5E] to-[#1A1F5E] bg-clip-text text-transparent">

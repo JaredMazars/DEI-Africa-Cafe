@@ -612,7 +612,7 @@ const MentorshipActivities: React.FC = () => {
 
                 <div className="bg-gradient-to-r from-[#F4F4F4] to-[#F4F4F4] -xl p-6 border border-[#0072CE]/30">
                   <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -full flex items-center justify-center text-white font-bold">
+                    <div className="w-12 h-12 bg-[#1A1F5E] -full flex items-center justify-center text-white font-bold">
                       MJ
                     </div>
                     <div className="flex-1">
@@ -645,7 +645,7 @@ const MentorshipActivities: React.FC = () => {
 
                 <div className="bg-gradient-to-r from-[#F4F4F4] to-[#F4F4F4] -xl p-6 border border-[#0072CE]/30">
                   <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -full flex items-center justify-center text-white font-bold">
+                    <div className="w-12 h-12 bg-[#1A1F5E] -full flex items-center justify-center text-white font-bold">
                       AP
                     </div>
                     <div className="flex-1">

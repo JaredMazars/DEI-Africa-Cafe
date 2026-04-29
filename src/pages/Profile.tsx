@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Camera, MapPin, Mail, Star, Award, TrendingUp, Users, ArrowRight, CheckCircle, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSimpleAuth } from '../contexts/SimpleAuthContext';
@@ -112,7 +112,7 @@ const Profile: React.FC = () => {
   const myMentors = connections.filter(
     c => c.requester_id === userId && c.status === 'accepted'
   );
-  // Connections where I am the expert/mentor â€” matched via mentor_user_id returned by getConnectionsWithDetails
+  // Connections where I am the expert/mentor — matched via mentor_user_id returned by getConnectionsWithDetails
   const myMentees = connections.filter(
     c => (c as any).mentor_user_id === userId && c.status === 'accepted'
   );
@@ -254,13 +254,13 @@ const Profile: React.FC = () => {
             <div className="bg-white -xl shadow-sm border border-[#E5E7EB] p-6">
               <h2 className="text-xl font-semibold text-[#333333] mb-4">Connection Summary</h2>
               {loadingConnections ? (
-                <p className="text-[#8C8C8C] text-sm">Loading connectionsâ€¦</p>
+                <p className="text-[#8C8C8C] text-sm">Loading connections…</p>
               ) : connections.length === 0 ? (
                 <div className="text-center py-6">
                   <Users className="w-10 h-10 text-[#8C8C8C] mx-auto mb-2" />
                   <p className="text-[#8C8C8C] text-sm">No connections yet. Explore mentors to get started.</p>
                   <button onClick={() => navigate('/mentors')} className="mt-3 text-[#0072CE] text-sm font-medium hover:text-[#E83E2D] transition-colors">
-                    Find Mentors â†’
+                    Find Mentors ?
                   </button>
                 </div>
               ) : (
@@ -291,7 +291,7 @@ const Profile: React.FC = () => {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Mentorship Activities CTA */}
-            <div className="bg-gradient-to-br from-[#1A1F5E] to-[#0072CE] -3xl shadow-2xl p-8 text-white hover:scale-[1.02] transition-all duration-300">
+            <div className="bg-[#1A1F5E] -3xl shadow-2xl p-8 text-white hover:scale-[1.02] transition-all duration-300">
               <div className="flex items-center justify-center mb-4">
                 <div className="bg-white/20 backdrop-blur-sm -full p-4">
                   <Award className="w-10 h-10 text-white" />
@@ -433,7 +433,7 @@ const Profile: React.FC = () => {
                   key={c.id}
                   className="flex items-center gap-4 p-4 border border-[#E5E7EB] -2xl hover:shadow-lg hover:border-[#1A1F5E]/30 cursor-pointer transition-all"
                 >
-                  <div className="w-14 h-14 -full bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] flex items-center justify-center text-white text-xl font-bold">
+                  <div className="w-14 h-14 -full bg-[#1A1F5E] flex items-center justify-center text-white text-xl font-bold">
                     {((c as any).mentee_name || '?')[0]}
                   </div>
                   <div className="flex-1">
@@ -456,21 +456,21 @@ const Profile: React.FC = () => {
 
           {/* Connection Stats */}
           <div className="grid md:grid-cols-3 gap-4">
-            <div className="bg-gradient-to-br from-[#1A1F5E] to-[#0072CE] -3xl p-6 text-white shadow-xl">
+            <div className="bg-[#1A1F5E] -3xl p-6 text-white shadow-xl">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-medium text-white/80">My Mentors</h3>
                 <Users className="w-5 h-5 text-white/60" />
               </div>
               <p className="text-3xl font-bold">{myMentors.length}</p>
             </div>
-            <div className="bg-gradient-to-br from-[#1A1F5E] to-[#0072CE] -3xl p-6 text-white shadow-xl">
+            <div className="bg-[#1A1F5E] -3xl p-6 text-white shadow-xl">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-medium text-white/80">My Mentees</h3>
                 <Users className="w-5 h-5 text-white/60" />
               </div>
               <p className="text-3xl font-bold">{myMentees.length}</p>
             </div>
-            <div className="bg-gradient-to-br from-[#1A1F5E] to-[#0072CE] -3xl p-6 text-white shadow-xl">
+            <div className="bg-[#1A1F5E] -3xl p-6 text-white shadow-xl">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-medium text-white/80">Pending</h3>
                 <Award className="w-5 h-5 text-white/60" />
@@ -526,7 +526,7 @@ const Profile: React.FC = () => {
                 rows={4}
                 defaultValue={user.bio}
                 className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
-                placeholder="Tell us about yourselfâ€¦"
+                placeholder="Tell us about yourself…"
               />
             </div>
             {/* My Expertise editor */}
@@ -585,7 +585,7 @@ const Profile: React.FC = () => {
                   href="/mentors?refresh=1"
                   className="flex-shrink-0 bg-[#1A1F5E] text-white px-4 py-1.5 rounded-full text-xs font-semibold hover:opacity-90 transition-all whitespace-nowrap"
                 >
-                  View my matches â†’
+                  View my matches ?
                 </a>
               </div>
             )}
@@ -601,7 +601,7 @@ const Profile: React.FC = () => {
                 disabled={savingExpertise}
                 className="bg-[#1A1F5E] text-white px-8 py-3 -full font-semibold shadow-lg hover:opacity-90 transition-all disabled:opacity-50"
               >
-                {savingExpertise ? 'Savingâ€¦' : 'Save Changes'}
+                {savingExpertise ? 'Saving…' : 'Save Changes'}
               </button>
               <button
                 type="button"

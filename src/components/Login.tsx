@@ -40,7 +40,7 @@ const Login: React.FC = () => {
         <div className="text-center lg:text-left space-y-8">
           <div className="space-y-4">
             <div className="flex items-center justify-center lg:justify-start space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-[#1A1F5E] -xl flex items-center justify-center">
                 <Building2 className="w-7 h-7 text-white" />
               </div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-[#1A1F5E] to-[#1A1F5E] bg-clip-text text-transparent">
@@ -81,7 +81,7 @@ const Login: React.FC = () => {
         <div className="w-full max-w-md mx-auto">
           <div className="bg-white -2xl shadow-2xl p-8 border border-[#E5E7EB]">
             <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -2xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-[#1A1F5E] -2xl flex items-center justify-center mx-auto mb-4">
                 <Building2 className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>

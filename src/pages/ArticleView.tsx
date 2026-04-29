@@ -1,4 +1,4 @@
-ï»¿import React from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, User, Share2, Bookmark, Calendar } from 'lucide-react';
 
@@ -13,13 +13,13 @@ const ArticleView: React.FC = () => {
     subtitle: 'How inclusive leadership shapes organizational success',
     content: `In today's rapidly evolving business landscape, diversity and inclusion have emerged as critical drivers of innovation and competitive advantage. Organizations that embrace diverse perspectives and create inclusive environments consistently outperform their peers across multiple metrics.
 
-Research from McKinsey & Company demonstrates that companies in the top quartile for ethnic and cultural diversity on executive teams are 33% more likely to have industry-leading profitability. These findings underscore a fundamental truth: diversity isn't just a moral imperativeâ€”it's a business necessity.
+Research from McKinsey & Company demonstrates that companies in the top quartile for ethnic and cultural diversity on executive teams are 33% more likely to have industry-leading profitability. These findings underscore a fundamental truth: diversity isn't just a moral imperative—it's a business necessity.
 
 Understanding the Diversity Advantage
 
 The benefits of diversity extend far beyond compliance or social responsibility. Diverse teams bring varied experiences, perspectives, and problem-solving approaches that fuel creativity and innovation. When people from different backgrounds collaborate, they challenge assumptions, identify blind spots, and develop more comprehensive solutions.
 
-Consider the tech industry, where homogeneous teams have historically dominated. Companies like Microsoft, Google, and Salesforce have made significant investments in diversifying their workforce, resulting in products and services that better serve global markets. This isn't coincidentalâ€”it's the natural outcome of having team members who reflect the diversity of their customer base.
+Consider the tech industry, where homogeneous teams have historically dominated. Companies like Microsoft, Google, and Salesforce have made significant investments in diversifying their workforce, resulting in products and services that better serve global markets. This isn't coincidental—it's the natural outcome of having team members who reflect the diversity of their customer base.
 
 Creating Truly Inclusive Cultures
 
@@ -41,7 +41,7 @@ The Path Forward
 
 As we look toward the future, the organizations that will thrive are those that view diversity and inclusion not as checkbox exercises but as fundamental components of their business strategy. This requires sustained commitment from leadership, meaningful investment in inclusive practices, and a willingness to have difficult conversations about systemic barriers.
 
-The journey toward true workplace diversity is ongoing, but the destinationâ€”organizations where every employee can thrive and contribute their best workâ€”is worth pursuing. By embracing diversity today, we build the innovative, resilient organizations of tomorrow.`,
+The journey toward true workplace diversity is ongoing, but the destination—organizations where every employee can thrive and contribute their best work—is worth pursuing. By embracing diversity today, we build the innovative, resilient organizations of tomorrow.`,
     author: 'Dr. Emily Rodriguez',
     authorBio: 'Leadership Development Expert & DEI Consultant',
     category: 'DEI',
@@ -163,7 +163,7 @@ The journey toward true workplace diversity is ongoing, but the destinationâ€”or
         <div className="mt-16 pt-8 border-t-2 border-gray-200">
           <div className="bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] -2xl p-8 border border-[#0072CE]/30">
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -full flex items-center justify-center text-white text-2xl font-bold">
+              <div className="w-16 h-16 bg-[#1A1F5E] -full flex items-center justify-center text-white text-2xl font-bold">
                 {article.author.split(' ').map(n => n[0]).join('')}
               </div>
               <div>

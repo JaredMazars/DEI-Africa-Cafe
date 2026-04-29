@@ -1,4 +1,4 @@
-ï»¿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader, Mail, Lock, Users, Globe, Network } from 'lucide-react';
 
@@ -51,7 +51,7 @@ const SimpleRegister: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#F4F4F4] via-white to-[#F4F4F4] px-4 py-12">
       <div className="w-full max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
 
-        {/* Left Side â€“ Branding */}
+        {/* Left Side – Branding */}
         <div className="text-center lg:text-left space-y-8">
           <div className="space-y-4">
             <img
@@ -69,7 +69,7 @@ const SimpleRegister: React.FC = () => {
           <div className="hidden lg:grid grid-cols-3 gap-4">
             {stats.map(({ icon: Icon, value, label, sub }) => (
               <div key={label} className="text-center p-5 -3xl bg-white shadow-xl border border-[#E5E7EB]">
-                <div className="w-10 h-10 bg-gradient-to-br from-[#1A1F5E] to-[#0072CE] -2xl mx-auto mb-3 flex items-center justify-center">
+                <div className="w-10 h-10 bg-[#1A1F5E] -2xl mx-auto mb-3 flex items-center justify-center">
                   <Icon className="w-5 h-5 text-white" />
                 </div>
                 <p className="text-lg font-bold text-[#1A1F5E]">{value}</p>
@@ -80,7 +80,7 @@ const SimpleRegister: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Side â€“ Register Form */}
+        {/* Right Side – Register Form */}
         <div className="w-full max-w-md mx-auto">
           <div className="bg-white -3xl shadow-xl p-8 border-t-4 border-t-[#1A1F5E] border border-[#E5E7EB]">
             <div className="text-center mb-8">

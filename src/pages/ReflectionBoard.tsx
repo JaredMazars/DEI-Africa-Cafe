@@ -334,8 +334,8 @@ const ReflectionBoard: React.FC = () => {
                         reflection.isAnonymous 
                           ? 'bg-gray-200' 
                           : reflection.userRole === 'mentor'
-                          ? 'bg-gradient-to-br from-[#0072CE] to-[#1A1F5E]'
-                          : 'bg-gradient-to-br from-[#0072CE] to-[#1A1F5E]'
+                          ? 'bg-[#1A1F5E]'
+                          : 'bg-[#1A1F5E]'
                       }`}>
                         {reflection.isAnonymous ? (
                           <User className="w-6 h-6 text-gray-500" />

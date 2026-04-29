@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Search, MapPin, Users, Star, MessageCircle, Calendar, ChevronDown, Award, Globe, Clock, Send, X, Lock, Unlock, Mail, UserPlus, Bell, CheckCircle, XCircle, AlertCircle, Video, Loader } from 'lucide-react';
 import { expertsAPI, questionsAPI, expertConnectionsAPI, expertWebinarsAPI, expertMeetingsAPI, usersAPI } from '../services/api';
 import { useSimpleAuth } from '../contexts/SimpleAuthContext';
@@ -115,7 +115,7 @@ interface ExpertApplication {
 
 const ExpertDirectory: React.FC = () => {
   const { currentUser: authUser } = useSimpleAuth();
-  // Expert role: user has an expert/mentor role — experts can see extra tabs
+  // Expert role: user has an expert/mentor role � experts can see extra tabs
   const isExpert = ['expert', 'mentor', 'both'].includes(authUser?.role || '');
   const [showBecomeExpertModal, setShowBecomeExpertModal] = useState(false);
   const [expertApplication, setExpertApplication] = useState<ExpertApplication>({
@@ -178,12 +178,12 @@ const ExpertDirectory: React.FC = () => {
   const [connectionRequests, setConnectionRequests] = useState<ConnectionRequest[]>([]);
   const [requestSubTab, setRequestSubTab] = useState<'connections' | 'meetings'>('connections');
   
-  // Scheduled meetings state – loaded from DB
+  // Scheduled meetings state � loaded from DB
   const [scheduledMeetings, setScheduledMeetings] = useState<ScheduledMeeting[]>([]);
   const [meetingsLoading, setMeetingsLoading] = useState(false);
   const [showMeetingsList, setShowMeetingsList] = useState(false);
 
-  // Platform users for email invitations – searched live from DB
+  // Platform users for email invitations � searched live from DB
   const [platformUsers] = useState<PlatformUser[]>([
     // kept empty: real users come from DB search in handleEmailInputChange
   ]);
@@ -381,7 +381,7 @@ const ExpertDirectory: React.FC = () => {
     });
   };
 
-  // Load my expert connections from DB (approved → My Experts tab, pending → button state)
+  // Load my expert connections from DB (approved ? My Experts tab, pending ? button state)
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -579,12 +579,12 @@ const ExpertDirectory: React.FC = () => {
     loadMeetings();
   }, []);
 
-  // Sample access requests for private webinars (empty — DB-backed)
+  // Sample access requests for private webinars (empty � DB-backed)
   // Webinars loaded from DB
   const [webinars, setWebinars] = useState<Webinar[]>([]);
 
-  // Static webinars removed — all data loaded from DB
-  const sampleAccessRequests: AccessRequest[] = []; // empty stub — access requests are DB-backed
+  // Static webinars removed � all data loaded from DB
+  const sampleAccessRequests: AccessRequest[] = []; // empty stub � access requests are DB-backed
 
   // Derive unique filter options dynamically from loaded experts
   const allExpertiseOptions = Array.from(new Set(experts.flatMap(e => e.expertise))).filter(Boolean).sort();
@@ -1375,7 +1375,7 @@ const ExpertDirectory: React.FC = () => {
         {/* Ask the Expert Forum Tab */}
         
 
-        {/* My Mentees Tab — approved short-term advice seekers */}
+        {/* My Mentees Tab � approved short-term advice seekers */}
         {activeTab === 'myMentees' && (
           <div className="p-8">
             <div className="mb-8">
@@ -1537,7 +1537,7 @@ const ExpertDirectory: React.FC = () => {
                                         <Mail className="w-4 h-4" />
                                         <span>{request.userEmail}</span>
                                       </span>
-                                      <span>ï¿½</span>
+                                      <span>�</span>
                                       <span>{request.userOrganization}</span>
                                     </div>
                                   </div>
@@ -1584,7 +1584,7 @@ const ExpertDirectory: React.FC = () => {
               </div>
             )}
 
-            {/* Meeting Access Requests Content — removed (no DB table) */}
+            {/* Meeting Access Requests Content � removed (no DB table) */}
             {false && (
               <div>
             {/* Stats Cards */}
@@ -1651,7 +1651,7 @@ const ExpertDirectory: React.FC = () => {
                     <div key={request.id} className="bg-white border border-gray-200 -xl p-6 hover:shadow-md transition-shadow">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-start space-x-4 flex-1">
-                          <div className="w-12 h-12 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -full flex items-center justify-center text-white font-bold text-lg">
+                          <div className="w-12 h-12 bg-[#1A1F5E] -full flex items-center justify-center text-white font-bold text-lg">
                             {request.name.split(' ').map(n => n[0]).join('')}
                           </div>
                           <div className="flex-1">
@@ -1663,7 +1663,7 @@ const ExpertDirectory: React.FC = () => {
                                     <Mail className="w-4 h-4" />
                                     <span>{request.email}</span>
                                   </span>
-                                  <span>ï¿½</span>
+                                  <span>�</span>
                                   <span>{request.organization}</span>
                                 </div>
                               </div>
@@ -1725,7 +1725,7 @@ const ExpertDirectory: React.FC = () => {
                         </div>
                         <div>
                           <div className="font-bold text-gray-900">{request.name}</div>
-                          <div className="text-sm text-gray-600">{request.email} ï¿½ {request.organization}</div>
+                          <div className="text-sm text-gray-600">{request.email} � {request.organization}</div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-4">
@@ -1757,7 +1757,7 @@ const ExpertDirectory: React.FC = () => {
                         </div>
                         <div>
                           <div className="font-bold text-gray-900">{request.name}</div>
-                          <div className="text-sm text-gray-600">{request.email} ï¿½ {request.organization}</div>
+                          <div className="text-sm text-gray-600">{request.email} � {request.organization}</div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-4">
@@ -2068,7 +2068,7 @@ const ExpertDirectory: React.FC = () => {
                     }`}
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -full flex items-center justify-center text-white font-bold">
+                      <div className="w-10 h-10 bg-[#1A1F5E] -full flex items-center justify-center text-white font-bold">
                         <Users className="w-5 h-5" />
                       </div>
                       <div>
@@ -2251,7 +2251,7 @@ const ExpertDirectory: React.FC = () => {
                   onClick={() => setShowExpertModal(false)}
                   className="text-gray-400 hover:text-gray-600 p-2"
                 >
-                  ï¿½
+                  �
                 </button>
               </div>
 
@@ -2309,7 +2309,7 @@ const ExpertDirectory: React.FC = () => {
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Past Clients</h3>
                 <div className="text-gray-700">
-                  {selectedExpert.pastClients.join(' ï¿½ ')}
+                  {selectedExpert.pastClients.join(' � ')}
                 </div>
               </div>
 
@@ -2965,7 +2965,7 @@ const ExpertDirectory: React.FC = () => {
                                       {user.email}
                                     </div>
                                     <div className="text-xs text-gray-500 truncate">
-                                      {user.role} ï¿½ {user.organization}
+                                      {user.role} � {user.organization}
                                     </div>
                                   </div>
                                   <UserPlus className="w-4 h-4 text-[#0072CE] flex-shrink-0" />
@@ -3086,7 +3086,7 @@ const ExpertDirectory: React.FC = () => {
                                   {request.name}
                                 </div>
                                 <div className="text-xs text-gray-600">
-                                  {request.email} ï¿½ {request.organization}
+                                  {request.email} � {request.organization}
                                 </div>
                               </div>
                               {request.status === 'pending' && (
@@ -3189,7 +3189,7 @@ const ExpertDirectory: React.FC = () => {
             <div className="p-8">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-[#1A1F5E] -xl flex items-center justify-center">
                     <Award className="w-6 h-6 text-white" />
                   </div>
                   <div>
@@ -3348,9 +3348,9 @@ const ExpertDirectory: React.FC = () => {
                     <div className="text-sm text-[#1A1F5E]">
                       <p className="font-semibold mb-1">What happens next?</p>
                       <ul className="space-y-1 text-[#1A1F5E]">
-                        <li>ï¿½ Our team will review your application within 2-3 business days</li>
-                        <li>ï¿½ We may contact you for additional information or an interview</li>
-                        <li>ï¿½ Once approved, you'll get access to expert features and be listed in the directory</li>
+                        <li>� Our team will review your application within 2-3 business days</li>
+                        <li>� We may contact you for additional information or an interview</li>
+                        <li>� Once approved, you'll get access to expert features and be listed in the directory</li>
                       </ul>
                     </div>
                   </div>

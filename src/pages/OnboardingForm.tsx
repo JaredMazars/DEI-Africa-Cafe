@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Users, Briefcase, Target, User, Clock, ArrowLeft, ArrowRight, Building2 } from 'lucide-react';
 import { authAPI } from '../services/api';
@@ -111,7 +111,7 @@ export default function OnboardingForm() {
         return (
           <div className="space-y-8">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-[#1A1F5E] -full flex items-center justify-center mx-auto">
                 <Building2 className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900">Welcome to DEI Cafe!</h2>
@@ -168,7 +168,7 @@ export default function OnboardingForm() {
         return (
           <div className="space-y-8">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-[#1A1F5E] -full flex items-center justify-center mx-auto">
                 <User className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900">Tell us about yourself</h2>
@@ -208,7 +208,7 @@ export default function OnboardingForm() {
         return (
           <div className="space-y-8">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-[#1A1F5E] -full flex items-center justify-center mx-auto">
                 <Briefcase className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900">Your Expertise</h2>
@@ -242,7 +242,7 @@ export default function OnboardingForm() {
         return (
           <div className="space-y-8">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-[#1A1F5E] -full flex items-center justify-center mx-auto">
                 <Target className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900">Your Interests</h2>
@@ -275,7 +275,7 @@ export default function OnboardingForm() {
         return (
           <div className="space-y-8">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-[#1A1F5E] -full flex items-center justify-center mx-auto">
                 <Target className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900">Experience & Goals</h2>
@@ -337,7 +337,7 @@ export default function OnboardingForm() {
         return (
           <div className="space-y-8">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-[#1A1F5E] -full flex items-center justify-center mx-auto">
                 <Clock className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900">Final Details</h2>

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useEffect } from 'react';
 import { adminAPI } from '../services/api';
 import { LogOut, Users, MessageSquare, Calendar, Settings, Building2, TrendingUp, Globe, Search, BookOpen, Briefcase, Target, Award, Clock, MapPin, Languages, ChevronRight, Plus, Filter, Bell, Video, FileText, BarChart3, PieChart, UserCheck, Handshake, Lightbulb, ArrowUpRight, CreditCard as Edit3, Eye, Trash2, CheckCircle, XCircle, AlertTriangle, Download, Upload, RefreshCw, MoreHorizontal, Star, TrendingDown, Activity, DollarSign, Zap, Shield, Database, Mail, Phone, Calendar as CalendarIcon, Flag, Hash, Percent, ArrowUp, ArrowDown, ArrowRight } from 'lucide-react';
@@ -859,7 +859,7 @@ export default function Dashboard() {
         <div className="max-w-[1920px] mx-auto px-8 sm:px-12 lg:px-16">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-[#1A1F5E] -xl flex items-center justify-center">
                 <Building2 className="w-6 h-6 text-white" />
               </div>
               <div>

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Settings, Save, RefreshCw, Target, MapPin, Clock, Languages, Briefcase, User } from 'lucide-react';
 import { authAPI } from '../services/api';
 
@@ -33,7 +33,7 @@ const expertiseOptions = [
 const locationOptions = [
   'Nigeria', 'South Africa', 'Kenya', 'Ghana', 'Egypt', 'Morocco',
   'Ethiopia', 'Uganda', 'Tanzania', 'Algeria', 'Rwanda', 'Botswana',
-  'Zambia', 'Zimbabwe', 'Senegal', 'Côte d\'Ivoire', 'Other African Country', 'Diaspora'
+  'Zambia', 'Zimbabwe', 'Senegal', 'C�te d\'Ivoire', 'Other African Country', 'Diaspora'
 ];
 
 const experienceOptions = [
@@ -164,7 +164,7 @@ const Preferences: React.FC = () => {
   const renderMentorPreferences = () => (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <div className="w-16 h-16 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -full flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 bg-[#1A1F5E] -full flex items-center justify-center mx-auto">
           <Target className="w-8 h-8 text-white" />
         </div>
         <h2 className="text-3xl font-bold text-gray-900">Mentor Preferences</h2>
@@ -296,7 +296,7 @@ const Preferences: React.FC = () => {
   const renderAvailability = () => (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <div className="w-16 h-16 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -full flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 bg-[#1A1F5E] -full flex items-center justify-center mx-auto">
           <Clock className="w-8 h-8 text-white" />
         </div>
         <h2 className="text-3xl font-bold text-gray-900">Availability Settings</h2>
@@ -366,7 +366,7 @@ const Preferences: React.FC = () => {
   const renderNotifications = () => (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <div className="w-16 h-16 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -full flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 bg-[#1A1F5E] -full flex items-center justify-center mx-auto">
           <Settings className="w-8 h-8 text-white" />
         </div>
         <h2 className="text-3xl font-bold text-gray-900">Notification Settings</h2>
@@ -448,7 +448,7 @@ const Preferences: React.FC = () => {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-[#1A1F5E] -full flex items-center justify-center mx-auto mb-4">
             <Settings className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Preferences</h1>

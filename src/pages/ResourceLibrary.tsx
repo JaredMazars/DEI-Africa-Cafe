@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, BookOpen, Play, FileText, Download, Star, Bookmark, Eye, Clock, TrendingUp, Grid, List } from 'lucide-react';
 import { resourcesAPI } from '../services/api';
 
@@ -191,7 +191,7 @@ const ResourceLibrary: React.FC = () => {
                     className="bg-white -xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 group hover:scale-[1.02]"
                   >
                     {/* Card Header */}
-                    <div className="h-40 bg-gradient-to-br from-[#1A1F5E] to-[#0072CE] p-6 flex items-center justify-center relative">
+                    <div className="h-40 bg-[#1A1F5E] p-6 flex items-center justify-center relative">
                       <div className="text-white text-6xl opacity-20">
                         {getIconForType(resource.type)}
                       </div>
@@ -253,7 +253,7 @@ const ResourceLibrary: React.FC = () => {
                   >
                     <div className="flex items-center space-x-6">
                       {/* Icon */}
-                      <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-[#1A1F5E] to-[#0072CE] -lg flex items-center justify-center text-white">
+                      <div className="flex-shrink-0 w-16 h-16 bg-[#1A1F5E] -lg flex items-center justify-center text-white">
                         {getIconForType(resource.type)}
                       </div>
 

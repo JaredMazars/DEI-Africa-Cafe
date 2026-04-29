@@ -46,7 +46,7 @@ const AdminOverview: React.FC = () => {
         </button>
       </div>
 
-      <div className="bg-gradient-to-r from-[#1A1F5E] to-[#0072CE] rounded-3xl p-6 text-white shadow-xl">
+      <div className="bg-[#1A1F5E] rounded-3xl p-6 text-white shadow-xl">
         <h2 className="text-xl text-white font-bold mb-1">Welcome back, Admin</h2>
         <p className="text-white/80 text-sm">Full access to the DEI Cafe management console. Use the sidebar to navigate.</p>
       </div>
