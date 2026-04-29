@@ -552,6 +552,18 @@ export const adminAPI = {
   adminDeleteResource: async (id: string) => {
     return apiRequest(`/admin/resources/${id}`, { method: 'DELETE' });
   },
+
+  adminUploadPdf: async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const token = localStorage.getItem('token');
+    const response = await fetch('/api/admin/resources/upload-pdf', {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    return response.json();
+  },
 };
 
 // Resources API

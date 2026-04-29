@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { BookOpen, Plus, Edit, Trash2, Save, X, Search, RefreshCw, Link as LinkIcon } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { BookOpen, Plus, Edit, Trash2, Save, X, Search, RefreshCw, Link as LinkIcon, Upload, FileText } from 'lucide-react';
 import { adminAPI } from '../../services/api';
 
 const EMPTY = { title:'', type:'article', category:'General', url:'', description:'' };
@@ -15,6 +15,10 @@ const AdminResources: React.FC = () => {
   const [editId, setEditId]       = useState<string|null>(null);
   const [form, setForm]           = useState({ ...EMPTY });
   const [toast, setToast]         = useState<{msg:string;ok:boolean}|null>(null);
+  const [uploadMode, setUploadMode] = useState<'url'|'file'>('url');
+  const [uploading, setUploading]   = useState(false);
+  const [pdfFile, setPdfFile]       = useState<File|null>(null);
+  const fileInputRef                = useRef<HTMLInputElement>(null);
 
   const showT = (msg: string, ok = true) => { setToast({msg,ok}); setTimeout(()=>setToast(null),4000); };
 
@@ -29,15 +33,29 @@ const AdminResources: React.FC = () => {
 
   useEffect(() => { load(); }, [load]);
 
-  const openCreate = () => { setEditId(null); setForm({...EMPTY}); setModal(true); };
-  const openEdit   = (r: any) => { setEditId(r.id); setForm({ title:r.title||'', type:r.type||'article', category:r.category||'General', url:r.url||'', description:r.description||'' }); setModal(true); };
+  const openCreate = () => { setEditId(null); setForm({...EMPTY}); setPdfFile(null); setUploadMode('url'); setModal(true); };
+  const openEdit   = (r: any) => { setEditId(r.id); setForm({ title:r.title||'', type:r.type||'article', category:r.category||'General', url:r.url||'', description:r.description||'' }); setPdfFile(null); setUploadMode(r.url?.startsWith('/uploads/') ? 'file' : 'url'); setModal(true); };
 
   const handleSave = async () => {
-    if (!form.title || !form.url) { showT('Title and URL required', false); return; }
+    if (!form.title) { showT('Title is required', false); return; }
+    let finalUrl = form.url;
+    if (form.type === 'pdf' && uploadMode === 'file') {
+      if (!pdfFile && !form.url) { showT('Please select a PDF file', false); return; }
+      if (pdfFile) {
+        setUploading(true);
+        try {
+          const res = await adminAPI.adminUploadPdf(pdfFile);
+          if (!res?.success) { showT(res?.message || 'Upload failed', false); setUploading(false); return; }
+          finalUrl = res.data.url;
+        } catch { showT('Upload failed', false); setUploading(false); return; }
+        finally { setUploading(false); }
+      }
+    } else if (!finalUrl) { showT('URL is required', false); return; }
     setSaving(true);
     try {
-      if (editId) { await adminAPI.adminUpdateResource(editId, form); await adminAPI.logAudit('UPDATE', 'Resource', form.title); showT('Resource updated'); }
-      else        { await adminAPI.adminCreateResource(form); await adminAPI.logAudit('CREATE', 'Resource', form.title); showT('Resource created'); }
+      const payload = { ...form, url: finalUrl };
+      if (editId) { await adminAPI.adminUpdateResource(editId, payload); await adminAPI.logAudit('UPDATE', 'Resource', form.title); showT('Resource updated'); }
+      else        { await adminAPI.adminCreateResource(payload); await adminAPI.logAudit('CREATE', 'Resource', form.title); showT('Resource created'); }
       setModal(false); load();
     } catch { showT('Save failed', false); }
     finally { setSaving(false); }
@@ -131,18 +149,60 @@ const AdminResources: React.FC = () => {
                   </select>
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-[#333333] mb-1.5">URL *</label>
-                <input type="url" value={form.url} onChange={e=>setForm(p=>({...p,url:e.target.value}))} placeholder="https://…" className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] focus:outline-none focus:border-[#1A1F5E] transition-all" />
-              </div>
+              {form.type === 'pdf' ? (
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-sm font-semibold text-[#333333]">PDF Source *</label>
+                    <div className="flex rounded-xl overflow-hidden border-2 border-[#E5E7EB] text-xs font-semibold">
+                      <button type="button" onClick={()=>setUploadMode('file')} className={`px-3 py-1.5 transition-colors ${uploadMode==='file' ? 'bg-[#1A1F5E] text-white' : 'bg-white text-[#8C8C8C] hover:bg-[#F4F4F4]'}`}><Upload className="w-3 h-3 inline mr-1" />Upload File</button>
+                      <button type="button" onClick={()=>setUploadMode('url')} className={`px-3 py-1.5 transition-colors ${uploadMode==='url' ? 'bg-[#1A1F5E] text-white' : 'bg-white text-[#8C8C8C] hover:bg-[#F4F4F4]'}`}><LinkIcon className="w-3 h-3 inline mr-1" />Paste URL</button>
+                    </div>
+                  </div>
+                  {uploadMode === 'file' ? (
+                    <div
+                      onClick={()=>fileInputRef.current?.click()}
+                      className="w-full px-4 py-6 rounded-2xl border-2 border-dashed border-[#1A1F5E]/30 text-center cursor-pointer hover:border-[#1A1F5E] hover:bg-[#1A1F5E]/5 transition-all"
+                    >
+                      <input ref={fileInputRef} type="file" accept=".pdf,application/pdf" className="hidden" onChange={e=>{ const f=e.target.files?.[0]; if(f){ setPdfFile(f); setForm(p=>({...p,url:''})); }}} />
+                      {pdfFile ? (
+                        <div className="flex items-center justify-center gap-2 text-[#1A1F5E]">
+                          <FileText className="w-5 h-5" />
+                          <span className="font-semibold text-sm">{pdfFile.name}</span>
+                          <span className="text-xs text-[#8C8C8C]">({(pdfFile.size/1024/1024).toFixed(2)} MB)</span>
+                        </div>
+                      ) : form.url?.startsWith('/uploads/') ? (
+                        <div className="flex items-center justify-center gap-2 text-[#1A1F5E]">
+                          <FileText className="w-5 h-5" />
+                          <span className="text-sm text-[#8C8C8C]">Current: {form.url.split('/').pop()}</span>
+                          <span className="text-xs text-[#0072CE] underline">click to replace</span>
+                        </div>
+                      ) : (
+                        <div className="text-[#8C8C8C]">
+                          <Upload className="w-8 h-8 mx-auto mb-2 text-[#1A1F5E]/40" />
+                          <p className="text-sm font-semibold text-[#1A1F5E]">Click to select a PDF</p>
+                          <p className="text-xs mt-1">Max 20 MB</p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <input type="url" value={form.url} onChange={e=>setForm(p=>({...p,url:e.target.value}))} placeholder="https://example.com/file.pdf" className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] focus:outline-none focus:border-[#1A1F5E] transition-all" />
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-semibold text-[#333333] mb-1.5">URL *</label>
+                  <input type="url" value={form.url} onChange={e=>setForm(p=>({...p,url:e.target.value}))} placeholder="https://…" className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] focus:outline-none focus:border-[#1A1F5E] transition-all" />
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-semibold text-[#333333] mb-1.5">Description</label>
                 <textarea rows={2} value={form.description} onChange={e=>setForm(p=>({...p,description:e.target.value}))} className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] focus:outline-none focus:border-[#1A1F5E] transition-all resize-none" />
               </div>
               <div className="flex gap-3 pt-2">
                 <button onClick={()=>setModal(false)} className="flex-1 py-3 rounded-2xl border-2 border-[#E5E7EB] font-semibold hover:bg-[#F4F4F4] transition-all">Cancel</button>
-                <button onClick={handleSave} disabled={saving} className="flex-1 py-3 rounded-2xl bg-[#1A1F5E] text-white font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 transition-all">
-                  {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}{saving ? 'Saving…' : 'Save'}
+                <button onClick={handleSave} disabled={saving||uploading} className="flex-1 py-3 rounded-2xl bg-[#1A1F5E] text-white font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 transition-all">
+                  {(saving||uploading) ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {uploading ? 'Uploading…' : saving ? 'Saving…' : 'Save'}
                 </button>
               </div>
             </div>

@@ -72,6 +72,20 @@ const ResourceLibrary: React.FC = () => {
     setCurrentPage(1); // Reset to page 1 when filters change
   };
 
+  const handleResourceOpen = (resource: Resource) => {
+    resourcesAPI.recordDownload(resource.id);
+    if (resource.type.toLowerCase() === 'pdf' && resource.url.startsWith('/uploads/')) {
+      const a = document.createElement('a');
+      a.href = resource.url;
+      a.download = resource.title.replace(/[^a-z0-9]/gi, '_') + '.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+      window.open(resource.url, '_blank');
+    }
+  };
+
   const toggleSaveResource = (resourceId: string) => {
     setSavedResources(prev => {
       const newSet = new Set(prev);
@@ -239,7 +253,7 @@ const ResourceLibrary: React.FC = () => {
                         </div>
                         <button
                           className="px-4 py-2 bg-[#1A1F5E] hover:opacity-90 text-white -lg font-medium transition-colors text-sm"
-                          onClick={() => { resourcesAPI.recordDownload(resource.id); window.open(resource.url, '_blank'); }}
+                          onClick={() => handleResourceOpen(resource)}
                         >
                           View
                         </button>
@@ -310,12 +324,12 @@ const ResourceLibrary: React.FC = () => {
                             </button>
                             <button
                               className="px-4 py-2 bg-[#1A1F5E] hover:opacity-90 text-white -lg font-medium transition-colors"
-                              onClick={() => { resourcesAPI.recordDownload(resource.id); window.open(resource.url, '_blank'); }}
+                              onClick={() => handleResourceOpen(resource)}
                             >
                               View
                             </button>
                             <button className="p-2 border border-[#1A1F5E] text-[#1A1F5E] hover:bg-[#1A1F5E]/5 -lg transition-colors"
-                              onClick={() => { resourcesAPI.recordDownload(resource.id); window.open(resource.url, '_blank'); }}
+                              onClick={() => handleResourceOpen(resource)}
                             >
                               <Download className="w-5 h-5" />
                             </button>
