@@ -1,4 +1,5 @@
 import express from 'express';
+import { cache } from '../utils/cache.js';
 import User from '../models/User.js';
 import UserProfile from '../models/UserProfile.js';
 import Connection from '../models/Connection.js';
@@ -32,10 +33,19 @@ router.get('/', auth, async (req, res) => {
 // Get connection statistics for dashboard
 router.get('/stats', auth, async (req, res) => {
     try {
-        const [connectionStats, userConnections] = await Promise.all([
-            Connection.getConnectionStats(),
+        // Platform-wide stats cached for 2 minutes; per-user stats not cached
+        const platformCacheKey = 'conn:platform_stats';
+        let connectionStats = cache.get(platformCacheKey);
+
+        const [resolvedStats, userConnections] = await Promise.all([
+            connectionStats ? Promise.resolve(connectionStats) : Connection.getConnectionStats(),
             Connection.getUserConnections(req.user.id)
         ]);
+
+        if (!connectionStats) {
+            connectionStats = resolvedStats;
+            cache.set(platformCacheKey, connectionStats, 120);
+        }
 
         const userStats = {
             totalConnections: userConnections.length,

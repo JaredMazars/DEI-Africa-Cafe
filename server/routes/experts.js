@@ -1,6 +1,7 @@
 import express from 'express';
 import User from '../models/User.js';
 import Expert from '../models/Expert.js';
+import { cache } from '../utils/cache.js';
 import Question from '../models/Question.js';
 import UserProfile from '../models/UserProfile.js';
 import auth from '../middleware/auth.js';
@@ -12,10 +13,16 @@ const router = express.Router();
 router.get('/', auth, async (req, res) => {
     try {
         const { expertise, industry, location, availability } = req.query;
+
+        // Cache the full unfiltered expert list — filters applied in-memory (10-minute TTL)
+        const CACHE_KEY = 'experts:all';
+        let experts = cache.get(CACHE_KEY);
+        if (!experts) {
+            experts = await Expert.getAllWithProfiles();
+            cache.set(CACHE_KEY, experts, 600);
+        }
         
-        let experts = await Expert.getAllWithProfiles();
-        
-        // Apply filters if provided
+        // Apply filters if provided (in-memory — no extra DB hit)
         if (expertise) {
             experts = experts.filter(expert => 
                 expert.specializations && expert.specializations.toLowerCase().includes(expertise.toLowerCase())

@@ -1,4 +1,8 @@
 import express from 'express';
+import multer from 'multer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { v4 as uuidv4 } from 'uuid';
 import User from '../models/User.js';
 import UserProfile from '../models/UserProfile.js';
 import Connection from '../models/Connection.js';
@@ -9,6 +13,26 @@ import Opportunity from '../models/Opportunity.js';
 import Expert from '../models/Expert.js';
 import auth from '../middleware/auth.js';
 import { body, validationResult } from 'express-validator';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Multer config for PDF uploads
+const pdfStorage = multer.diskStorage({
+    destination: path.join(__dirname, '..', 'uploads', 'pdfs'),
+    filename: (req, file, cb) => {
+        const safe = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+        cb(null, `${uuidv4()}_${safe}`);
+    }
+});
+const uploadPdf = multer({
+    storage: pdfStorage,
+    limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype === 'application/pdf') cb(null, true);
+        else cb(new Error('Only PDF files are allowed'), false);
+    }
+});
 
 const router = express.Router();
 
@@ -427,7 +451,7 @@ router.post('/audit', auth, requireAdmin, async (req, res) => {
 router.get('/notifications', auth, requireAdmin, async (req, res) => {
     try {
         const { executeQuery } = await import('../config/database.js');
-        const result = await executeQuery(`SELECT * FROM admin_notifications ORDER BY created_at DESC`);
+        const result = await executeQuery(`SELECT id, title, message, type, target_audience, status, created_by, created_at, updated_at FROM admin_notifications ORDER BY created_at DESC`);
         res.json({ success: true, data: { notifications: result.recordset } });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Failed to fetch notifications' });
@@ -486,7 +510,7 @@ router.delete('/notifications/:id', auth, requireAdmin, async (req, res) => {
 router.get('/content', auth, requireAdmin, async (req, res) => {
     try {
         const { executeQuery } = await import('../config/database.js');
-        const result = await executeQuery(`SELECT * FROM admin_content ORDER BY created_at DESC`);
+        const result = await executeQuery(`SELECT id, type, title, description, url, category, status, created_by, created_at, updated_at FROM admin_content ORDER BY created_at DESC`);
         res.json({ success: true, data: { content: result.recordset } });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Failed to fetch content' });
@@ -616,10 +640,22 @@ router.delete('/opportunities/:id', auth, requireAdmin, async (req, res) => {
 
 // ── Resources (admin CRUD) ────────────────────────────────────────────────────
 
+// PDF file upload endpoint
+router.post('/resources/upload-pdf', auth, requireAdmin, uploadPdf.single('file'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
+        const url = `/uploads/pdfs/${req.file.filename}`;
+        res.json({ success: true, data: { url, filename: req.file.filename, originalName: req.file.originalname } });
+    } catch (error) {
+        console.error('PDF upload error:', error);
+        res.status(500).json({ success: false, message: error.message || 'Upload failed' });
+    }
+});
+
 router.get('/resources', auth, requireAdmin, async (req, res) => {
     try {
         const { executeQuery } = await import('../config/database.js');
-        const result = await executeQuery(`SELECT * FROM resources ORDER BY created_at DESC`);
+        const result = await executeQuery(`SELECT id, title, type, category, url, description, uploader_name, uploaded_by, downloads, rating, is_active, created_at, updated_at FROM resources ORDER BY created_at DESC`);
         res.json({ success: true, data: { resources: result.recordset } });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Failed to fetch resources' });

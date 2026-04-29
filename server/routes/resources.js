@@ -3,6 +3,7 @@ import https from 'https';
 import http from 'http';
 import auth from '../middleware/auth.js';
 import { executeQuery } from '../config/database.js';
+import { cache } from '../utils/cache.js';
 
 const router = express.Router();
 
@@ -10,6 +11,10 @@ const router = express.Router();
 router.get('/', auth, async (req, res) => {
     try {
         const { category, type, search } = req.query;
+        // Cache key encodes all filter params (5-minute TTL)
+        const cacheKey = `resources:${category || ''}:${type || ''}:${search || ''}`;
+        const cached = cache.get(cacheKey);
+        if (cached) return res.json(cached);
         let where = "WHERE r.is_active = 1";
         if (category) where += ` AND r.category = '${category.replace(/'/g, "''")}'`;
         if (type)     where += ` AND r.type = '${type.replace(/'/g, "''")}'`;
@@ -24,7 +29,9 @@ router.get('/', auth, async (req, res) => {
             ${where}
             ORDER BY r.created_at DESC
         `);
-        res.json({ success: true, data: { resources: result.recordset } });
+        const responseData = { success: true, data: { resources: result.recordset } };
+        cache.set(cacheKey, responseData, 300); // 5-minute cache
+        res.json(responseData);
     } catch (error) {
         console.error('Error fetching resources:', error);
         res.status(500).json({ success: false, message: 'Failed to fetch resources' });
@@ -55,6 +62,7 @@ router.post('/', auth, async (req, res) => {
                 GETDATE(), GETDATE()
             )
         `);
+        cache.invalidatePattern('resources:'); // bust list cache
         res.status(201).json({ success: true, data: { id: ins.recordset[0].id } });
     } catch (error) {
         console.error('Error creating resource:', error);

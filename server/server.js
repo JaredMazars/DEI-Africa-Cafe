@@ -39,6 +39,16 @@ const PORT = process.env.PORT || 5000;
 // Security middleware
 app.use(helmet());
 
+// HTTP cache hints for read-heavy public API routes
+app.use((req, res, next) => {
+    if (req.method === 'GET') {
+        if (req.path.startsWith('/api/resources') || req.path.startsWith('/api/experts')) {
+            res.set('Cache-Control', 'private, max-age=120'); // 2-minute browser cache
+        }
+    }
+    next();
+});
+
 // Rate limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -63,6 +73,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Serve static files from React build
 const distPath = path.join(__dirname, '..', 'dist');
 app.use(express.static(distPath));
+
+// Serve uploaded files (PDFs etc.)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
