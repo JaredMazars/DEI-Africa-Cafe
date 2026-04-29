@@ -298,68 +298,64 @@ const Home: React.FC = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB]">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Connections</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.totalConnections}</p>
-              <p className="text-sm text-green-600 flex items-center mt-1">
-                <TrendingUp className="w-4 h-4 mr-1" />
-                +2 this month
-              </p>
+        {/* My Connections */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-11 h-11 bg-[#1A1F5E]/10 rounded-xl flex items-center justify-center">
+              <Users className="w-5 h-5 text-[#1A1F5E]" />
             </div>
-            <div className="w-12 h-12 bg-[#1A1F5E]/10 -xl flex items-center justify-center">
-              <Users className="w-6 h-6 text-[#0072CE]" />
-            </div>
+            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#1A1F5E]/10 text-[#1A1F5E]">Network</span>
           </div>
+          <p className="text-3xl font-bold text-[#1A1F5E]">{stats.totalConnections}</p>
+          <p className="text-sm font-semibold text-[#333333] mt-1">My Connections</p>
+          <p className="text-xs text-[#8C8C8C] mt-0.5">
+            {stats.activeConnections > 0
+              ? `${stats.activeConnections} active`
+              : 'Connect with mentors & peers'}
+          </p>
         </div>
 
-        <div className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB]">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Upcoming Sessions</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.upcomingSessions}</p>
-              <p className="text-sm text-[#0072CE] flex items-center mt-1">
-                <Calendar className="w-4 h-4 mr-1" />
-                Next 7 days
-              </p>
+        {/* Upcoming Sessions */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-11 h-11 bg-[#0072CE]/10 rounded-xl flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-[#0072CE]" />
             </div>
-            <div className="w-12 h-12 bg-[#1A1F5E]/10 -xl flex items-center justify-center">
-              <Video className="w-6 h-6 text-[#1A1F5E]" />
-            </div>
+            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#0072CE]/10 text-[#0072CE]">Scheduled</span>
           </div>
+          <p className="text-3xl font-bold text-[#1A1F5E]">{stats.upcomingSessions}</p>
+          <p className="text-sm font-semibold text-[#333333] mt-1">Upcoming Sessions</p>
+          <p className="text-xs text-[#8C8C8C] mt-0.5">
+            {stats.upcomingSessions > 0 ? 'Next 7 days' : 'No sessions booked yet'}
+          </p>
         </div>
 
-        <div className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB]">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Peer Rating</p>
-              <p className="text-3xl font-bold text-gray-900">4.8</p>
-              <p className="text-sm text-yellow-600 flex items-center mt-1">
-                <Star className="w-4 h-4 mr-1 fill-current" />
-                Highly rated
-              </p>
+        {/* Sessions Completed */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-11 h-11 bg-green-100 rounded-xl flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 text-green-600" />
             </div>
-            <div className="w-12 h-12 bg-[#1A1F5E]/10 -xl flex items-center justify-center">
-              <Award className="w-6 h-6 text-[#1A1F5E]" />
-            </div>
+            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-green-100 text-green-700">Progress</span>
           </div>
+          <p className="text-3xl font-bold text-[#1A1F5E]">{stats.totalSessions}</p>
+          <p className="text-sm font-semibold text-[#333333] mt-1">Sessions Completed</p>
+          <p className="text-xs text-[#8C8C8C] mt-0.5">Across all your mentors</p>
         </div>
 
-        <div className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB]">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Active Connections</p>
-              <p className="text-3xl font-bold text-gray-900">{stats.activeConnections}</p>
-              <p className="text-sm text-[#0072CE] flex items-center mt-1">
-                <Users className="w-4 h-4 mr-1" />
-                Engaged network
-              </p>
+        {/* Registered Webinars */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-11 h-11 bg-[#E83E2D]/10 rounded-xl flex items-center justify-center">
+              <Video className="w-5 h-5 text-[#E83E2D]" />
             </div>
-            <div className="w-12 h-12 bg-[#1A1F5E]/10 -xl flex items-center justify-center">
-              <Users className="w-6 h-6 text-[#0072CE]" />
-            </div>
+            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#E83E2D]/10 text-[#E83E2D]">Live</span>
           </div>
+          <p className="text-3xl font-bold text-[#1A1F5E]">{registeredSessions.length}</p>
+          <p className="text-sm font-semibold text-[#333333] mt-1">Registered Webinars</p>
+          <p className="text-xs text-[#8C8C8C] mt-0.5">
+            {registeredSessions.length > 0 ? 'Check Your Meeting below' : 'Explore Expert Directory'}
+          </p>
         </div>
       </div>
 
