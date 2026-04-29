@@ -237,7 +237,10 @@ const ResourceLibrary: React.FC = () => {
                             </div>
                           )}
                         </div>
-                        <button className="px-4 py-2 bg-[#1A1F5E] hover:bg-[#1A1F5E] text-white -lg font-medium transition-colors text-sm">
+                        <button
+                          className="px-4 py-2 bg-[#1A1F5E] hover:opacity-90 text-white -lg font-medium transition-colors text-sm"
+                          onClick={() => { resourcesAPI.recordDownload(resource.id); window.open(resource.url, '_blank'); }}
+                        >
                           View
                         </button>
                       </div>
@@ -305,7 +308,10 @@ const ResourceLibrary: React.FC = () => {
                             >
                               <Bookmark className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
                             </button>
-                            <button className="px-4 py-2 bg-[#1A1F5E] hover:bg-[#1A1F5E] text-white -lg font-medium transition-colors">
+                            <button
+                              className="px-4 py-2 bg-[#1A1F5E] hover:opacity-90 text-white -lg font-medium transition-colors"
+                              onClick={() => { resourcesAPI.recordDownload(resource.id); window.open(resource.url, '_blank'); }}
+                            >
                               View
                             </button>
                             <button className="p-2 border border-[#1A1F5E] text-[#1A1F5E] hover:bg-[#1A1F5E]/5 -lg transition-colors"
