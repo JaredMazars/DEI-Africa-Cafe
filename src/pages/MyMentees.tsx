@@ -302,7 +302,7 @@ const MyMentees: React.FC = () => {
                   ) : (
                     <div className="grid grid-cols-2 gap-3">
                       <button
-                        onClick={() => navigate(`/messages`)}
+                        onClick={() => navigate(`/messages?connectionId=${c.id}`)}
                         className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#1A1F5E] text-[#1A1F5E] -full font-semibold transition-all hover:bg-[#1A1F5E] hover:text-white"
                       >
                         <MessageSquare className="w-4 h-4" /> Message

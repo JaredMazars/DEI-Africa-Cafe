@@ -59,6 +59,7 @@ const Navigation = () => {
     ...(isMentee ? [{ path: '/mentors', label: 'Mentor Discovery' }] : []),
     { path: '/experts', label: 'Expert Directory' },
     { path: '/collaboration', label: 'Collaboration Hub' },
+    { path: '/messages', label: 'Messages' },
     { path: '/resources', label: 'Resource Library' },
     { path: '/discussion', label: 'Discussion' },
     { path: '/calendar', label: 'Calendar' },

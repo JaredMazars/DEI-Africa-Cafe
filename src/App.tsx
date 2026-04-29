@@ -44,6 +44,7 @@ const AdminOpportunities    = lazy(() => import('./admin/pages/AdminOpportunitie
 const AdminCollaboration    = lazy(() => import('./admin/pages/AdminCollaboration'));
 const AdminNotifications    = lazy(() => import('./admin/pages/AdminNotifications'));
 const AdminAudit            = lazy(() => import('./admin/pages/AdminAudit'));
+const Messages              = lazy(() => import('./pages/Messages'));
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -126,6 +127,7 @@ function AppContent() {
 
         <Route path="/experts" element={<ProtectedRoute><ExpertDirectory /></ProtectedRoute>} />
         <Route path="/collaboration" element={<ProtectedRoute><CollaborationHub /></ProtectedRoute>} />
+        <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
         <Route path="/preferences" element={<ProtectedRoute><Preferences /></ProtectedRoute>} />
 
         {/* Admin Protected Routes - New Comprehensive Console */}

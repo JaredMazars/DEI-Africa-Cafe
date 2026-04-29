@@ -44,6 +44,15 @@ const ReflectionBoard: React.FC = () => {
   const [newComment, setNewComment] = useState('');
   const [commentAnonymous, setCommentAnonymous] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [newReflection, setNewReflection] = useState({
+    title: '',
+    content: '',
+    category: 'goal-progress',
+    tags: '',
+    isAnonymous: false,
+  });
 
   const [reflections, setReflections] = useState<Reflection[]>([]);
 
@@ -84,6 +93,33 @@ const ReflectionBoard: React.FC = () => {
     }
   };
 
+  const handleCreateReflection = async () => {
+    if (!newReflection.title.trim() || !newReflection.content.trim()) {
+      setCreateError('Title and content are required.');
+      return;
+    }
+    setSubmitting(true);
+    setCreateError(null);
+    try {
+      const tags = newReflection.tags.split(',').map(t => t.trim()).filter(Boolean);
+      await reflectionsAPI.createReflection({
+        title: newReflection.title.trim(),
+        content: newReflection.content.trim(),
+        category: newReflection.category,
+        tags,
+        is_anonymous: newReflection.isAnonymous,
+        keyTakeaways: [],
+      });
+      setShowCreateModal(false);
+      setNewReflection({ title: '', content: '', category: 'goal-progress', tags: '', isAnonymous: false });
+      loadReflections();
+    } catch (err: any) {
+      setCreateError(err.message || 'Failed to post reflection.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const loadComments = async (reflection: Reflection) => {
     const res = await reflectionsAPI.getComments(reflection.id);
     const raw: any[] = res.data?.comments || [];
@@ -105,7 +141,7 @@ const ReflectionBoard: React.FC = () => {
       userRole: 'mentee',
       category: 'Communication',
       title: 'Learning to Navigate Difficult Conversations',
-      content: "Today's session was transformative. My mentor helped me understand that difficult conversations aren't about winning or losing—they're about understanding. We practiced using 'I' statements and active listening techniques. I realized I've been approaching conflicts defensively instead of curiously. This shift in mindset alone has already changed how I interact with my team.",
+      content: "Today's session was transformative. My mentor helped me understand that difficult conversations aren't about winning or losingï¿½they're about understanding. We practiced using 'I' statements and active listening techniques. I realized I've been approaching conflicts defensively instead of curiously. This shift in mindset alone has already changed how I interact with my team.",
       keyTakeaways: [
         'Use "I feel..." statements instead of "You always..."',
         'Ask clarifying questions before responding',
@@ -135,11 +171,11 @@ const ReflectionBoard: React.FC = () => {
       userRole: 'mentee',
       category: 'Challenge',
       title: 'Addressing Imposter Syndrome',
-      content: "I finally opened up about feeling like a fraud despite my accomplishments. My mentor shared that even senior leaders experience this. We identified that my imposter syndrome spikes when I'm learning something new—which is actually a sign I'm growing, not failing. This reframe was powerful. I'm going to start tracking my wins and revisit them when doubt creeps in.",
+      content: "I finally opened up about feeling like a fraud despite my accomplishments. My mentor shared that even senior leaders experience this. We identified that my imposter syndrome spikes when I'm learning something newï¿½which is actually a sign I'm growing, not failing. This reframe was powerful. I'm going to start tracking my wins and revisit them when doubt creeps in.",
       keyTakeaways: [
         'Imposter syndrome often means you\'re stretching yourself',
         'Keep a "wins" journal for tough moments',
-        'Growth feels uncomfortable—that\'s normal'
+        'Growth feels uncomfortableï¿½that\'s normal'
       ],
       tags: ['imposter-syndrome', 'self-confidence', 'growth-mindset'],
       rating: 5,
@@ -155,7 +191,7 @@ const ReflectionBoard: React.FC = () => {
       userRole: 'mentor',
       category: 'Success',
       title: 'Celebrating My Mentee\'s First Leadership Presentation',
-      content: "I'm so proud! My mentee delivered their first executive presentation today. We'd been preparing for weeks—working on storytelling, handling tough questions, and managing nerves. They were brilliant. What struck me most was how they incorporated feedback from our sessions without losing their authentic voice. This is what mentorship is about: not changing someone, but amplifying who they already are.",
+      content: "I'm so proud! My mentee delivered their first executive presentation today. We'd been preparing for weeksï¿½working on storytelling, handling tough questions, and managing nerves. They were brilliant. What struck me most was how they incorporated feedback from our sessions without losing their authentic voice. This is what mentorship is about: not changing someone, but amplifying who they already are.",
       keyTakeaways: [
         'Preparation builds confidence',
         'Authenticity > perfection',
@@ -370,7 +406,7 @@ const ReflectionBoard: React.FC = () => {
                           })}</span>
                           {reflection.rating && (
                             <div className="flex items-center space-x-1">
-                              <span>•</span>
+                              <span>ï¿½</span>
                               <div className="flex">
                                 {[...Array(5)].map((_, i) => (
                                   <Star
@@ -478,20 +514,99 @@ const ReflectionBoard: React.FC = () => {
       {/* Create Reflection Modal - Placeholder */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white -2xl max-w-3xl w-full p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-gray-900">Create Reflection</h2>
-              <button onClick={() => setShowCreateModal(false)} className="text-gray-400 hover:text-gray-600">
-                <X className="w-6 h-6" />
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-8 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <div className="h-1 w-8 bg-[#E83E2D] rounded-full mb-2" />
+                <h2 className="text-2xl font-bold text-[#1A1F5E]">Share a Reflection</h2>
+              </div>
+              <button onClick={() => { setShowCreateModal(false); setCreateError(null); }} className="p-2 rounded-xl hover:bg-[#F4F4F4] text-[#8C8C8C]">
+                <X className="w-5 h-5" />
               </button>
             </div>
-            <p className="text-gray-600">This will open the enhanced reflection form...</p>
-            <button
-              onClick={() => setShowCreateModal(false)}
-              className="mt-6 w-full bg-[#1A1F5E] text-white px-6 py-3 -lg font-semibold"
-            >
-              Close
-            </button>
+
+            {createError && (
+              <div className="mb-4 px-4 py-3 rounded-2xl bg-[#E83E2D]/10 border border-[#E83E2D]/30 text-[#E83E2D] text-sm">{createError}</div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-[#333333] mb-1.5">Title *</label>
+                <input
+                  value={newReflection.title}
+                  onChange={e => setNewReflection(p => ({ ...p, title: e.target.value }))}
+                  placeholder="What did you learn or experience?"
+                  className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-[#333333] mb-1.5">Category</label>
+                <select
+                  value={newReflection.category}
+                  onChange={e => setNewReflection(p => ({ ...p, category: e.target.value }))}
+                  className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
+                >
+                  <option value="goal-progress">Goal Progress</option>
+                  <option value="session-recap">Session Recap</option>
+                  <option value="challenge">Challenge &amp; Growth</option>
+                  <option value="achievement">Achievement</option>
+                  <option value="communication">Communication</option>
+                  <option value="leadership">Leadership</option>
+                  <option value="general">General</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-[#333333] mb-1.5">Reflection *</label>
+                <textarea
+                  rows={5}
+                  value={newReflection.content}
+                  onChange={e => setNewReflection(p => ({ ...p, content: e.target.value }))}
+                  placeholder="Describe your experience, insights, or key takeaways..."
+                  className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-[#333333] mb-1.5">Tags <span className="font-normal text-[#8C8C8C]">(comma-separated)</span></label>
+                <input
+                  value={newReflection.tags}
+                  onChange={e => setNewReflection(p => ({ ...p, tags: e.target.value }))}
+                  placeholder="e.g. leadership, growth, communication"
+                  className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
+                />
+              </div>
+
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={newReflection.isAnonymous}
+                  onChange={e => setNewReflection(p => ({ ...p, isAnonymous: e.target.checked }))}
+                  className="w-4 h-4 accent-[#1A1F5E]"
+                />
+                <span className="text-sm text-[#333333] font-medium">Post anonymously</span>
+              </label>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => { setShowCreateModal(false); setCreateError(null); }}
+                  className="flex-1 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] font-semibold hover:bg-[#F4F4F4] transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateReflection}
+                  disabled={submitting}
+                  className="flex-1 py-3 rounded-2xl bg-[#1A1F5E] text-white font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 transition-all shadow-lg"
+                >
+                  {submitting
+                    ? <><CheckCircle className="w-4 h-4 animate-pulse" /> Postingâ€¦</>
+                    : <><Plus className="w-4 h-4" /> Post Reflection</>
+                  }
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
