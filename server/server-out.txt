@@ -1,0 +1,12 @@
+🔑 Using SQL Authentication for database
+🔌 Testing database connection...
+✅ Database connected successfully!
+✅ Email server is ready to send messages
+📊 Database has 33 tables
+
+🚀 DEI Cafe API server running on port 5000
+📊 Health check: http://localhost:5000/health
+🌍 Environment: development
+🔗 Frontend URL: http://localhost:5173
+✉️  Email service ready for testing
+🔐 Login attempt: yusufabdi@deicafe-demo.com

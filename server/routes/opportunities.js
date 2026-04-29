@@ -49,11 +49,6 @@ router.post('/', auth, [
     body('title').notEmpty().withMessage('Opportunity title is required'),
     body('description').notEmpty().withMessage('Description is required'),
     body('industry').notEmpty().withMessage('Industry is required'),
-    body('client_sector').notEmpty().withMessage('Client sector is required'),
-    body('regions_needed').notEmpty().withMessage('Regions needed is required'),
-    body('budget_range').notEmpty().withMessage('Budget range is required'),
-    body('deadline').isISO8601().withMessage('Valid deadline is required'),
-    body('priority').isIn(['high', 'medium', 'low']).withMessage('Priority must be high, medium, or low')
 ], async (req, res) => {
     try {
         const errors = validationResult(req);
@@ -66,8 +61,15 @@ router.post('/', auth, [
         }
 
         const opportunityData = {
+            ...req.body,
             contact_person_id: req.user.user_id,
-            ...req.body
+            client_sector: req.body.client_sector || req.body.industry || '',
+            regions_needed: req.body.regions_needed || '',
+            budget_range: req.body.budget_range || 'To be discussed',
+            deadline: (req.body.deadline && req.body.deadline.trim())
+                ? req.body.deadline.trim()
+                : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            priority: req.body.priority || 'medium',
         };
 
         const opportunity = await Opportunity.create(opportunityData);

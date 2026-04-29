@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, EyeOff, Loader, Building2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -40,7 +40,7 @@ const Login: React.FC = () => {
         <div className="text-center lg:text-left space-y-8">
           <div className="space-y-4">
             <div className="flex items-center justify-center lg:justify-start space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -xl flex items-center justify-center">
                 <Building2 className="w-7 h-7 text-white" />
               </div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-[#1A1F5E] to-[#1A1F5E] bg-clip-text text-transparent">
@@ -53,22 +53,22 @@ const Login: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="text-center p-4 rounded-xl bg-white/50 backdrop-blur-sm">
-              <div className="w-8 h-8 bg-[#0072CE] rounded-full mx-auto mb-2 flex items-center justify-center">
+            <div className="text-center p-4 -xl bg-white/50 backdrop-blur-sm">
+              <div className="w-8 h-8 bg-[#0072CE] -full mx-auto mb-2 flex items-center justify-center">
                 <span className="text-white font-bold text-sm">10K+</span>
               </div>
               <h3 className="font-semibold text-gray-800">Active Members</h3>
               <p className="text-sm text-gray-600">Across Africa</p>
             </div>
-            <div className="text-center p-4 rounded-xl bg-white/50 backdrop-blur-sm">
-              <div className="w-8 h-8 bg-[#0072CE] rounded-full mx-auto mb-2 flex items-center justify-center">
+            <div className="text-center p-4 -xl bg-white/50 backdrop-blur-sm">
+              <div className="w-8 h-8 bg-[#0072CE] -full mx-auto mb-2 flex items-center justify-center">
                 <span className="text-white font-bold text-sm">54</span>
               </div>
               <h3 className="font-semibold text-gray-800">Countries</h3>
               <p className="text-sm text-gray-600">Connected</p>
             </div>
-            <div className="text-center p-4 rounded-xl bg-white/50 backdrop-blur-sm">
-              <div className="w-8 h-8 bg-[#0072CE] rounded-full mx-auto mb-2 flex items-center justify-center">
+            <div className="text-center p-4 -xl bg-white/50 backdrop-blur-sm">
+              <div className="w-8 h-8 bg-[#0072CE] -full mx-auto mb-2 flex items-center justify-center">
                 <span className="text-white font-bold text-sm">5K+</span>
               </div>
               <h3 className="font-semibold text-gray-800">Connections</h3>
@@ -79,9 +79,9 @@ const Login: React.FC = () => {
 
         {/* Right Side - Login Form */}
         <div className="w-full max-w-md mx-auto">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 border border-[#E5E7EB]">
+          <div className="bg-white -2xl shadow-2xl p-8 border border-[#E5E7EB]">
             <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -2xl flex items-center justify-center mx-auto mb-4">
                 <Building2 className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
@@ -89,7 +89,7 @@ const Login: React.FC = () => {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+              <div className="bg-red-50 border border-red-200 -xl p-4 mb-6">
                 <p className="text-red-600 text-sm">{error}</p>
               </div>
             )}
@@ -104,7 +104,7 @@ const Login: React.FC = () => {
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 -xl focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] transition-colors"
                   placeholder="Enter your email"
                   required
                 />
@@ -120,7 +120,7 @@ const Login: React.FC = () => {
                     id="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] transition-colors"
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 -xl focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] transition-colors"
                     placeholder="Enter your password"
                     required
                   />
@@ -136,7 +136,7 @@ const Login: React.FC = () => {
 
               <div className="flex items-center justify-between">
                 <label className="flex items-center">
-                  <input type="checkbox" className="rounded border-gray-300 text-[#0072CE] focus:ring-[#1A1F5E]/20" />
+                  <input type="checkbox" className=" border-gray-300 text-[#0072CE] focus:ring-[#1A1F5E]/20" />
                   <span className="ml-2 text-sm text-gray-600">Remember me</span>
                 </label>
                 <button type="button" className="text-sm text-[#0072CE] hover:text-[#1A1F5E] font-medium">
@@ -147,7 +147,7 @@ const Login: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
+                className="w-full flex items-center justify-center px-4 py-3 bg-[#1A1F5E] hover:opacity-90 text-white -xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
               >
                 {loading ? (
                   <>

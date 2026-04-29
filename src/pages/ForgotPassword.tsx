@@ -61,7 +61,7 @@ const ForgotPassword: React.FC = () => {
         </div>
 
         {/* Form Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white -2xl shadow-xl p-8">
           {!success ? (
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Email Input */}
@@ -78,7 +78,7 @@ const ForgotPassword: React.FC = () => {
                     id="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     placeholder="you@example.com"
                     required
                   />
@@ -90,7 +90,7 @@ const ForgotPassword: React.FC = () => {
 
               {/* Error Message */}
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="bg-red-50 border border-red-200 -lg p-4">
                   <p className="text-sm text-red-800">{error}</p>
                 </div>
               )}
@@ -99,7 +99,7 @@ const ForgotPassword: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center px-6 py-3 bg-[#0072CE] text-white rounded-lg hover:bg-[#1A1F5E] transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center px-6 py-3 bg-[#0072CE] text-white -lg hover:bg-[#1A1F5E] transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
@@ -128,7 +128,7 @@ const ForgotPassword: React.FC = () => {
           ) : (
             /* Success State */
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 -full mb-6">
                 <CheckCircle className="w-10 h-10 text-green-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Check Your Email</h2>
@@ -136,7 +136,7 @@ const ForgotPassword: React.FC = () => {
                 We've sent password reset instructions to your email address. Please check your inbox and follow the link to reset your password.
               </p>
 
-              <div className="bg-[#F4F4F4] border border-[#0072CE]/30 rounded-lg p-4 mb-6">
+              <div className="bg-[#F4F4F4] border border-[#0072CE]/30 -lg p-4 mb-6">
                 <p className="text-sm text-[#1A1F5E] mb-2">
                   <strong>Didn't receive the email?</strong>
                 </p>
@@ -153,7 +153,7 @@ const ForgotPassword: React.FC = () => {
                   setSuccess(false);
                   setError('');
                 }}
-                className="w-full px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium mb-4"
+                className="w-full px-6 py-3 border border-gray-300 text-gray-700 -lg hover:bg-gray-50 transition-colors font-medium mb-4"
               >
                 Try Another Email
               </button>

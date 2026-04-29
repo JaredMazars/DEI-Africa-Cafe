@@ -22,7 +22,8 @@ const AdminLogin: React.FC = () => {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      const ct = response.headers.get('content-type') || '';
+      const data = ct.includes('application/json') ? await response.json() : { success: false, message: await response.text() || 'Server error' };
 
       if (!response.ok || !data.success) {
         setError(data.message || 'Invalid admin credentials.');
@@ -44,14 +45,14 @@ const AdminLogin: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-[#1A1F5E] via-[#0d1240] to-[#1A1F5E] flex items-center justify-center px-4 relative overflow-hidden">
       {/* Background orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-[#0072CE] rounded-full filter blur-3xl opacity-10" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-[#E83E2D] rounded-full filter blur-3xl opacity-10" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-[#0072CE] -full filter blur-3xl opacity-10" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-[#E83E2D] -full filter blur-3xl opacity-10" />
       </div>
 
       <div className="w-full max-w-md relative z-10">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-[#E83E2D] to-[#c0321f] rounded-2xl shadow-2xl mb-4">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-[#E83E2D] to-[#c0321f] -2xl shadow-2xl mb-4">
             <Shield className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">Admin Portal</h1>
@@ -59,10 +60,10 @@ const AdminLogin: React.FC = () => {
         </div>
 
         {/* Card */}
-        <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8">
+        <div className="bg-white/10 backdrop-blur-xl -3xl shadow-2xl border border-white/20 p-8">
           <form onSubmit={handleLogin} className="space-y-6">
             {error && (
-              <div className="bg-[#E83E2D]/20 border border-[#E83E2D]/40 rounded-2xl p-4 flex items-center gap-3">
+              <div className="bg-[#E83E2D]/20 border border-[#E83E2D]/40 -2xl p-4 flex items-center gap-3">
                 <AlertCircle className="w-5 h-5 text-[#E83E2D] shrink-0" />
                 <p className="text-white text-sm">{error}</p>
               </div>
@@ -76,7 +77,7 @@ const AdminLogin: React.FC = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 bg-white/10 border-2 border-white/20 rounded-2xl text-white placeholder-white/30 focus:outline-none focus:border-[#0072CE] focus:ring-2 focus:ring-[#0072CE]/30 transition-all"
+                  className="w-full pl-11 pr-4 py-3 bg-white/10 border-2 border-white/20 -2xl text-white placeholder-white/30 focus:outline-none focus:border-[#0072CE] focus:ring-2 focus:ring-[#0072CE]/30 transition-all"
                   placeholder="admin@deiafrica.com"
                   required
                   autoComplete="username"
@@ -92,7 +93,7 @@ const AdminLogin: React.FC = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-11 pr-12 py-3 bg-white/10 border-2 border-white/20 rounded-2xl text-white placeholder-white/30 focus:outline-none focus:border-[#0072CE] focus:ring-2 focus:ring-[#0072CE]/30 transition-all"
+                  className="w-full pl-11 pr-12 py-3 bg-white/10 border-2 border-white/20 -2xl text-white placeholder-white/30 focus:outline-none focus:border-[#0072CE] focus:ring-2 focus:ring-[#0072CE]/30 transition-all"
                   placeholder="Enter your password"
                   required
                   autoComplete="current-password"
@@ -111,7 +112,7 @@ const AdminLogin: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white font-semibold py-3 px-4 rounded-full shadow-lg hover:opacity-90 hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-[#1A1F5E] text-white font-semibold py-3 px-4 -full shadow-lg hover:opacity-90 hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /><span>Authenticating...</span></>

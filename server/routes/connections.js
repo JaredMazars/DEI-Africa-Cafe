@@ -148,9 +148,20 @@ router.put('/:connectionId/status', auth, [
             });
         }
 
+        // Resolve the mentor's users.id (expert_id is experts.id, not users.id)
+        let mentorUserId = null;
+        try {
+            const expertRow = await (await import('../config/database.js')).executeQuery(
+                `SELECT user_id FROM experts WHERE id = '${connection.expert_id}'`
+            );
+            mentorUserId = expertRow.recordset[0]?.user_id || null;
+        } catch { /* ignore */ }
+
         // Verify that the requesting user is part of this connection
-        if (req.user.id !== connection.expert_id && req.user.id !== connection.requester_id
-            && req.user.id !== connection.mentor_id && req.user.id !== connection.mentee_id) {
+        // Use String() coercion — JWT userId may be int, DB ids are strings
+        const isRequester = String(req.user.id) === String(connection.requester_id);
+        const isMentor    = String(req.user.id) === String(mentorUserId);
+        if (!isRequester && !isMentor) {
             return res.status(403).json({
                 success: false,
                 message: 'You can only update your own connections'

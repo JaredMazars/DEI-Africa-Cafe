@@ -21,6 +21,12 @@ import preferencesRoutes from './routes/preferences.js';
 import matchingRoutes from './routes/matching.js';
 import resourceRoutes from './routes/resources.js';
 import reflectionRoutes from './routes/reflections.js';
+import goalsRoutes from './routes/goals.js';
+import learningPathsRoutes from './routes/learning-paths.js';
+import expertConnectionRoutes from './routes/expert-connections.js';
+import expertWebinarRoutes from './routes/expert-webinars.js';
+import expertMeetingRoutes from './routes/expert-meetings.js';
+import collaborationRoutes from './routes/collaboration.js';
 
 // Load environment variables from parent directory
 const __filename = fileURLToPath(import.meta.url);
@@ -82,6 +88,12 @@ app.use('/api/preferences', preferencesRoutes);
 app.use('/api/matching', matchingRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/reflections', reflectionRoutes);
+app.use('/api/goals', goalsRoutes);
+app.use('/api/learning-paths', learningPathsRoutes);
+app.use('/api/expert-connections', expertConnectionRoutes);
+app.use('/api/expert-webinars', expertWebinarRoutes);
+app.use('/api/expert-meetings', expertMeetingRoutes);
+app.use('/api/collaboration', collaborationRoutes);
 
 // Serve React app for all non-API routes (SPA routing)
 app.get('*', (req, res) => {

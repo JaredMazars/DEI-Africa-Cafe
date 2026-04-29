@@ -1,417 +1,150 @@
-﻿import React, { useState, useEffect } from 'react';
-import {
-  UserCog,
-  Search,
-  Plus,
-  Edit,
-  Trash2,
-  Save,
-  X,
-  Mail,
-  Phone,
-  Award,
-  Users,
-  AlertCircle
-} from 'lucide-react';
-import { logAuditAction } from '../../services/auditLogger';
+import React, { useState, useEffect, useCallback } from 'react';
+import { UserCog, Plus, Edit, Trash2, Save, X, Search, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
+import { adminAPI } from '../../services/api';
 
-interface Mentor {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  expertise: string[];
-  bio: string;
-  photo: string;
-  rating: number;
-  totalMentees: number;
-  sessionsCompleted: number;
-  joinedDate: string;
-  status: 'active' | 'inactive';
-}
-
-const API = '/api/admin';
+const EMPTY = { name:'', email:'', bio:'', expertise:'', photo:'' };
 
 const AdminMentors: React.FC = () => {
-  const [mentors, setMentors] = useState<Mentor[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    expertise: '',
-    bio: '',
-    photo: ''
-  });
+  const [mentors, setMentors]     = useState<any[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [saving, setSaving]       = useState(false);
+  const [search, setSearch]       = useState('');
+  const [showModal, setModal]     = useState(false);
+  const [editId, setEditId]       = useState<string|null>(null);
+  const [form, setForm]           = useState({ ...EMPTY });
+  const [toast, setToast]         = useState<{msg:string;ok:boolean}|null>(null);
 
-  useEffect(() => {
-    loadMentors();
+  const showT = (msg: string, ok = true) => { setToast({msg,ok}); setTimeout(()=>setToast(null),4000); };
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await adminAPI.getMentors();
+      if (res?.success) setMentors(res.data.mentors || []);
+    } catch { showT('Failed to load mentors', false); }
+    finally { setLoading(false); }
   }, []);
 
-  const getToken = () => localStorage.getItem('adminToken') || localStorage.getItem('token') || '';
+  useEffect(() => { load(); }, [load]);
 
-  const loadMentors = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const res = await fetch(`${API}/mentors`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.message);
-      const raw: any[] = data.data?.mentors || [];
-      const list: Mentor[] = raw.map((m: any) => ({
-        id: m.expert_id || m.id,
-        name: m.name || '',
-        email: m.email || '',
-        phone: m.phone || '',
-        expertise: m.expertise_list ? m.expertise_list.split(', ').filter(Boolean) : [],
-        bio: m.bio || '',
-        photo: m.profile_image_url || m.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=1A1F5E&color=fff&size=200`,
-        rating: parseFloat(m.average_rating) || 0,
-        totalMentees: parseInt(m.active_mentee_count) || 0,
-        sessionsCompleted: parseInt(m.sessions_completed) || 0,
-        joinedDate: m.created_at ? new Date(m.created_at).toISOString().split('T')[0] : '',
-        status: m.is_available ? 'active' : 'inactive',
-      }));
-      setMentors(list);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load mentors');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const openCreate = () => { setEditId(null); setForm({...EMPTY}); setModal(true); };
+  const openEdit   = (m: any) => { setEditId(m.id||m.expert_id); setForm({ name: m.name||'', email: m.email||'', bio: m.bio||'', expertise: Array.isArray(m.expertise) ? m.expertise.join(', ') : (m.expertise||''), photo: m.photo||m.avatar_url||'' }); setModal(true); };
 
-  const handleSubmit = async () => {
-    if (!formData.name || !formData.email || !formData.bio) {
-      alert('Please fill in all required fields (Name, Email, and Bio)');
-      return;
-    }
+  const handleSave = async () => {
+    if (!form.name || !form.email || !form.bio) { showT('Name, email and bio are required', false); return; }
+    setSaving(true);
     try {
-      const body = {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        expertise: formData.expertise.split(',').map(e => e.trim()).filter(e => e),
-        bio: formData.bio,
-        photo: formData.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name)}&size=200`,
-      };
-      if (editingId) {
-        await fetch(`${API}/mentors/${editingId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
-          body: JSON.stringify(body),
-        });
-        logAuditAction('UPDATED', 'Mentor', `${formData.name}`);
+      const payload = { ...form, expertise: form.expertise.split(',').map((s:string)=>s.trim()).filter(Boolean) };
+      if (editId) {
+        await adminAPI.updateMentor(editId, payload);
+        await adminAPI.logAudit('UPDATE', 'Mentor', form.name);
+        showT('Mentor updated');
       } else {
-        await fetch(`${API}/mentors`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
-          body: JSON.stringify(body),
-        });
-        logAuditAction('CREATED', 'Mentor', `${formData.name}`);
+        await adminAPI.createMentor(payload);
+        await adminAPI.logAudit('CREATE', 'Mentor', form.name);
+        showT('Mentor created');
       }
-      resetForm();
-      await loadMentors();
-    } catch (err: any) {
-      alert('Failed to save mentor: ' + (err.message || 'Unknown error'));
-    }
+      setModal(false);
+      load();
+    } catch (e: any) { showT(e.message || 'Save failed', false); }
+    finally { setSaving(false); }
   };
 
-  const handleEdit = (mentor: Mentor) => {
-    setEditingId(mentor.id);
-    setFormData({
-      name: mentor.name,
-      email: mentor.email,
-      phone: mentor.phone || '',
-      expertise: mentor.expertise.join(', '),
-      bio: mentor.bio,
-      photo: mentor.photo
-    });
-    setShowModal(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    const mentor = mentors.find(m => m.id === id);
-    if (!confirm(`Are you sure you want to delete ${mentor?.name}? This cannot be undone.`)) return;
+  const handleDelete = async (m: any) => {
+    if (!confirm(`Remove ${m.name}? They will no longer appear as a mentor.`)) return;
     try {
-      await fetch(`${API}/mentors/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      logAuditAction('DELETED', 'Mentor', mentor?.name || id);
-      await loadMentors();
-    } catch (err: any) {
-      alert('Failed to delete: ' + (err.message || 'Unknown error'));
-    }
+      await adminAPI.deleteMentor(m.id||m.expert_id);
+      await adminAPI.logAudit('DELETE', 'Mentor', m.name);
+      setMentors(prev => prev.filter(x => (x.id||x.expert_id) !== (m.id||m.expert_id)));
+      showT('Mentor removed');
+    } catch { showT('Failed to remove mentor', false); }
   };
 
-  const resetForm = () => {
-    setShowModal(false);
-    setEditingId(null);
-    setFormData({ name: '', email: '', phone: '', expertise: '', bio: '', photo: '' });
-  };
-
-  const filteredMentors = mentors.filter(m =>
-    m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    m.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    m.expertise.some(e => e.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filtered = mentors.filter(m => {
+    const q = search.toLowerCase();
+    return !q || (m.name||'').toLowerCase().includes(q) || (m.email||'').toLowerCase().includes(q);
+  });
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
-      {/* Header */}
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+      {toast && <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-4 rounded-2xl shadow-xl text-sm font-semibold ${toast.ok ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-[#E83E2D]/10 border border-[#E83E2D]/30 text-[#E83E2D]'}`}>{toast.msg}</div>}
+
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Mentor Management</h1>
-          <p className="text-gray-600 mt-1">Add, edit, and manage mentors in the system</p>
+          <div className="h-1 w-10 bg-[#E83E2D] rounded-full mb-3" />
+          <h1 className="text-3xl font-bold text-[#1A1F5E]">Mentor Management</h1>
+          <p className="text-[#8C8C8C] mt-1">{mentors.length} mentors registered</p>
         </div>
-        <button
-          onClick={() => { resetForm(); setShowModal(true); }}
-          className="flex items-center gap-2 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
-        >
-          <Plus className="w-5 h-5" />
-          Add New Mentor
-        </button>
+        <div className="flex gap-3">
+          <button onClick={load} className="flex items-center gap-2 px-4 py-2.5 border-2 border-[#1A1F5E] text-[#1A1F5E] font-semibold rounded-xl hover:bg-[#1A1F5E] hover:text-white transition-all duration-200"><RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin':''}`} />Refresh</button>
+          <button onClick={openCreate} className="flex items-center gap-2 px-5 py-2.5 bg-[#1A1F5E] text-white font-semibold rounded-xl hover:opacity-90 hover:scale-105 active:scale-95 transition-all shadow-lg"><Plus className="w-4 h-4" />Add Mentor</button>
+        </div>
       </div>
 
-      {error && (
-        <div className="flex items-center gap-3 bg-[#E83E2D]/10 border border-[#E83E2D]/30 text-[#E83E2D] px-5 py-4 rounded-2xl">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
-          <span>{error}</span>
-          <button onClick={loadMentors} className="ml-auto underline font-semibold">Retry</button>
-        </div>
-      )}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8C8C8C]" />
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search mentors…" className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-[#E5E7EB] text-sm focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all" />
+      </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {[
-          { label: 'Total Mentors', value: loading ? '…' : mentors.length, icon: UserCog },
-          { label: 'Active Mentors', value: loading ? '…' : mentors.filter(m => m.status === 'active').length, icon: Award },
-          { label: 'Total Sessions', value: loading ? '…' : mentors.reduce((acc, m) => acc + m.sessionsCompleted, 0), icon: UserCog },
-          { label: 'Total Mentees', value: loading ? '…' : mentors.reduce((acc, m) => acc + m.totalMentees, 0), icon: Users },
-        ].map((stat, idx) => {
-          const Icon = stat.icon;
-          return (
-            <div key={idx} className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <div className="inline-flex p-3 rounded-lg bg-[#1A1F5E]/10 mb-3">
-                <Icon className="w-6 h-6 text-[#1A1F5E]" />
+      <div className="bg-white rounded-3xl shadow-xl border border-[#E5E7EB] overflow-hidden">
+        {loading ? <div className="p-12 text-center text-[#8C8C8C]"><RefreshCw className="w-8 h-8 mx-auto mb-2 animate-spin text-[#1A1F5E]" />Loading…</div> :
+        filtered.length === 0 ? <div className="p-12 text-center text-[#8C8C8C]"><UserCog className="w-12 h-12 mx-auto mb-3 text-[#E5E7EB]" /><p>{search ? 'No mentors match your search' : 'No mentors yet. Add one above.'}</p></div> :
+        <div className="divide-y divide-[#E5E7EB]">
+          {filtered.map(m => (
+            <div key={m.id||m.expert_id} className="p-5 hover:bg-[#F4F4F4]/50 transition-colors flex gap-4 items-start">
+              <img src={m.avatar_url||m.photo||`https://ui-avatars.com/api/?name=${encodeURIComponent(m.name||'M')}&background=1A1F5E&color=fff`} alt={m.name} className="w-12 h-12 rounded-2xl object-cover shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <h3 className="font-semibold text-[#333333]">{m.name}</h3>
+                  {m.can_mentor ? <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-[#1A1F5E]/10 text-[#1A1F5E]">Mentor</span> : null}
+                </div>
+                <p className="text-sm text-[#8C8C8C] mb-1">{m.email}</p>
+                {m.bio && <p className="text-sm text-[#333333] line-clamp-2 mb-2">{m.bio}</p>}
+                {(m.expertise || m.expertise_tags) && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {(Array.isArray(m.expertise) ? m.expertise : (m.expertise||m.expertise_tags||'').split(',').map((s:string)=>s.trim()).filter(Boolean)).map((tag:string,i:number) => (
+                      <span key={i} className="px-2 py-0.5 rounded-full text-xs font-semibold bg-[#1A1F5E]/10 text-[#1A1F5E]">{tag}</span>
+                    ))}
+                  </div>
+                )}
               </div>
-              <p className="text-gray-600 text-sm">{stat.label}</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">{stat.value}</p>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Search */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search mentors by name, email, or expertise..."
-            className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
-          />
-        </div>
-      </div>
-
-      {/* Mentors List */}
-      <div className="grid grid-cols-1 gap-6">
-        {filteredMentors.map(mentor => (
-          <div key={mentor.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-            <div className="flex gap-6">
-              <img
-                src={mentor.photo}
-                alt={mentor.name}
-                className="w-24 h-24 rounded-xl object-cover border-4 border-[#E5E7EB]"
-              />
-              
-              <div className="flex-1">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-1">{mentor.name}</h3>
-                    <div className="flex items-center gap-3 text-sm text-gray-600">
-                      <span className="flex items-center gap-1">
-                        <Mail className="w-4 h-4" />
-                        {mentor.email}
-                      </span>
-                      {mentor.phone && (
-                        <span className="flex items-center gap-1">
-                          <Phone className="w-4 h-4" />
-                          {mentor.phone}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEdit(mentor)}
-                      className="p-2 text-[#0072CE] hover:bg-[#1A1F5E]/5 rounded-lg transition-colors"
-                      title="Edit mentor"
-                    >
-                      <Edit className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(mentor.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Delete mentor"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-
-                <p className="text-gray-700 mb-3">{mentor.bio}</p>
-
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {mentor.expertise.map((skill, idx) => (
-                    <span
-                      key={idx}
-                      className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] rounded-full text-sm font-medium"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-6 text-sm">
-                  <span className="flex items-center gap-1 text-gray-600">
-                    <Users className="w-4 h-4" />
-                    <strong>{mentor.totalMentees}</strong> mentees
-                  </span>
-                  <span className="flex items-center gap-1 text-gray-600">
-                    <UserCog className="w-4 h-4" />
-                    <strong>{mentor.sessionsCompleted}</strong> sessions
-                  </span>
-                  <span className="flex items-center gap-1 text-gray-600">
-                    <Award className="w-4 h-4 text-yellow-500" />
-                    <strong>{mentor.rating}</strong> rating
-                  </span>
-                  <span className={`ml-auto px-3 py-1 rounded-full text-xs font-bold ${
-                    mentor.status === 'active' 
-                      ? 'bg-green-100 text-green-700' 
-                      : 'bg-gray-100 text-gray-700'
-                  }`}>
-                    {mentor.status.toUpperCase()}
-                  </span>
-                </div>
+              <div className="flex gap-2 shrink-0">
+                <button onClick={()=>openEdit(m)} className="p-2 rounded-xl text-[#0072CE] hover:bg-[#0072CE]/10 transition-colors"><Edit className="w-4 h-4" /></button>
+                <button onClick={()=>handleDelete(m)} className="p-2 rounded-xl text-[#E83E2D] hover:bg-[#E83E2D]/10 transition-colors"><Trash2 className="w-4 h-4" /></button>
               </div>
             </div>
-          </div>
-        ))}
-
-        {filteredMentors.length === 0 && (
-          <div className="text-center py-16 bg-white rounded-xl border-2 border-dashed border-gray-300">
-            <UserCog className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 text-lg">
-              {searchTerm ? 'No mentors found matching your search' : 'No mentors yet. Click "Add New Mentor" to get started!'}
-            </p>
-          </div>
-        )}
+          ))}
+        </div>}
       </div>
 
-      {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-gray-900">
-                {editingId ? 'Edit Mentor' : 'Add New Mentor'}
-              </h3>
-              <button onClick={resetForm} className="text-gray-500 hover:text-gray-700">
-                <X className="w-6 h-6" />
-              </button>
+              <h3 className="text-2xl font-bold text-[#1A1F5E]">{editId ? 'Edit' : 'Add'} Mentor</h3>
+              <button onClick={()=>setModal(false)} className="p-2 rounded-xl hover:bg-[#F4F4F4] transition-colors"><X className="w-5 h-5" /></button>
             </div>
-
-            <div className="grid grid-cols-2 gap-6">
-              <div className="col-span-2">
-                <label className="block text-sm font-bold text-gray-700 mb-2">Full Name *</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
-                  placeholder="Dr. Emily Rodriguez"
-                />
-              </div>
-
+            <div className="space-y-4">
+              {[{label:'Full Name *',key:'name',type:'text'},{label:'Email *',key:'email',type:'email'},{label:'Photo URL',key:'photo',type:'url'}].map(f => (
+                <div key={f.key}>
+                  <label className="block text-sm font-semibold text-[#333333] mb-1.5">{f.label}</label>
+                  <input type={f.type} value={(form as any)[f.key]} onChange={e=>setForm(p=>({...p,[f.key]:e.target.value}))} className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all" />
+                </div>
+              ))}
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Email *</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
-                  placeholder="email@deiafrica.com"
-                />
+                <label className="block text-sm font-semibold text-[#333333] mb-1.5">Bio *</label>
+                <textarea rows={3} value={form.bio} onChange={e=>setForm(p=>({...p,bio:e.target.value}))} className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all resize-none" />
               </div>
-
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Phone</label>
-                <input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
-                  placeholder="+27 11 555 0101"
-                />
+                <label className="block text-sm font-semibold text-[#333333] mb-1.5">Expertise (comma-separated)</label>
+                <input type="text" value={form.expertise} onChange={e=>setForm(p=>({...p,expertise:e.target.value}))} placeholder="Leadership, Finance, DEI…" className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all" />
               </div>
-
-              <div className="col-span-2">
-                <label className="block text-sm font-bold text-gray-700 mb-2">Photo URL</label>
-                <input
-                  type="url"
-                  value={formData.photo}
-                  onChange={(e) => setFormData({ ...formData, photo: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
-                  placeholder="https://example.com/photo.jpg (optional)"
-                />
+              <div className="flex gap-3 pt-2">
+                <button onClick={()=>setModal(false)} className="flex-1 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] font-semibold hover:bg-[#F4F4F4] transition-all">Cancel</button>
+                <button onClick={handleSave} disabled={saving} className="flex-1 py-3 rounded-2xl bg-[#1A1F5E] text-white font-semibold hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+                  {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}{saving ? 'Saving…' : 'Save'}
+                </button>
               </div>
-
-              <div className="col-span-2">
-                <label className="block text-sm font-bold text-gray-700 mb-2">Expertise (comma-separated)</label>
-                <input
-                  type="text"
-                  value={formData.expertise}
-                  onChange={(e) => setFormData({ ...formData, expertise: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
-                  placeholder="Leadership, Strategy, Career Development"
-                />
-              </div>
-
-              <div className="col-span-2">
-                <label className="block text-sm font-bold text-gray-700 mb-2">Bio *</label>
-                <textarea
-                  value={formData.bio}
-                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
-                  rows={4}
-                  placeholder="Brief professional background and expertise..."
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-4 mt-6">
-              <button
-                onClick={resetForm}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-bold transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmit}
-                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white py-3 rounded-lg font-bold shadow-lg transition-all"
-              >
-                <Save className="w-5 h-5" />
-                {editingId ? 'Update Mentor' : 'Add Mentor'}
-              </button>
             </div>
           </div>
         </div>
@@ -421,4 +154,3 @@ const AdminMentors: React.FC = () => {
 };
 
 export default AdminMentors;
-

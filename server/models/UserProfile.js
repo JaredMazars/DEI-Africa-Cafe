@@ -69,13 +69,19 @@ class UserProfile {
                     `SELECT id FROM experts WHERE user_id = '${userId}'`
                 );
                 if (existingExpert.recordset.length === 0) {
+                    const expertTitle   = UserProfile.sq(profileData.title    || profileData.experience || 'Mentor');
+                    const expertCompany = UserProfile.sq(profileData.company  || 'Forvis Mazars');
+                    const expertCountry = UserProfile.sq(profileData.country  || (profileData.location?.split(',').pop()?.trim()) || 'South Africa');
                     await executeQuery(`
-                        INSERT INTO experts (user_id, name, bio, location, is_available, created_at, updated_at)
+                        INSERT INTO experts (user_id, name, title, company, bio, location, country, is_available, created_at, updated_at)
                         VALUES (
                             '${userId}',
                             ${UserProfile.sq(profileData.name)},
-                            ${UserProfile.sq(profileData.bio)},
-                            ${UserProfile.sq(profileData.location)},
+                            ${expertTitle},
+                            ${expertCompany},
+                            ${UserProfile.sq(profileData.bio || '')},
+                            ${UserProfile.sq(profileData.location || '')},
+                            ${expertCountry},
                             1, GETDATE(), GETDATE()
                         )
                     `);

@@ -29,7 +29,7 @@ const ResetPassword: React.FC = () => {
 
   const passwordStrength = calculatePasswordStrength(password);
   const strengthLabels = ['Weak', 'Fair', 'Good', 'Strong', 'Very Strong'];
-  const strengthColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-[#F4F4F4]0', 'bg-green-500'];
+  const strengthColors = ['bg-red-500', 'bg-blue-500', 'bg-yellow-500', 'bg-[#F4F4F4]0', 'bg-green-500'];
 
   useEffect(() => {
     if (token) {
@@ -140,15 +140,15 @@ const ResetPassword: React.FC = () => {
               className="h-10 sm:h-14 lg:h-16 mx-auto mb-4 object-contain"
             />
           </div>
-          <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-6">
+          <div className="bg-white -2xl shadow-xl p-8 text-center">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-red-100 -full mb-6">
               <XCircle className="w-10 h-10 text-red-600" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Invalid Reset Link</h2>
             <p className="text-gray-600 mb-6">{error}</p>
             <Link
               to="/forgot-password"
-              className="inline-block w-full px-6 py-3 bg-[#0072CE] text-white rounded-lg hover:bg-[#1A1F5E] transition-colors font-medium mb-4"
+              className="inline-block w-full px-6 py-3 bg-[#0072CE] text-white -lg hover:bg-[#1A1F5E] transition-colors font-medium mb-4"
             >
               Request New Reset Link
             </Link>
@@ -180,7 +180,7 @@ const ResetPassword: React.FC = () => {
         </div>
 
         {/* Form Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white -2xl shadow-xl p-8">
           {!success ? (
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* New Password Input */}
@@ -197,7 +197,7 @@ const ResetPassword: React.FC = () => {
                     id="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                    className="block w-full pl-10 pr-10 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     placeholder="••••••••"
                     required
                   />
@@ -219,7 +219,7 @@ const ResetPassword: React.FC = () => {
                   <div className="mt-2">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs text-gray-600">Password Strength:</span>
-                      <span className={`text-xs font-medium ${passwordStrength >= 3 ? 'text-green-600' : 'text-orange-600'}`}>
+                      <span className={`text-xs font-medium ${passwordStrength >= 3 ? 'text-green-600' : 'text-blue-600'}`}>
                         {strengthLabels[passwordStrength]}
                       </span>
                     </div>
@@ -227,7 +227,7 @@ const ResetPassword: React.FC = () => {
                       {[...Array(5)].map((_, i) => (
                         <div
                           key={i}
-                          className={`h-1 flex-1 rounded-full ${
+                          className={`h-1 flex-1 -full ${
                             i < passwordStrength ? strengthColors[passwordStrength] : 'bg-gray-200'
                           }`}
                         />
@@ -255,7 +255,7 @@ const ResetPassword: React.FC = () => {
                     id="confirmPassword"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                    className="block w-full pl-10 pr-10 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     placeholder="••••••••"
                     required
                   />
@@ -278,7 +278,7 @@ const ResetPassword: React.FC = () => {
 
               {/* Error Message */}
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="bg-red-50 border border-red-200 -lg p-4">
                   <p className="text-sm text-red-800">{error}</p>
                 </div>
               )}
@@ -287,7 +287,7 @@ const ResetPassword: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading || password !== confirmPassword || passwordStrength < 2}
-                className="w-full flex items-center justify-center px-6 py-3 bg-[#0072CE] text-white rounded-lg hover:bg-[#1A1F5E] transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center px-6 py-3 bg-[#0072CE] text-white -lg hover:bg-[#1A1F5E] transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
@@ -313,21 +313,21 @@ const ResetPassword: React.FC = () => {
           ) : (
             /* Success State */
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 -full mb-6">
                 <CheckCircle className="w-10 h-10 text-green-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Password Reset!</h2>
               <p className="text-gray-600 mb-6">
                 Your password has been successfully reset. You can now log in with your new password.
               </p>
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <div className="bg-green-50 border border-green-200 -lg p-4 mb-6">
                 <p className="text-sm text-green-800">
                   Redirecting you to login page in 3 seconds...
                 </p>
               </div>
               <Link
                 to="/login"
-                className="inline-block w-full px-6 py-3 bg-[#0072CE] text-white rounded-lg hover:bg-[#1A1F5E] transition-colors font-medium"
+                className="inline-block w-full px-6 py-3 bg-[#0072CE] text-white -lg hover:bg-[#1A1F5E] transition-colors font-medium"
               >
                 Go to Login Now
               </Link>

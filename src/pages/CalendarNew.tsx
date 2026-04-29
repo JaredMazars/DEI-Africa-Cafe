@@ -5,7 +5,7 @@ export default function CalendarPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#1A1F5E] via-[#0072CE] to-[#1A1F5E] text-white">
+      <div className="bg-[#1A1F5E] text-white">
         <div className="max-w-[1920px] mx-auto px-12 sm:px-16 lg:px-20 py-12">
           <div className="text-center">
             <h1 className="text-4xl text-white font-bold mb-3">Calendar & Scheduling</h1>
@@ -19,7 +19,7 @@ export default function CalendarPage() {
       {/* Main Content */}
       <div className="max-w-5xl mx-auto px-6 py-16">
         {/* Info Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-12 mb-12 border border-gray-200">
+        <div className="bg-white -2xl shadow-xl p-12 mb-12 border border-gray-200">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Schedule via Microsoft Teams</h2>
             <p className="text-lg text-gray-600">
@@ -29,9 +29,9 @@ export default function CalendarPage() {
 
           {/* Features Grid */}
           <div className="grid md:grid-cols-2 gap-8 mb-12">
-            <div className="bg-[#F4F4F4] border-2 border-[#0072CE]/30 rounded-xl p-6">
+            <div className="bg-[#F4F4F4] border-2 border-[#0072CE]/30 -xl p-6">
               <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-[#0072CE] rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 bg-[#0072CE] -lg flex items-center justify-center flex-shrink-0">
                   <Calendar className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -41,9 +41,9 @@ export default function CalendarPage() {
               </div>
             </div>
 
-            <div className="bg-[#F4F4F4] border-2 border-[#0072CE]/30 rounded-xl p-6">
+            <div className="bg-[#F4F4F4] border-2 border-[#0072CE]/30 -xl p-6">
               <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-[#0072CE] rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 bg-[#0072CE] -lg flex items-center justify-center flex-shrink-0">
                   <Video className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -53,9 +53,9 @@ export default function CalendarPage() {
               </div>
             </div>
 
-            <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6">
+            <div className="bg-[#F4F4F4] border-2 border-[#E5E7EB] -xl p-6">
               <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 bg-[#1A1F5E] -lg flex items-center justify-center flex-shrink-0">
                   <Users className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -65,9 +65,9 @@ export default function CalendarPage() {
               </div>
             </div>
 
-            <div className="bg-orange-50 border-2 border-orange-200 rounded-xl p-6">
+            <div className="bg-[#F4F4F4] border-2 border-[#E5E7EB] -xl p-6">
               <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-orange-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 bg-[#1A1F5E] -lg flex items-center justify-center flex-shrink-0">
                   <Clock className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -79,7 +79,7 @@ export default function CalendarPage() {
           </div>
 
           {/* What You Can Do Section */}
-          <div className="bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] border-2 border-[#0072CE]/30 rounded-xl p-8 mb-8">
+          <div className="bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] border-2 border-[#0072CE]/30 -xl p-8 mb-8">
             <h3 className="text-xl font-semibold text-gray-900 mb-6 text-center">What You Can Do in Teams Calendar</h3>
             <div className="grid md:grid-cols-2 gap-4">
               {[
@@ -105,7 +105,7 @@ export default function CalendarPage() {
               href="https://teams.microsoft.com/l/meeting/new"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center space-x-3 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white px-10 py-5 rounded-xl font-bold text-xl shadow-2xl hover:shadow-3xl transition-all transform hover:scale-105"
+              className="inline-flex items-center space-x-3 bg-[#1A1F5E] hover:opacity-90 text-white px-10 py-5 -xl font-bold text-xl shadow-2xl hover:shadow-3xl transition-all transform hover:scale-105"
             >
               <Plus className="w-8 h-8" />
               <span>Schedule New Meeting</span>
@@ -117,7 +117,7 @@ export default function CalendarPage() {
                 href="https://teams.microsoft.com/l/calendar"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center space-x-2 bg-white border-2 border-[#0072CE] text-[#0072CE] hover:bg-[#1A1F5E]/5 px-6 py-3 rounded-lg font-semibold transition-colors"
+                className="inline-flex items-center space-x-2 bg-white border-2 border-[#0072CE] text-[#0072CE] hover:bg-[#1A1F5E]/5 px-6 py-3 -lg font-semibold transition-colors"
               >
                 <Calendar className="w-5 h-5" />
                 <span>View Calendar</span>
@@ -127,7 +127,7 @@ export default function CalendarPage() {
                 href="https://teams.microsoft.com/l/meeting/join"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center space-x-2 bg-white border-2 border-green-600 text-green-600 hover:bg-green-50 px-6 py-3 rounded-lg font-semibold transition-colors"
+                className="inline-flex items-center space-x-2 bg-white border-2 border-green-600 text-green-600 hover:bg-green-50 px-6 py-3 -lg font-semibold transition-colors"
               >
                 <Video className="w-5 h-5" />
                 <span>Join Meeting</span>
@@ -141,7 +141,7 @@ export default function CalendarPage() {
         </div>
 
         {/* Help Section */}
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-8">
+        <div className="bg-gray-50 border border-gray-200 -xl p-8">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Need Help?</h3>
           <p className="text-gray-600 mb-4">
             If you're having trouble accessing Teams Calendar or need assistance scheduling meetings, please contact your IT administrator or visit the Microsoft Teams help center.

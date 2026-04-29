@@ -193,7 +193,7 @@ const AdminContentManager: React.FC = () => {
           
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] bg-clip-text text-transparent mb-2">
+              <h1 className="text-4xl font-bold bg-[#1A1F5E] bg-clip-text text-transparent mb-2">
                 Content Library
               </h1>
               <p className="text-gray-600">
@@ -204,7 +204,7 @@ const AdminContentManager: React.FC = () => {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 mb-6">
+        <div className="bg-white -xl shadow-lg border border-gray-200 mb-6">
           <div className="border-b border-gray-200">
             <div className="flex gap-4 px-6">
               {[
@@ -241,7 +241,7 @@ const AdminContentManager: React.FC = () => {
                   </div>
                   <button
                     onClick={() => setShowAddVideo(true)}
-                    className="flex items-center gap-2 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all"
+                    className="flex items-center gap-2 bg-[#1A1F5E] hover:opacity-90 text-white px-6 py-3 -xl font-bold shadow-lg transition-all"
                   >
                     <Plus className="w-5 h-5" />
                     Add Video
@@ -250,7 +250,7 @@ const AdminContentManager: React.FC = () => {
 
                 {/* Add Video Form */}
                 {showAddVideo && (
-                  <div className="bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] rounded-2xl p-6 border-2 border-[#0072CE]/30">
+                  <div className="bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] -2xl p-6 border-2 border-[#0072CE]/30">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-xl font-bold text-gray-900">Add YouTube Video</h3>
                       <button
@@ -269,7 +269,7 @@ const AdminContentManager: React.FC = () => {
                             type="text"
                             value={newVideo.title}
                             onChange={(e) => setNewVideo({ ...newVideo, title: e.target.value })}
-                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                            className="w-full px-4 py-3 border-2 border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                             placeholder="e.g., Introduction to Leadership"
                           />
                         </div>
@@ -279,7 +279,7 @@ const AdminContentManager: React.FC = () => {
                           <textarea
                             value={newVideo.description}
                             onChange={(e) => setNewVideo({ ...newVideo, description: e.target.value })}
-                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                            className="w-full px-4 py-3 border-2 border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                             rows={3}
                             placeholder="What will viewers learn from this video?"
                           />
@@ -291,7 +291,7 @@ const AdminContentManager: React.FC = () => {
                             type="url"
                             value={newVideo.youtubeUrl}
                             onChange={(e) => setNewVideo({ ...newVideo, youtubeUrl: e.target.value })}
-                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                            className="w-full px-4 py-3 border-2 border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                             placeholder="https://www.youtube.com/watch?v=..."
                           />
                         </div>
@@ -301,7 +301,7 @@ const AdminContentManager: React.FC = () => {
                           <select
                             value={newVideo.category}
                             onChange={(e) => setNewVideo({ ...newVideo, category: e.target.value })}
-                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+                            className="w-full px-4 py-3 border-2 border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
                           >
                             <option value="Leadership">Leadership</option>
                             <option value="Technical">Technical</option>
@@ -317,7 +317,7 @@ const AdminContentManager: React.FC = () => {
                             type="text"
                             value={newVideo.duration}
                             onChange={(e) => setNewVideo({ ...newVideo, duration: e.target.value })}
-                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+                            className="w-full px-4 py-3 border-2 border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
                             placeholder="e.g., 28:17"
                           />
                         </div>
@@ -326,13 +326,13 @@ const AdminContentManager: React.FC = () => {
                       <div className="flex gap-3 justify-end">
                         <button
                           onClick={() => setShowAddVideo(false)}
-                          className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-bold transition-colors"
+                          className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 -lg font-bold transition-colors"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={handleAddVideo}
-                          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white rounded-lg font-bold shadow-lg"
+                          className="flex items-center gap-2 px-6 py-3 bg-[#1A1F5E] hover:opacity-90 text-white -lg font-bold shadow-lg"
                         >
                           <Save className="w-5 h-5" />
                           Add Video
@@ -345,7 +345,7 @@ const AdminContentManager: React.FC = () => {
                 {/* Videos Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {videos.map(video => (
-                    <div key={video.id} className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow">
+                    <div key={video.id} className="bg-white -xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow">
                       <div className="relative">
                         <img 
                           src={`https://img.youtube.com/vi/${video.videoId}/mqdefault.jpg`}
@@ -357,13 +357,13 @@ const AdminContentManager: React.FC = () => {
                             href={video.youtubeUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="bg-red-600 hover:bg-red-700 text-white p-4 rounded-full"
+                            className="bg-red-600 hover:bg-red-700 text-white p-4 -full"
                           >
                             <Video className="w-8 h-8" />
                           </a>
                         </div>
                         {video.duration && (
-                          <span className="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white px-2 py-1 rounded text-xs font-bold">
+                          <span className="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white px-2 py-1  text-xs font-bold">
                             {video.duration}
                           </span>
                         )}
@@ -381,7 +381,7 @@ const AdminContentManager: React.FC = () => {
                         </div>
                         <p className="text-sm text-gray-600 line-clamp-2 mb-3">{video.description}</p>
                         <div className="flex items-center justify-between text-xs text-gray-500">
-                          <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-2 py-1 rounded font-medium">
+                          <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-2 py-1  font-medium">
                             {video.category}
                           </span>
                           <span>{video.uploadedDate}</span>
@@ -392,7 +392,7 @@ const AdminContentManager: React.FC = () => {
                 </div>
 
                 {videos.length === 0 && (
-                  <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                  <div className="text-center py-16 bg-gray-50 -xl border-2 border-dashed border-gray-300">
                     <Video className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-600">No videos yet. Click "Add Video" to get started.</p>
                   </div>
@@ -410,7 +410,7 @@ const AdminContentManager: React.FC = () => {
                   </div>
                   <button
                     onClick={() => setShowAddArticle(true)}
-                    className="flex items-center gap-2 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all"
+                    className="flex items-center gap-2 bg-[#1A1F5E] hover:opacity-90 text-white px-6 py-3 -xl font-bold shadow-lg transition-all"
                   >
                     <Plus className="w-5 h-5" />
                     Create Article
@@ -419,7 +419,7 @@ const AdminContentManager: React.FC = () => {
 
                 {/* Add/Edit Article Form */}
                 {showAddArticle && (
-                  <div className="bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] rounded-2xl p-6 border-2 border-[#0072CE]/30">
+                  <div className="bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] -2xl p-6 border-2 border-[#0072CE]/30">
                     <div className="flex items-center justify-between mb-6">
                       <h3 className="text-xl font-bold text-gray-900">
                         {editingArticle ? 'Edit Article' : 'Create New Article'}
@@ -444,7 +444,7 @@ const AdminContentManager: React.FC = () => {
                             type="text"
                             value={newArticle.title}
                             onChange={(e) => setNewArticle({ ...newArticle, title: e.target.value })}
-                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 text-xl font-bold"
+                            className="w-full px-4 py-3 border-2 border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 text-xl font-bold"
                             placeholder="e.g., The Future of Workplace Diversity"
                           />
                         </div>
@@ -455,7 +455,7 @@ const AdminContentManager: React.FC = () => {
                             type="text"
                             value={newArticle.subtitle}
                             onChange={(e) => setNewArticle({ ...newArticle, subtitle: e.target.value })}
-                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+                            className="w-full px-4 py-3 border-2 border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
                             placeholder="A brief subtitle or tagline"
                           />
                         </div>
@@ -466,7 +466,7 @@ const AdminContentManager: React.FC = () => {
                             type="text"
                             value={newArticle.author}
                             onChange={(e) => setNewArticle({ ...newArticle, author: e.target.value })}
-                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+                            className="w-full px-4 py-3 border-2 border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
                             placeholder="Author name"
                           />
                         </div>
@@ -476,7 +476,7 @@ const AdminContentManager: React.FC = () => {
                           <select
                             value={newArticle.category}
                             onChange={(e) => setNewArticle({ ...newArticle, category: e.target.value })}
-                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+                            className="w-full px-4 py-3 border-2 border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
                           >
                             <option value="Leadership">Leadership</option>
                             <option value="Technical">Technical</option>
@@ -492,7 +492,7 @@ const AdminContentManager: React.FC = () => {
                             type="url"
                             value={newArticle.coverImage}
                             onChange={(e) => setNewArticle({ ...newArticle, coverImage: e.target.value })}
-                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+                            className="w-full px-4 py-3 border-2 border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
                             placeholder="https://..."
                           />
                         </div>
@@ -503,7 +503,7 @@ const AdminContentManager: React.FC = () => {
                             type="text"
                             value={newArticle.readTime}
                             onChange={(e) => setNewArticle({ ...newArticle, readTime: e.target.value })}
-                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+                            className="w-full px-4 py-3 border-2 border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
                             placeholder="e.g., 8 min"
                           />
                         </div>
@@ -513,7 +513,7 @@ const AdminContentManager: React.FC = () => {
                           <textarea
                             value={newArticle.content}
                             onChange={(e) => setNewArticle({ ...newArticle, content: e.target.value })}
-                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 font-serif"
+                            className="w-full px-4 py-3 border-2 border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 font-serif"
                             rows={12}
                             placeholder="Write your article content here... 
 
@@ -532,13 +532,13 @@ You can format the text with line breaks and spacing for better readability."
                             setEditingArticle(null);
                             setNewArticle({ title: '', subtitle: '', content: '', author: '', category: 'Leadership', coverImage: '', readTime: '' });
                           }}
-                          className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-bold transition-colors"
+                          className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 -lg font-bold transition-colors"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={handleSaveArticle}
-                          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white rounded-lg font-bold shadow-lg"
+                          className="flex items-center gap-2 px-6 py-3 bg-[#1A1F5E] hover:opacity-90 text-white -lg font-bold shadow-lg"
                         >
                           <Save className="w-5 h-5" />
                           {editingArticle ? 'Update Article' : 'Publish Article'}
@@ -551,7 +551,7 @@ You can format the text with line breaks and spacing for better readability."
                 {/* Articles Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {articles.map(article => (
-                    <div key={article.id} className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow">
+                    <div key={article.id} className="bg-white -xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow">
                       <img 
                         src={article.coverImage}
                         alt={article.title}
@@ -561,7 +561,7 @@ You can format the text with line breaks and spacing for better readability."
                       <div className="p-6">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
-                            <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-3 py-1 rounded-full text-xs font-bold">
+                            <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-3 py-1 -full text-xs font-bold">
                               {article.category}
                             </span>
                             <h3 className="text-xl font-bold text-gray-900 mt-2 mb-1">{article.title}</h3>
@@ -581,20 +581,20 @@ You can format the text with line breaks and spacing for better readability."
                         <div className="flex gap-2">
                           <button
                             onClick={() => navigate(`/article/${article.id}`)}
-                            className="flex-1 flex items-center justify-center gap-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                            className="flex-1 flex items-center justify-center gap-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-4 py-2 -lg font-medium transition-colors"
                           >
                             <Eye className="w-4 h-4" />
                             View
                           </button>
                           <button
                             onClick={() => handleEditArticle(article)}
-                            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                            className="p-2 text-gray-600 hover:bg-gray-100 -lg transition-colors"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDeleteArticle(article.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-2 text-red-600 hover:bg-red-50 -lg transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -605,7 +605,7 @@ You can format the text with line breaks and spacing for better readability."
                 </div>
 
                 {articles.length === 0 && (
-                  <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                  <div className="text-center py-16 bg-gray-50 -xl border-2 border-dashed border-gray-300">
                     <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-600">No articles yet. Click "Create Article" to start writing.</p>
                   </div>

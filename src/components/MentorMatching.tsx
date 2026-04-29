@@ -150,7 +150,7 @@ const MentorMatching: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 py-8">
           <div className="flex items-center justify-between">
             <div>
-              <div className="h-1 w-10 bg-[#E83E2D] rounded-full mb-3" />
+              <div className="h-1 w-10 bg-[#E83E2D] -full mb-3" />
               <h1 className="text-3xl font-bold">
                 {isMentee ? 'Find Your Mentor' : 'Connect with Mentees'}
               </h1>
@@ -169,7 +169,7 @@ const MentorMatching: React.FC = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowFilters(v => !v)}
-              className="flex items-center gap-2 px-5 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full text-white font-semibold transition-all duration-200"
+              className="flex items-center gap-2 px-5 py-3 bg-white/10 hover:bg-white/20 border border-white/20 -full text-white font-semibold transition-all duration-200"
             >
               <Filter className="w-4 h-4" />
               Filters
@@ -184,7 +184,7 @@ const MentorMatching: React.FC = () => {
               placeholder={`Search ${viewLabel}s by name, expertise or location…`}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 rounded-2xl border-2 border-transparent bg-white text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#0072CE] focus:ring-2 focus:ring-[#0072CE]/20 transition-all duration-200"
+              className="w-full pl-12 pr-4 py-3 -2xl border-2 border-transparent bg-white text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#0072CE] focus:ring-2 focus:ring-[#0072CE]/20 transition-all duration-200"
             />
           </div>
 
@@ -195,7 +195,7 @@ const MentorMatching: React.FC = () => {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-4 bg-white/10 border border-white/20 rounded-2xl p-5 grid grid-cols-1 md:grid-cols-2 gap-5 overflow-hidden"
+                className="mt-4 bg-white/10 border border-white/20 -2xl p-5 grid grid-cols-1 md:grid-cols-2 gap-5 overflow-hidden"
               >
                 <div>
                   <p className="text-sm font-semibold text-white mb-2">Expertise area</p>
@@ -208,7 +208,7 @@ const MentorMatching: React.FC = () => {
                             prev.includes(e) ? prev.filter(x => x !== e) : [...prev, e]
                           )
                         }
-                        className={`px-3 py-1 rounded-full text-xs font-semibold transition-all duration-200 ${
+                        className={`px-3 py-1 -full text-xs font-semibold transition-all duration-200 ${
                           selectedExpertise.includes(e)
                             ? 'bg-[#E83E2D] text-white'
                             : 'bg-white/20 text-white hover:bg-white/30'
@@ -224,7 +224,7 @@ const MentorMatching: React.FC = () => {
                   <select
                     value={selectedLocation}
                     onChange={e => setSelectedLocation(e.target.value)}
-                    className="w-full px-4 py-3 rounded-2xl border-2 border-transparent bg-white text-[#333333] focus:outline-none focus:border-[#0072CE] transition-all duration-200"
+                    className="w-full px-4 py-3 -2xl border-2 border-transparent bg-white text-[#333333] focus:outline-none focus:border-[#0072CE] transition-all duration-200"
                   >
                     <option value="">All Locations</option>
                     {allLocations.map(l => (
@@ -270,14 +270,14 @@ const MentorMatching: React.FC = () => {
         {/* Loading */}
         {loading && (
           <div className="text-center py-16">
-            <div className="w-10 h-10 border-4 border-[#1A1F5E] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <div className="w-10 h-10 border-4 border-[#1A1F5E] border-t-transparent -full animate-spin mx-auto mb-4" />
             <p className="text-[#8C8C8C]">Finding your best matches…</p>
           </div>
         )}
 
         {/* Error */}
         {error && !loading && (
-          <div className="flex items-center gap-3 bg-[#E83E2D]/10 border border-[#E83E2D]/30 text-[#E83E2D] px-5 py-4 rounded-2xl mb-6">
+          <div className="flex items-center gap-3 bg-[#E83E2D]/10 border border-[#E83E2D]/30 text-[#E83E2D] px-5 py-4 -2xl mb-6">
             <XCircle className="w-5 h-5 flex-shrink-0" />
             {error}
           </div>
@@ -298,32 +298,40 @@ const MentorMatching: React.FC = () => {
                 whileHover={{ scale: 1.02, y: -4 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                className={`bg-white rounded-3xl shadow-xl border border-[#E5E7EB] overflow-hidden hover:shadow-2xl transition-shadow duration-300 ${
+                className={`bg-white -3xl shadow-xl border border-[#E5E7EB] overflow-hidden hover:shadow-2xl transition-shadow duration-300 ${
                   person.atCapacity ? 'opacity-70' : ''
                 }`}
               >
-                <div className="h-1 w-full bg-gradient-to-r from-[#1A1F5E] to-[#0072CE]" />
+                <div className="h-1 w-full bg-[#1A1F5E]" />
                 <div className="p-6">
 
                   {/* Badges */}
                   <div className="flex items-center justify-between mb-3">
-                    {person.matchScore > 0 ? (
-                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#1A1F5E]/10 text-[#1A1F5E]">
-                        {person.matchScore} area{person.matchScore !== 1 ? 's' : ''} matched
+                    {person.matchScore >= 70 ? (
+                      <span className="px-3 py-1 -full text-xs font-semibold bg-[#1A1F5E] text-white">
+                        {person.matchScore}% match
+                      </span>
+                    ) : person.matchScore >= 40 ? (
+                      <span className="px-3 py-1 -full text-xs font-semibold bg-[#1A1F5E]/10 text-[#1A1F5E]">
+                        {person.matchScore}% match
+                      </span>
+                    ) : person.matchScore > 0 ? (
+                      <span className="px-3 py-1 -full text-xs font-semibold bg-[#8C8C8C]/10 text-[#8C8C8C]">
+                        {person.matchScore}% match
                       </span>
                     ) : (
-                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#8C8C8C]/10 text-[#8C8C8C]">
+                      <span className="px-3 py-1 -full text-xs font-semibold bg-[#8C8C8C]/10 text-[#8C8C8C]">
                         Explore profile
                       </span>
                     )}
 
                     {isMentee &&
                       (person.atCapacity ? (
-                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#E83E2D]/10 text-[#E83E2D]">
+                        <span className="px-3 py-1 -full text-xs font-semibold bg-[#E83E2D]/10 text-[#E83E2D]">
                           Full (3/3)
                         </span>
                       ) : (
-                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                        <span className="px-3 py-1 -full text-xs font-semibold bg-green-100 text-green-700">
                           {spotsLeft(person)} spot{spotsLeft(person) !== 1 ? 's' : ''} left
                         </span>
                       ))}
@@ -335,7 +343,7 @@ const MentorMatching: React.FC = () => {
                       <img
                         src={person.avatar}
                         alt={person.name}
-                        className="w-16 h-16 rounded-full object-cover border-2 border-[#E5E7EB]"
+                        className="w-16 h-16 -full object-cover border-2 border-[#E5E7EB]"
                       />
                       <div>
                         <h3 className="text-xl font-semibold text-[#333333]">{person.name}</h3>
@@ -350,7 +358,7 @@ const MentorMatching: React.FC = () => {
                     </div>
                     <button
                       onClick={() => handleLike(person.id)}
-                      className="p-2 rounded-full hover:bg-[#E83E2D]/10 transition-colors duration-200"
+                      className="p-2 -full hover:bg-[#E83E2D]/10 transition-colors duration-200"
                     >
                       <Heart
                         className={`w-5 h-5 ${
@@ -367,13 +375,13 @@ const MentorMatching: React.FC = () => {
                     {person.expertise.slice(0, 3).map((e, i) => (
                       <span
                         key={i}
-                        className="px-3 py-1 bg-[#F4F4F4] text-[#333333] text-xs font-medium rounded-full border border-[#E5E7EB]"
+                        className="px-3 py-1 bg-[#F4F4F4] text-[#333333] text-xs font-medium -full border border-[#E5E7EB]"
                       >
                         {e}
                       </span>
                     ))}
                     {person.expertise.length > 3 && (
-                      <span className="px-3 py-1 bg-[#F4F4F4] text-[#8C8C8C] text-xs rounded-full">
+                      <span className="px-3 py-1 bg-[#F4F4F4] text-[#8C8C8C] text-xs -full">
                         +{person.expertise.length - 3} more
                       </span>
                     )}
@@ -388,19 +396,19 @@ const MentorMatching: React.FC = () => {
                         setSelected(person);
                         setShowModal(true);
                       }}
-                      className="w-full bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white font-semibold py-3 rounded-full hover:opacity-90 transition-all duration-200 shadow-lg"
+                      className="w-full bg-[#1A1F5E] text-white font-semibold py-3 -full hover:opacity-90 transition-all duration-200 shadow-lg"
                     >
                       View Profile
                     </motion.button>
                     <div className="grid grid-cols-2 gap-3">
-                      <button className="flex items-center justify-center gap-1.5 border-2 border-[#1A1F5E] text-[#1A1F5E] font-semibold py-2.5 rounded-full hover:bg-[#1A1F5E] hover:text-white transition-all duration-200 text-sm">
+                      <button className="flex items-center justify-center gap-1.5 border-2 border-[#1A1F5E] text-[#1A1F5E] font-semibold py-2.5 -full hover:bg-[#1A1F5E] hover:text-white transition-all duration-200 text-sm">
                         <MessageCircle className="w-4 h-4" />
                         Message
                       </button>
                       <button
                         onClick={() => handleConnect(person)}
                         disabled={person.atCapacity || connectingId === person.id}
-                        className={`flex items-center justify-center gap-1.5 py-2.5 rounded-full font-semibold text-sm transition-all duration-200 ${
+                        className={`flex items-center justify-center gap-1.5 py-2.5 -full font-semibold text-sm transition-all duration-200 ${
                           person.atCapacity
                             ? 'bg-[#F4F4F4] text-[#8C8C8C] cursor-not-allowed border-2 border-[#E5E7EB]'
                             : connectSuccess === person.id
@@ -413,7 +421,7 @@ const MentorMatching: React.FC = () => {
                             <CheckCircle className="w-4 h-4" /> Sent
                           </>
                         ) : connectingId === person.id ? (
-                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          <div className="w-4 h-4 border-2 border-current border-t-transparent -full animate-spin" />
                         ) : (
                           <>
                             <Calendar className="w-4 h-4" /> Connect
@@ -431,7 +439,7 @@ const MentorMatching: React.FC = () => {
         {/* Empty state */}
         {!loading && !error && filtered.length === 0 && (
           <div className="text-center py-16">
-            <div className="w-20 h-20 bg-[#1A1F5E]/10 rounded-full mx-auto mb-4 flex items-center justify-center">
+            <div className="w-20 h-20 bg-[#1A1F5E]/10 -full mx-auto mb-4 flex items-center justify-center">
               <Users className="w-10 h-10 text-[#1A1F5E]" />
             </div>
             <h3 className="text-xl font-semibold text-[#1A1F5E] mb-2">No matches found</h3>
@@ -440,7 +448,7 @@ const MentorMatching: React.FC = () => {
             </p>
             <Link
               to="/preferences"
-              className="inline-block bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white font-semibold px-8 py-3 rounded-full hover:opacity-90 shadow-lg transition-all"
+              className="inline-block bg-[#1A1F5E] text-white font-semibold px-8 py-3 -full hover:opacity-90 shadow-lg transition-all"
             >
               Update Preferences
             </Link>
@@ -464,7 +472,7 @@ const MentorMatching: React.FC = () => {
                   {likedIds.length} saved
                 </span>
               </div>
-              <button className="flex items-center gap-1 bg-[#E83E2D] hover:opacity-90 text-white font-semibold px-5 py-2 rounded-full transition-all">
+              <button className="flex items-center gap-1 bg-[#E83E2D] hover:opacity-90 text-white font-semibold px-5 py-2 -full transition-all">
                 View saved <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -487,9 +495,9 @@ const MentorMatching: React.FC = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+              className="bg-white -3xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl"
             >
-              <div className="h-2 bg-gradient-to-r from-[#1A1F5E] to-[#0072CE] rounded-t-3xl" />
+              <div className="h-2 bg-[#1A1F5E] -t-3xl" />
               <div className="p-8">
 
                 {/* Modal header */}
@@ -498,7 +506,7 @@ const MentorMatching: React.FC = () => {
                     <img
                       src={selected.avatar}
                       alt={selected.name}
-                      className="w-20 h-20 rounded-full object-cover border-4 border-[#1A1F5E]/10"
+                      className="w-20 h-20 -full object-cover border-4 border-[#1A1F5E]/10"
                     />
                     <div>
                       <h2 className="text-2xl font-bold text-[#1A1F5E]">{selected.name}</h2>
@@ -513,7 +521,7 @@ const MentorMatching: React.FC = () => {
                   </div>
                   <button
                     onClick={() => setShowModal(false)}
-                    className="p-2 rounded-full hover:bg-[#1A1F5E]/10 text-[#8C8C8C] text-2xl leading-none transition-colors"
+                    className="p-2 -full hover:bg-[#1A1F5E]/10 text-[#8C8C8C] text-2xl leading-none transition-colors"
                   >
                     ×
                   </button>
@@ -521,19 +529,32 @@ const MentorMatching: React.FC = () => {
 
                 {/* Match score */}
                 {selected.matchScore > 0 && (
-                  <div className="mb-5 p-4 bg-[#1A1F5E]/5 rounded-2xl border border-[#1A1F5E]/10">
+                  <div className="mb-5 p-4 bg-[#1A1F5E]/5 -2xl border border-[#1A1F5E]/10">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-[#1A1F5E] font-semibold text-sm">Expertise overlap</span>
+                      <span className="text-[#1A1F5E] font-semibold text-sm">
+                        {isMentee ? 'Expertise match' : 'Mentee compatibility'}
+                      </span>
                       <span className="text-[#1A1F5E] font-bold text-xl">
-                        {selected.matchScore} area{selected.matchScore !== 1 ? 's' : ''}
+                        {selected.matchScore}%
                       </span>
                     </div>
-                    <div className="w-full bg-[#1A1F5E]/20 rounded-full h-2">
+                    <div className="w-full bg-[#1A1F5E]/20 -full h-2">
                       <div
-                        className="bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] h-2 rounded-full transition-all duration-500"
-                        style={{ width: `${Math.min(100, selected.matchScore * 15)}%` }}
+                        className={`h-2 -full transition-all duration-500 ${
+                          selected.matchScore >= 70 ? 'bg-[#1A1F5E]' : 'bg-[#0072CE]'
+                        }`}
+                        style={{ width: `${selected.matchScore}%` }}
                       />
                     </div>
+                    <p className="text-xs text-[#8C8C8C] mt-1">
+                      {selected.matchScore >= 90
+                        ? 'Excellent — direct expertise alignment'
+                        : selected.matchScore >= 70
+                        ? 'Strong match — closely related fields'
+                        : selected.matchScore >= 40
+                        ? 'Partial match — some related areas'
+                        : 'Indirect match — adjacent expertise'}
+                    </p>
                   </div>
                 )}
 
@@ -541,12 +562,12 @@ const MentorMatching: React.FC = () => {
                 {isMentee && (
                   <div className="mb-5">
                     {selected.atCapacity ? (
-                      <div className="flex items-center gap-2 bg-[#E83E2D]/10 border border-[#E83E2D]/20 text-[#E83E2D] px-4 py-3 rounded-2xl text-sm font-semibold">
+                      <div className="flex items-center gap-2 bg-[#E83E2D]/10 border border-[#E83E2D]/20 text-[#E83E2D] px-4 py-3 -2xl text-sm font-semibold">
                         <XCircle className="w-4 h-4" />
                         This mentor is at capacity (3/3 mentees)
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-2xl text-sm font-semibold">
+                      <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 px-4 py-3 -2xl text-sm font-semibold">
                         <CheckCircle className="w-4 h-4" />
                         {spotsLeft(selected)} mentee spot{spotsLeft(selected) !== 1 ? 's' : ''} available
                       </div>
@@ -571,7 +592,7 @@ const MentorMatching: React.FC = () => {
                     {selected.expertise.map((e, i) => (
                       <span
                         key={i}
-                        className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] text-sm font-medium rounded-full"
+                        className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] text-sm font-medium -full"
                       >
                         {e}
                       </span>
@@ -592,7 +613,7 @@ const MentorMatching: React.FC = () => {
                 <div className="flex gap-3">
                   <button
                     onClick={() => setShowModal(false)}
-                    className="flex-1 border-2 border-[#1A1F5E] text-[#1A1F5E] font-semibold py-3 rounded-full hover:bg-[#1A1F5E] hover:text-white transition-all duration-200"
+                    className="flex-1 border-2 border-[#1A1F5E] text-[#1A1F5E] font-semibold py-3 -full hover:bg-[#1A1F5E] hover:text-white transition-all duration-200"
                   >
                     Close
                   </button>
@@ -602,7 +623,7 @@ const MentorMatching: React.FC = () => {
                       setShowModal(false);
                     }}
                     disabled={selected.atCapacity}
-                    className={`flex-1 font-semibold py-3 rounded-full shadow-lg transition-all duration-200 ${
+                    className={`flex-1 font-semibold py-3 -full shadow-lg transition-all duration-200 ${
                       selected.atCapacity
                         ? 'bg-[#F4F4F4] text-[#8C8C8C] cursor-not-allowed'
                         : 'bg-gradient-to-r from-[#E83E2D] to-[#c0321f] text-white hover:opacity-90 hover:scale-105 active:scale-95'

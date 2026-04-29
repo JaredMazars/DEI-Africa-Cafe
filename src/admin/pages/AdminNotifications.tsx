@@ -1,261 +1,153 @@
-﻿import React, { useState, useEffect } from 'react';
-import { Bell, Plus, Edit, Trash2, Save, X, Search, Send } from 'lucide-react';
-import { getData, setData, STORAGE_KEYS } from '../../services/dataStore';
-import { logAuditAction } from '../../services/auditLogger';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Bell, Plus, Edit, Trash2, Save, X, Search, RefreshCw, Send } from 'lucide-react';
+import { adminAPI } from '../../services/api';
 
-interface Announcement {
-  id: string;
-  title: string;
-  message: string;
-  type: 'info' | 'warning' | 'success' | 'error';
-  targetAudience: 'all' | 'mentors' | 'mentees';
-  createdDate: string;
-  status: 'draft' | 'published';
-}
+const EMPTY = { title:'', message:'', type:'info', target_audience:'all', status:'draft' };
+const TYPES = ['info','warning','success','error'];
+const AUDIENCES = ['all','mentors','mentees','experts'];
 
 const AdminNotifications: React.FC = () => {
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    title: '',
-    message: '',
-    type: 'info' as 'info' | 'warning' | 'success' | 'error',
-    targetAudience: 'all' as 'all' | 'mentors' | 'mentees',
-    status: 'draft' as 'draft' | 'published'
-  });
+  const [items, setItems]       = useState<any[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [saving, setSaving]     = useState(false);
+  const [search, setSearch]     = useState('');
+  const [showModal, setModal]   = useState(false);
+  const [editId, setEditId]     = useState<string|null>(null);
+  const [form, setForm]         = useState({ ...EMPTY });
+  const [toast, setToast]       = useState<{msg:string;ok:boolean}|null>(null);
 
-  useEffect(() => {
-    loadAnnouncements();
+  const showT = (msg: string, ok = true) => { setToast({msg,ok}); setTimeout(()=>setToast(null),4000); };
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await adminAPI.getNotifications();
+      if (res?.success) setItems(res.data.notifications || []);
+    } catch { showT('Failed to load notifications', false); }
+    finally { setLoading(false); }
   }, []);
 
-  const loadAnnouncements = () => {
-    const stored = getData(STORAGE_KEYS.ANNOUNCEMENTS, [
-      {
-        id: '1',
-        title: 'Welcome to DEI Africa Café',
-        message: 'We are excited to have you join our community!',
-        type: 'info',
-        targetAudience: 'all',
-        createdDate: '2024-01-15',
-        status: 'published'
-      }
-    ]);
-    setAnnouncements(stored);
+  useEffect(() => { load(); }, [load]);
+
+  const openCreate = () => { setEditId(null); setForm({...EMPTY}); setModal(true); };
+  const openEdit   = (n: any) => { setEditId(n.id); setForm({ title:n.title, message:n.message, type:n.type, target_audience:n.target_audience, status:n.status }); setModal(true); };
+
+  const handleSave = async () => {
+    if (!form.title || !form.message) { showT('Title and message required', false); return; }
+    setSaving(true);
+    try {
+      if (editId) { await adminAPI.updateNotification(editId, form); await adminAPI.logAudit('UPDATE', 'Notification', form.title); showT('Notification updated'); }
+      else        { await adminAPI.createNotification(form); await adminAPI.logAudit('CREATE', 'Notification', form.title); showT('Notification created'); }
+      setModal(false); load();
+    } catch { showT('Save failed', false); }
+    finally { setSaving(false); }
   };
 
-  const handleSubmit = () => {
-    if (!formData.title || !formData.message) {
-      alert('Please fill in title and message');
-      return;
-    }
-
-    if (editingId) {
-      const updated = announcements.map(a =>
-        a.id === editingId ? { ...a, ...formData } : a
-      );
-      setAnnouncements(updated);
-      setStore('admin_announcements', updated);
-      logAuditAction('UPDATED', 'Announcement', formData.title);
-    } else {
-      const newAnnouncement: Announcement = {
-        id: Date.now().toString(),
-        ...formData,
-        createdDate: new Date().toISOString().split('T')[0]
-      };
-      const updated = [...announcements, newAnnouncement];
-      setAnnouncements(updated);
-      setStore('admin_announcements', updated);
-      logAuditAction('CREATED', 'Announcement', formData.title);
-    }
-    resetModal();
+  const publish = async (n: any) => {
+    try {
+      await adminAPI.updateNotification(n.id, { status: 'published' });
+      await adminAPI.logAudit('PUBLISH', 'Notification', n.title);
+      setItems(prev => prev.map(x => x.id === n.id ? {...x, status:'published'} : x));
+      showT('Notification published');
+    } catch { showT('Failed to publish', false); }
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this announcement?')) {
-      const announcement = announcements.find(a => a.id === id);
-      const updated = announcements.filter(a => a.id !== id);
-      setAnnouncements(updated);
-      setStore('admin_announcements', updated);
-      logAuditAction('DELETED', 'Announcement', announcement?.title || id);
-    }
+  const handleDelete = async (n: any) => {
+    if (!confirm(`Delete "${n.title}"?`)) return;
+    try {
+      await adminAPI.deleteNotification(n.id);
+      await adminAPI.logAudit('DELETE', 'Notification', n.title);
+      setItems(prev => prev.filter(x => x.id !== n.id));
+      showT('Notification deleted');
+    } catch { showT('Failed to delete', false); }
   };
 
-  const handlePublish = (id: string) => {
-    const updated = announcements.map(a =>
-      a.id === id ? { ...a, status: 'published' as const } : a
-    );
-    setAnnouncements(updated);
-    setStore('admin_announcements', updated);
-    const announcement = announcements.find(a => a.id === id);
-    logAuditAction('PUBLISHED', 'Announcement', announcement?.title || id);
-  };
+  const filtered = items.filter(n => {
+    const q = search.toLowerCase();
+    return !q || (n.title||'').toLowerCase().includes(q);
+  });
 
-  const resetModal = () => {
-    setShowModal(false);
-    setEditingId(null);
-    setFormData({ title: '', message: '', type: 'info', targetAudience: 'all', status: 'draft' });
-  };
-
-  const filtered = announcements.filter(a =>
-    a.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    a.message.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const typeCls = (t: string) => ({ info:'bg-[#0072CE]/10 text-[#0072CE]', warning:'bg-yellow-100 text-yellow-700', success:'bg-green-100 text-green-700', error:'bg-[#E83E2D]/10 text-[#E83E2D]' })[t] || 'bg-[#F4F4F4] text-[#8C8C8C]';
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+      {toast && <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-4 rounded-2xl shadow-xl text-sm font-semibold ${toast.ok ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-[#E83E2D]/10 border border-[#E83E2D]/30 text-[#E83E2D]'}`}>{toast.msg}</div>}
+
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Announcements</h1>
-          <p className="text-gray-600 mt-1">Create and manage platform announcements</p>
+          <div className="h-1 w-10 bg-[#E83E2D] rounded-full mb-3" />
+          <h1 className="text-3xl font-bold text-[#1A1F5E]">Announcements</h1>
+          <p className="text-[#8C8C8C] mt-1">{items.filter(n=>n.status==='published').length} published · {items.filter(n=>n.status==='draft').length} drafts</p>
         </div>
-        <button
-          onClick={() => { resetModal(); setShowModal(true); }}
-          className="flex items-center gap-2 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
-        >
-          <Plus className="w-5 h-5" />
-          New Announcement
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl p-6 shadow-sm border">
-          <div className="inline-flex p-3 rounded-lg bg-[#1A1F5E]/10 mb-3">
-            <Bell className="w-6 h-6 text-[#0072CE]" />
-          </div>
-          <p className="text-gray-600 text-sm">Total Announcements</p>
-          <p className="text-3xl font-bold text-gray-900 mt-1">{announcements.length}</p>
-        </div>
-        <div className="bg-white rounded-xl p-6 shadow-sm border">
-          <div className="inline-flex p-3 rounded-lg bg-green-100 mb-3">
-            <Send className="w-6 h-6 text-green-600" />
-          </div>
-          <p className="text-gray-600 text-sm">Published</p>
-          <p className="text-3xl font-bold text-gray-900 mt-1">
-            {announcements.filter(a => a.status === 'published').length}
-          </p>
+        <div className="flex gap-3">
+          <button onClick={load} className="flex items-center gap-2 px-4 py-2.5 border-2 border-[#1A1F5E] text-[#1A1F5E] font-semibold rounded-xl hover:bg-[#1A1F5E] hover:text-white transition-all duration-200"><RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin':''}`} />Refresh</button>
+          <button onClick={openCreate} className="flex items-center gap-2 px-5 py-2.5 bg-[#1A1F5E] text-white font-semibold rounded-xl hover:opacity-90 hover:scale-105 active:scale-95 transition-all shadow-lg"><Plus className="w-4 h-4" />New</button>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border p-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search announcements..."
-            className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
-          />
-        </div>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8C8C8C]" />
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search announcements…" className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-[#E5E7EB] text-sm focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all" />
       </div>
 
-      <div className="space-y-4">
-        {filtered.map(announcement => (
-          <div key={announcement.id} className="bg-white rounded-xl shadow-sm border p-6">
-            <div className="flex justify-between">
-              <div className="flex-1">
-                <div className="flex items-start gap-3 mb-2">
-                  <h3 className="font-bold text-gray-900 text-lg">{announcement.title}</h3>
-                  <span className={`px-2 py-1 rounded text-xs font-bold ${
-                    announcement.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-                  }`}>
-                    {announcement.status.toUpperCase()}
-                  </span>
+      <div className="bg-white rounded-3xl shadow-xl border border-[#E5E7EB] overflow-hidden">
+        {loading ? <div className="p-12 text-center text-[#8C8C8C]"><RefreshCw className="w-8 h-8 mx-auto mb-2 animate-spin text-[#1A1F5E]" />Loading…</div> :
+        filtered.length === 0 ? <div className="p-12 text-center text-[#8C8C8C]"><Bell className="w-12 h-12 mx-auto mb-3 text-[#E5E7EB]" /><p>No announcements yet.</p></div> :
+        <div className="divide-y divide-[#E5E7EB]">
+          {filtered.map(n => (
+            <div key={n.id} className="p-5 hover:bg-[#F4F4F4]/50 transition-colors flex gap-4 items-start">
+              <div className={`inline-flex p-2.5 rounded-xl shrink-0 ${typeCls(n.type)}`}><Bell className="w-4 h-4" /></div>
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <h3 className="font-semibold text-[#333333]">{n.title}</h3>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${typeCls(n.type)}`}>{n.type}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${n.status==='published' ? 'bg-green-100 text-green-700' : 'bg-[#F4F4F4] text-[#8C8C8C]'}`}>{n.status}</span>
+                  <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-[#1A1F5E]/10 text-[#1A1F5E]">→ {n.target_audience}</span>
                 </div>
-                <p className="text-sm text-gray-700 mb-3">{announcement.message}</p>
-                <div className="flex items-center gap-4 text-xs text-gray-500">
-                  <span className={`px-2 py-1 rounded ${
-                    announcement.type === 'info' ? 'bg-[#1A1F5E]/10 text-[#1A1F5E]' :
-                    announcement.type === 'warning' ? 'bg-yellow-100 text-yellow-700' :
-                    announcement.type === 'success' ? 'bg-green-100 text-green-700' :
-                    'bg-red-100 text-red-700'
-                  }`}>
-                    {announcement.type}
-                  </span>
-                  <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-2 py-1 rounded">
-                    {announcement.targetAudience}
-                  </span>
-                  <span>Created: {announcement.createdDate}</span>
-                </div>
+                <p className="text-sm text-[#333333] line-clamp-2">{n.message}</p>
+                <p className="text-xs text-[#8C8C8C] mt-1">{new Date(n.created_at).toLocaleDateString()}</p>
               </div>
-              <div className="flex gap-2">
-                {announcement.status === 'draft' && (
-                  <button
-                    onClick={() => handlePublish(announcement.id)}
-                    className="p-2 text-green-600 hover:bg-green-50 rounded-lg"
-                    title="Publish"
-                  >
-                    <Send className="w-5 h-5" />
-                  </button>
-                )}
-                <button
-                  onClick={() => {
-                    setEditingId(announcement.id);
-                    setFormData(announcement);
-                    setShowModal(true);
-                  }}
-                  className="p-2 text-[#0072CE] hover:bg-[#1A1F5E]/5 rounded-lg"
-                >
-                  <Edit className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => handleDelete(announcement.id)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
+              <div className="flex gap-2 shrink-0">
+                {n.status === 'draft' && <button onClick={()=>publish(n)} title="Publish" className="p-2 rounded-xl text-green-600 hover:bg-green-50 transition-colors"><Send className="w-4 h-4" /></button>}
+                <button onClick={()=>openEdit(n)} className="p-2 rounded-xl text-[#0072CE] hover:bg-[#0072CE]/10 transition-colors"><Edit className="w-4 h-4" /></button>
+                <button onClick={()=>handleDelete(n)} className="p-2 rounded-xl text-[#E83E2D] hover:bg-[#E83E2D]/10 transition-colors"><Trash2 className="w-4 h-4" /></button>
               </div>
             </div>
-          </div>
-        ))}
-        {filtered.length === 0 && (
-          <div className="text-center py-16 bg-white rounded-xl border-2 border-dashed">
-            <Bell className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">No announcements found</p>
-          </div>
-        )}
+          ))}
+        </div>}
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold">{editingId ? 'Edit' : 'New'} Announcement</h3>
-              <button onClick={resetModal}><X className="w-6 h-6" /></button>
+              <h3 className="text-2xl font-bold text-[#1A1F5E]">{editId ? 'Edit' : 'New'} Announcement</h3>
+              <button onClick={()=>setModal(false)} className="p-2 rounded-xl hover:bg-[#F4F4F4]"><X className="w-5 h-5" /></button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Title *</label>
-                <input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" />
+                <label className="block text-sm font-semibold text-[#333333] mb-1.5">Title *</label>
+                <input value={form.title} onChange={e=>setForm(p=>({...p,title:e.target.value}))} className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all" />
               </div>
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Message *</label>
-                <textarea value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" rows={4} />
+                <label className="block text-sm font-semibold text-[#333333] mb-1.5">Message *</label>
+                <textarea rows={4} value={form.message} onChange={e=>setForm(p=>({...p,message:e.target.value}))} className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] focus:outline-none focus:border-[#1A1F5E] transition-all resize-none" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Type</label>
-                  <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value as any })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20">
-                    <option value="info">Info</option>
-                    <option value="warning">Warning</option>
-                    <option value="success">Success</option>
-                    <option value="error">Error</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Target Audience</label>
-                  <select value={formData.targetAudience} onChange={(e) => setFormData({ ...formData, targetAudience: e.target.value as any })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20">
-                    <option value="all">All Users</option>
-                    <option value="mentors">Mentors Only</option>
-                    <option value="mentees">Mentees Only</option>
-                  </select>
-                </div>
+              <div className="grid grid-cols-3 gap-3">
+                {[{label:'Type',key:'type',opts:TYPES},{label:'Audience',key:'target_audience',opts:AUDIENCES},{label:'Status',key:'status',opts:['draft','published']}].map(f => (
+                  <div key={f.key}>
+                    <label className="block text-sm font-semibold text-[#333333] mb-1.5">{f.label}</label>
+                    <select value={(form as any)[f.key]} onChange={e=>setForm(p=>({...p,[f.key]:e.target.value}))} className="w-full px-3 py-2.5 rounded-2xl border-2 border-[#E5E7EB] text-sm focus:outline-none focus:border-[#1A1F5E] bg-white">
+                      {f.opts.map(o=><option key={o} value={o}>{o}</option>)}
+                    </select>
+                  </div>
+                ))}
               </div>
-              <div className="flex gap-4 mt-6">
-                <button onClick={resetModal} className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-bold">Cancel</button>
-                <button onClick={handleSubmit} className="flex-1 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white py-3 rounded-lg font-bold"><Save className="w-5 h-5 inline mr-2" />{editingId ? 'Update' : 'Create'}</button>
+              <div className="flex gap-3 pt-2">
+                <button onClick={()=>setModal(false)} className="flex-1 py-3 rounded-2xl border-2 border-[#E5E7EB] font-semibold hover:bg-[#F4F4F4] transition-all">Cancel</button>
+                <button onClick={handleSave} disabled={saving} className="flex-1 py-3 rounded-2xl bg-[#1A1F5E] text-white font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 transition-all">
+                  {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}{saving ? 'Saving…' : 'Save'}
+                </button>
               </div>
             </div>
           </div>
@@ -266,4 +158,3 @@ const AdminNotifications: React.FC = () => {
 };
 
 export default AdminNotifications;
-

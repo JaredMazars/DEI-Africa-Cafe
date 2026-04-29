@@ -1,18 +1,14 @@
-﻿import { useState } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
-  Home, 
   Users, 
-  BookOpen, 
-  MessageSquare, 
-  Calendar, 
   User, 
   Bell,
   Settings,
-  Briefcase,
-  Award,
   LogOut,
-  Trophy
+  Trophy,
+  Search,
+  ChevronDown,
 } from 'lucide-react';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useSimpleAuth } from '../contexts/SimpleAuthContext';
@@ -21,10 +17,36 @@ import NotificationCenter from './NotificationCenter';
 const Navigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useSimpleAuth();
+  const { logout, currentUser } = useSimpleAuth();
   const { unreadCount } = useNotifications();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  const displayName = currentUser?.profile?.name ||
+    (currentUser?.email ? currentUser.email.split('@')[0] : 'User');
+  const displayInitial = displayName.charAt(0).toUpperCase();
+  const userRole: string = (currentUser as any)?.role || '';
+  const isMentor = userRole === 'mentor' || userRole === 'both';
+  const isMentee = userRole === 'mentee' || userRole === 'both' || !userRole;
+
+  useEffect(() => {
+    if (!isMentor || !currentUser?.id) return;
+    const fetchPending = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('/api/connections', { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) return;
+        const data = await res.json();
+        const all = data.data?.connections || [];
+        const count = all.filter((c: any) => c.mentor_user_id === currentUser.id && c.status === 'pending').length;
+        setPendingCount(count);
+      } catch { /* silent */ }
+    };
+    fetchPending();
+    const interval = setInterval(fetchPending, 30000);
+    return () => clearInterval(interval);
+  }, [isMentor, currentUser?.id]);
 
   const handleLogout = () => {
     logout();
@@ -32,152 +54,141 @@ const Navigation = () => {
   };
 
   const navigationItems = [
-    { path: '/home', icon: Home, label: 'Home' },
-    // { path: '/dashboard', icon: Target, label: 'Dashboard' },
-    { path: '/mentors', icon: Users, label: 'Mentor Discovery' },
-    { path: '/experts', icon: Award, label: 'Expert Directory' },
-    { path: '/collaboration', icon: Briefcase, label: 'Collaboration Hub' },
-    { path: '/resources', icon: BookOpen, label: 'Resource Library' },
-    { path: '/discussion', icon: MessageSquare, label: 'Discussion' },
-    { path: '/calendar', icon: Calendar, label: 'Calendar' },
+    { path: '/home', label: 'Home' },
+    { path: '/mentors', label: 'Mentor Discovery' },
+    { path: '/experts', label: 'Expert Directory' },
+    { path: '/collaboration', label: 'Collaboration Hub' },
+    { path: '/resources', label: 'Resource Library' },
+    { path: '/discussion', label: 'Discussion' },
+    { path: '/calendar', label: 'Calendar' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="bg-[#1A1F5E] shadow-2xl sticky top-0 z-50">
-      <div className="max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-12">
-        <div className="flex justify-between items-center h-16 sm:h-20">
-          {/* Logo and Brand */}
-          <div className="flex items-center space-x-2 sm:space-x-6 min-w-0 flex-shrink">
-            <Link to="/dashboard" className="flex items-center space-x-2 sm:space-x-4 min-w-0">
-              <img 
-                src="/assets/forvis-mazars-logo.png.png" 
-                alt="Forvis Mazars"
-                className="h-8 sm:h-12 lg:h-14 object-contain flex-shrink-0"
-              />
-              <div className="hidden sm:block min-w-0">
-                <h1 className="text-base sm:text-xl font-bold text-gray-900 whitespace-nowrap truncate">
-                  DEI Cafe
-                </h1>
-                <p className="text-xs text-gray-500">Forvis Mazars</p>
-              </div>
-            </Link>
-          </div>
+    <nav className="bg-white border-b border-[#E5E7EB] sticky top-0 z-50 shadow-sm">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-8 lg:px-16">
 
-          {/* Main Navigation */}
-          <div className="hidden lg:flex items-center space-x-2">
-            {navigationItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    isActive(item.path)
-                      ? 'text-white font-semibold border-b-2 border-[#E83E2D]'
-                      : 'text-white/80 hover:text-white hover:bg-white/10'
+        {/* Top bar */}
+        <div className="flex items-center justify-between h-[72px]">
+
+          {/* Logo */}
+          <Link to="/home" className="flex items-center flex-shrink-0">
+            <img
+              src="/assets/forvis-mazars-logo.png.png"
+              alt="Forvis Mazars"
+              className="h-9 sm:h-11 object-contain"
+            />
+          </Link>
+
+          {/* Desktop Nav Links */}
+          <div className="hidden lg:flex items-center h-full">
+            {navigationItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`relative h-full flex items-center px-4 text-sm font-medium transition-colors duration-200 whitespace-nowrap
+                  ${isActive(item.path)
+                    ? 'text-[#1A1F5E] font-semibold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-[#E83E2D] after:-t'
+                    : 'text-[#333333] hover:text-[#1A1F5E]'
                   }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span className="whitespace-nowrap">{item.label}</span>
-                </Link>
-              );
-            })}
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
 
-          {/* Right Side - Search, Notifications, Profile */}
-          <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-6 min-w-0 justify-end">
-            {/* Search */}
-            {/* <div className="hidden md:block relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] text-sm w-64"
-              />
-            </div> */}
+          {/* Right side: search, bell, profile */}
+          <div className="flex items-center gap-1 sm:gap-2">
+
+            {/* Search icon */}
+            <button className="p-2 text-[#333333] hover:text-[#1A1F5E] hover:bg-[#F4F4F4] -lg transition-colors">
+              <Search className="w-5 h-5" />
+            </button>
 
             {/* Notifications */}
-            <button 
+            <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 sm:p-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors flex-shrink-0"
+              className="relative p-2 text-[#333333] hover:text-[#1A1F5E] hover:bg-[#F4F4F4] -lg transition-colors"
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
-                <span className="absolute top-0 right-0 min-w-[18px] h-[18px] bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold px-1">
+                <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-[#E83E2D] -full flex items-center justify-center text-white text-[10px] font-bold px-0.5">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
             </button>
 
-            {/* Profile Dropdown */}
+            {/* Divider */}
+            <div className="hidden sm:block w-px h-6 bg-[#E5E7EB] mx-1" />
+
+            {/* Profile dropdown */}
             <div className="relative flex-shrink-0">
               <button
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center space-x-2 sm:space-x-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg hover:bg-white/10 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 -lg hover:bg-[#F4F4F4] transition-colors"
               >
-                <div 
-                  data-profile-icon
-                  className="w-7 h-7 sm:w-8 sm:h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0"
-                >
-                  <span className="text-white font-medium text-xs sm:text-sm">
-                    U
-                  </span>
+                <div className="w-8 h-8 bg-[#1A1F5E] -full flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-semibold text-sm">{displayInitial}</span>
                 </div>
-                <div className="hidden md:block text-left min-w-0">
-                  <div className="text-sm font-medium text-white truncate">
-                    User
-                  </div>
-                  <div className="text-xs text-white/60 truncate">
-                    Mentee
-                  </div>
+                <div className="hidden md:block text-left">
+                  <div className="text-sm font-semibold text-[#1A1F5E] leading-tight max-w-[120px] truncate">{displayName}</div>
+                  <div className="text-xs text-[#8C8C8C] capitalize leading-tight">{userRole || 'Member'}</div>
                 </div>
-                <Settings className="w-4 h-4 text-white/60 hidden sm:block flex-shrink-0" />
+                <ChevronDown className="w-4 h-4 text-[#8C8C8C] hidden md:block flex-shrink-0" />
               </button>
 
-              {/* Dropdown Menu */}
               {showProfileMenu && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                <div className="absolute right-0 mt-1 w-56 bg-white -2xl shadow-xl border border-[#E5E7EB] py-2 z-50">
+                  <div className="px-4 py-2 border-b border-[#E5E7EB] mb-1">
+                    <p className="text-sm font-semibold text-[#1A1F5E] truncate">{displayName}</p>
+                    <p className="text-xs text-[#8C8C8C] capitalize">{userRole || 'Member'}</p>
+                  </div>
                   <Link
                     to="/profile"
-                    className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#333333] hover:bg-[#F4F4F4] transition-colors"
                     onClick={() => setShowProfileMenu(false)}
                   >
-                    <User className="w-4 h-4" />
+                    <User className="w-4 h-4 text-[#8C8C8C]" />
                     <span>Profile</span>
                   </Link>
-                  <Link
-                    to="/mentorship-activities"
-                    className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    onClick={() => setShowProfileMenu(false)}
-                  >
-                    <Trophy className="w-4 h-4 text-[#0072CE]" />
-                    <span>My Mentors</span>
-                  </Link>
-                  <Link
-                    to="/my-mentees"
-                    className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    onClick={() => setShowProfileMenu(false)}
-                  >
-                    <Users className="w-4 h-4 text-[#0072CE]" />
-                    <span>My Mentees</span>
-                  </Link>
+                  {isMentee && (
+                    <Link
+                      to="/mentorship-activities"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#333333] hover:bg-[#F4F4F4] transition-colors"
+                      onClick={() => setShowProfileMenu(false)}
+                    >
+                      <Trophy className="w-4 h-4 text-[#0072CE]" />
+                      <span>My Mentors</span>
+                    </Link>
+                  )}
+                  {isMentor && (
+                    <Link
+                      to="/my-mentees"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#333333] hover:bg-[#F4F4F4] transition-colors"
+                      onClick={() => setShowProfileMenu(false)}
+                    >
+                      <Users className="w-4 h-4 text-[#0072CE]" />
+                      <span className="flex-1">My Mentees</span>
+                      {pendingCount > 0 && (
+                        <span className="ml-auto min-w-[20px] h-5 bg-[#E83E2D] -full flex items-center justify-center text-white text-xs font-bold px-1">
+                          {pendingCount}
+                        </span>
+                      )}
+                    </Link>
+                  )}
                   <Link
                     to="/preferences"
-                    className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#333333] hover:bg-[#F4F4F4] transition-colors"
                     onClick={() => setShowProfileMenu(false)}
                   >
-                    <Settings className="w-4 h-4" />
+                    <Settings className="w-4 h-4 text-[#8C8C8C]" />
                     <span>Preferences</span>
                   </Link>
-                  <hr className="my-1 border-gray-200" />
+                  <hr className="my-1 border-[#E5E7EB]" />
                   <button
-                    onClick={() => {
-                      setShowProfileMenu(false);
-                      handleLogout();
-                    }}
-                    className="flex items-center space-x-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                    onClick={() => { setShowProfileMenu(false); handleLogout(); }}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#E83E2D] hover:bg-[#E83E2D]/5 w-full text-left transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Logout</span>
@@ -188,42 +199,33 @@ const Navigation = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
-        <div className="lg:hidden border-t border-white/20 py-2 sm:py-3 overflow-x-auto">
-          <div className="flex items-center space-x-1 sm:space-x-2 pb-1 min-w-max px-3 sm:px-6">
-            {navigationItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center space-x-1.5 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-200 ${
-                    isActive(item.path)
-                      ? 'text-white font-semibold bg-white/10 border-b-2 border-[#E83E2D]'
-                      : 'text-white/80 hover:text-white hover:bg-white/10'
+        {/* Mobile Nav row */}
+        <div className="lg:hidden border-t border-[#E5E7EB] overflow-x-auto">
+          <div className="flex items-center py-2 gap-1 min-w-max">
+            {navigationItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`px-3 py-1.5 -lg text-xs font-medium whitespace-nowrap transition-colors
+                  ${isActive(item.path)
+                    ? 'bg-[#1A1F5E] text-white'
+                    : 'text-[#333333] hover:bg-[#F4F4F4] hover:text-[#1A1F5E]'
                   }`}
-                >
-                  <Icon className="w-4 h-4 flex-shrink-0" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Click outside to close dropdown */}
       {showProfileMenu && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setShowProfileMenu(false)}
-        />
+        <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
       )}
 
-      {/* Notification Center */}
-      <NotificationCenter 
-        isOpen={showNotifications} 
-        onClose={() => setShowNotifications(false)} 
+      <NotificationCenter
+        isOpen={showNotifications}
+        onClose={() => setShowNotifications(false)}
       />
     </nav>
   );

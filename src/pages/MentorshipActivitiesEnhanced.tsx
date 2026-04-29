@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Target, CheckCircle, Clock, Calendar, TrendingUp, Award, 
   BookOpen, BarChart3, MessageSquare, Star, Plus, Edit2, Trash2,
@@ -9,6 +9,7 @@ import {
   User, MapPin
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useSimpleAuth } from '../contexts/SimpleAuthContext';
 
 // ==================== INTERFACES ====================
 
@@ -517,7 +518,7 @@ const mockLearningPaths: LearningPath[] = [
             url: '#',
             author: 'James Patterson',
             readTime: '8 min read',
-            content: 'Executive presence is more than just confidence—it\'s about authenticity, clarity, and the ability to inspire others. Learn the key components of executive presence including body language, vocal tone, strategic storytelling, and how to command a room while remaining approachable...'
+            content: 'Executive presence is more than just confidence�it\'s about authenticity, clarity, and the ability to inspire others. Learn the key components of executive presence including body language, vocal tone, strategic storytelling, and how to command a room while remaining approachable...'
           }
         ]
       }
@@ -830,41 +831,60 @@ const mockProgressReports: ProgressReport[] = [
 
 const MentorshipActivitiesEnhanced: React.FC = () => {
   const navigate = useNavigate();
-  const { mentorId } = useParams<{ mentorId: string }>();
-  
+  const { mentorId, menteeId, connectionId: connIdParam } = useParams<{ mentorId?: string; menteeId?: string; connectionId?: string }>();
+  const { currentUser } = useSimpleAuth();
+
   // Mentor data based on ID
   const [mentorData, setMentorData] = useState<any>(null);
+  const [menteeData, setMenteeData] = useState<any>(null);
+  const [isMentorView, setIsMentorView] = useState(false);
+  const [activeConnectionId, setActiveConnectionId] = useState<string>('');
 
+  // Unified connection fetch � works for both /mentorship-session/:connectionId
+  // and the legacy /mentorship-activities/:mentorId / /mentor-view/mentee/:menteeId routes
   useEffect(() => {
-    // Fetch mentor data from real API
     const token = localStorage.getItem('token');
-    fetch('/api/matching/mentors', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    fetch('/api/connections', { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
       .then(data => {
-        const raw: any[] = data.data?.mentors || [];
-        if (raw.length === 0) return;
-        // If a mentorId param is given, find matching; else use first
-        const found = mentorId
-          ? raw.find((m: any) => m.id === mentorId || m.user_id === mentorId)
-          : raw[0];
-        const m = found || raw[0];
-        setMentorData({
-          id: m.id,
-          name: m.name,
-          role: m.title || 'Professional',
-          company: 'Forvis Mazars',
-          location: m.location || '',
-          image: m.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=1A1F5E&color=fff&size=200`,
-          expertise: Array.isArray(m.expertise) ? m.expertise : [],
-        });
+        const all: any[] = data.data?.connections || [];
+        // Find the right connection depending on which URL param is present
+        const conn = connIdParam
+          ? all.find(c => String(c.id) === String(connIdParam))
+          : menteeId
+            ? all.find(c => String(c.requester_id) === String(menteeId))
+            : mentorId
+              ? all.find(c => String(c.mentor_user_id) === String(mentorId) || String(c.expert_id) === String(mentorId))
+              : all[0];
+        if (!conn) return;
+        setActiveConnectionId(conn.id);
+        const isRequester = String(conn.requester_id) === String(currentUser?.id);
+        setIsMentorView(!isRequester);
+        if (!isRequester) {
+          // Mentor sees mentee info
+          setMenteeData({
+            id: conn.requester_id,
+            name: conn.mentee_name || 'Your Mentee',
+            location: conn.mentee_location || '',
+            bio: conn.mentee_bio || '',
+            image: `https://ui-avatars.com/api/?name=${encodeURIComponent(conn.mentee_name || 'M')}&background=E83E2D&color=fff&size=200`,
+            connectedSince: conn.created_at,
+          });
+        } else {
+          // Mentee sees mentor info
+          setMentorData({
+            id: conn.mentor_user_id,
+            name: conn.mentor_name || 'Your Mentor',
+            role: conn.mentor_title || 'Professional',
+            company: 'Forvis Mazars',
+            location: conn.mentor_location || '',
+            image: `https://ui-avatars.com/api/?name=${encodeURIComponent(conn.mentor_name || 'M')}&background=1A1F5E&color=fff&size=200`,
+            expertise: [],
+          });
+        }
       })
-      .catch(() => {
-        // Fallback: show generic mentor card
-        setMentorData({ id: mentorId || '', name: 'Your Mentor', role: 'Professional', company: 'Forvis Mazars', location: '', image: '', expertise: [] });
-      });
-  }, [mentorId]);
+      .catch(() => {});
+  }, [connIdParam, mentorId, menteeId, currentUser?.id]);
 
   const [activeTab, setActiveTab] = useState<'goals' | 'progress' | 'learning' | 'feedback' | 'development' | 'activities' | 'resources' | 'reflections'>('activities');
   const [selectedGoal, setSelectedGoal] = useState<SMARTGoal | null>(null);
@@ -872,9 +892,11 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   const [showProgressReport, setShowProgressReport] = useState(false);
   const [expandedMilestone, setExpandedMilestone] = useState<string | null>(null);
+  const [showUploadResource, setShowUploadResource] = useState(false);
+  const [newResource, setNewResource] = useState({ title: '', description: '', url: '', type: 'article' as 'article' | 'video' | 'guide', category: '' });
   
-  // Goals State Management
-  const [goals, setGoals] = useState<SMARTGoal[]>(mockGoals);
+  // Goals State Management � seeded from DB per connection
+  const [goals, setGoals] = useState<SMARTGoal[]>([]);
   const [newGoal, setNewGoal] = useState({
     title: '',
     description: '',
@@ -888,8 +910,8 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
     obstacles: ''
   });
 
-  // Progress Reports State Management
-  const [progressReports, setProgressReports] = useState<ProgressReport[]>(mockProgressReports);
+  // Progress Reports State Management � seeded from DB per connection
+  const [progressReports, setProgressReports] = useState<ProgressReport[]>([]);
   const [newReport, setNewReport] = useState({
     goalId: '',
     period: 'weekly' as 'weekly' | 'monthly',
@@ -900,6 +922,76 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
     nextSteps: ['', '', ''],
     menteeFeedback: ''
   });
+
+  // Fetch goals & progress reports when activeConnectionId is known
+  useEffect(() => {
+    if (!activeConnectionId) return;
+    const token = localStorage.getItem('token');
+    fetch(`/api/goals?connection_id=${activeConnectionId}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(d => { if (d.success) setGoals(d.data.goals); })
+      .catch(() => {});
+    fetch(`/api/goals/progress-reports?connection_id=${activeConnectionId}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(d => { if (d.success) setProgressReports(d.data.reports); })
+      .catch(() => {});
+    // Fetch reflections scoped to this connection
+    fetch(`/api/reflections?connection_id=${activeConnectionId}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(d => { if (d.success) setReflections(d.data.reflections); })
+      .catch(() => {});
+    // Fetch sessions for this connection
+    fetch(`/api/sessions/connection/${activeConnectionId}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(d => { if (d.success) setSessions(d.data.sessions); })
+      .catch(() => {});
+    // Fetch learning paths scoped to this connection
+    fetch(`/api/learning-paths?connection_id=${activeConnectionId}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(d => { if (d.success) setLearningPaths(d.data.paths); })
+      .catch(() => {});
+    // Fetch resources
+    fetch('/api/resources', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(d => { if (d.success) setDbResources(d.data.resources); })
+      .catch(() => {});
+  }, [activeConnectionId]);
+
+  // Refresh sessions helper
+  const refreshSessions = () => {
+    if (!activeConnectionId) return;
+    const token = localStorage.getItem('token');
+    fetch(`/api/sessions/connection/${activeConnectionId}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(d => { if (d.success) setSessions(d.data.sessions); })
+      .catch(() => {});
+  };
+
+  // Handle create session
+  const handleCreateSession = async () => {
+    if (!newSession.title || !newSession.scheduled_at) {
+      alert('Please provide a title and date/time for the session.');
+      return;
+    }
+    setSessionLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ ...newSession, connection_id: activeConnectionId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        refreshSessions();
+        setShowNewSession(false);
+        setNewSession({ title: '', scheduled_at: '', duration_minutes: 60, meeting_link: '', description: '' });
+      } else {
+        alert(data.message || 'Failed to create session');
+      }
+    } catch { alert('Failed to create session'); }
+    setSessionLoading(false);
+  };
 
   // Reflections State Management
   const [reflections, setReflections] = useState<any[]>([]);
@@ -922,18 +1014,22 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
   const [selectedModule, setSelectedModule] = useState<LearningModule | null>(null);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
   const [showResourceViewer, setShowResourceViewer] = useState(false);
-  const [learningPaths, setLearningPaths] = useState<LearningPath[]>(mockLearningPaths);
+  const [learningPaths, setLearningPaths] = useState<LearningPath[]>([]);
   const [showWordwallGame, setShowWordwallGame] = useState(false);
+  const [showQuizManager, setShowQuizManager] = useState(false);
+  const [activeQuestionIds, setActiveQuestionIds] = useState<number[]>(() => gameQuestions.map(q => q.id));
+  const [customQuestions, setCustomQuestions] = useState<GameQuestion[]>([]);
+  const [newCustomQ, setNewCustomQ] = useState({ question: '', options: ['', '', '', ''], correctAnswer: 0, category: '', explanation: '' });
   const [selectedRating, setSelectedRating] = useState(0);
-  const [activityResults, setActivityResults] = useState({
-    sessionsRated: 8,
-    reflectionsPosted: 12,
-    activitiesCompleted: 5,
-    averageRating: 4.8,
-    mixerScenarios: 6,
-    wordsLearned: 15,
-    gameHighScore: 850
-  });
+  const [gameHighScore, setGameHighScore] = useState(() => parseInt(localStorage.getItem('mentorship_game_high') || '0'));
+  // Sessions state
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [showNewSession, setShowNewSession] = useState(false);
+  const [newSession, setNewSession] = useState({ title: '', scheduled_at: '', duration_minutes: 60, meeting_link: '', description: '' });
+  const [sessionLoading, setSessionLoading] = useState(false);
+  // Resources state
+  const [dbResources, setDbResources] = useState<any[]>([]);
+  const [resourceSearch, setResourceSearch] = useState('');
 
   // Wordwall Game State
   const [gameState, setGameState] = useState<'menu' | 'playing' | 'results'>('menu');
@@ -1009,11 +1105,11 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
       setTimeLeft(30);
     } else {
       setGameState('results');
-      setActivityResults({
-        ...activityResults,
-        gameHighScore: Math.max(activityResults.gameHighScore, score),
-        activitiesCompleted: activityResults.activitiesCompleted + 1
-      });
+      const newHigh = Math.max(gameHighScore, score);
+      if (newHigh > gameHighScore) {
+        setGameHighScore(newHigh);
+        localStorage.setItem('mentorship_game_high', String(newHigh));
+      }
     }
   };
 
@@ -1029,10 +1125,10 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
 
   const getScoreMessage = () => {
     const percentage = (answers.filter(a => a.correct).length / gameQuestions.length) * 100;
-    if (percentage === 100) return "Perfect! Outstanding work! 🌟";
-    if (percentage >= 80) return "Excellent! You're a mentorship expert! 🎉";
-    if (percentage >= 60) return "Great job! Keep learning! 💪";
-    return "Good effort! Review the concepts and try again! 📚";
+    if (percentage === 100) return "Perfect! Outstanding work! ??";
+    if (percentage >= 80) return "Excellent! You're a mentorship expert! ??";
+    if (percentage >= 60) return "Great job! Keep learning! ??";
+    return "Good effort! Review the concepts and try again! ??";
   };
 
   // Learning Path Functions
@@ -1074,142 +1170,132 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
       }
     }
 
-    alert('✅ Resource marked as complete! Module progress updated.');
+    alert('? Resource marked as complete! Module progress updated.');
     setShowResourceViewer(false);
     setSelectedResource(null);
   };
 
   // Goal Management Functions
-  const handleCreateGoal = () => {
+  const handleCreateGoal = async () => {
     if (!newGoal.title || !newGoal.description || !newGoal.targetDate || !newGoal.measurable) {
-      alert('⚠️ Please fill in all required fields (Title, Description, Target Date, and Success Metrics)');
+      alert('?? Please fill in all required fields (Title, Description, Target Date, and Success Metrics)');
       return;
     }
 
-    const milestones: Milestone[] = newGoal.actionSteps
+    const milestones = newGoal.actionSteps
       .filter(step => step.trim() !== '')
       .map((step, index) => ({
-        id: `milestone-${Date.now()}-${index}`,
         title: step,
         description: step,
-        dueDate: newGoal.actionStepDates[index] || newGoal.targetDate,
-        completed: false,
-        tasks: [
-          {
-            id: `task-${Date.now()}-${index}-1`,
-            title: step,
-            completed: false,
-            assignedTo: 'mentee' as 'mentee' | 'mentor'
-          }
-        ]
+        due_date: newGoal.actionStepDates[index] || newGoal.targetDate,
+        tasks: [{ title: step, assigned_to: 'mentee' }]
       }));
 
-    const goal: SMARTGoal = {
-      id: `goal-${Date.now()}`,
-      title: newGoal.title,
-      description: newGoal.description,
-      specific: newGoal.description,
-      measurable: newGoal.measurable,
-      achievable: newGoal.resources || 'Achievable with dedicated effort',
-      relevant: 'Aligned with career development goals',
-      timeBound: `Complete by ${new Date(newGoal.targetDate).toLocaleDateString()}`,
-      category: newGoal.category,
-      priority: newGoal.priority,
-      status: 'not-started',
-      progress: 0,
-      startDate: new Date().toISOString().split('T')[0],
-      targetDate: newGoal.targetDate,
-      mentorId: 'mentor-1',
-      mentorName: 'Your Mentor',
-      createdAt: new Date().toISOString(),
-      milestones: milestones
-    };
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/goals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          connection_id: activeConnectionId,
+          title:       newGoal.title,
+          description: newGoal.description,
+          specific:    newGoal.description,
+          measurable:  newGoal.measurable,
+          achievable:  newGoal.resources || 'Achievable with dedicated effort',
+          relevant:    'Aligned with career development goals',
+          time_bound:  `Complete by ${new Date(newGoal.targetDate).toLocaleDateString()}`,
+          category:    newGoal.category,
+          priority:    newGoal.priority,
+          start_date:  new Date().toISOString().split('T')[0],
+          target_date: newGoal.targetDate,
+          milestones,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Refresh goals from server to get milestones/tasks populated
+        const refreshed = await fetch(`/api/goals?connection_id=${activeConnectionId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const rd = await refreshed.json();
+        if (rd.success) setGoals(rd.data.goals);
+      }
+    } catch { /* silent */ }
 
-    setGoals([goal, ...goals]);
     setShowCreateGoal(false);
-    
-    // Reset form
-    setNewGoal({
-      title: '',
-      description: '',
-      category: 'technical',
-      priority: 'medium',
-      targetDate: '',
-      measurable: '',
-      actionSteps: ['', '', ''],
-      actionStepDates: ['', '', ''],
-      resources: '',
-      obstacles: ''
-    });
-    
-    alert('✅ Goal created successfully! Your SMART goal has been added to your mentorship plan.');
+    setNewGoal({ title: '', description: '', category: 'technical', priority: 'medium', targetDate: '', measurable: '', actionSteps: ['', '', ''], actionStepDates: ['', '', ''], resources: '', obstacles: '' });
+    alert('? Goal created successfully!');
   };
 
-  const handleCreateReport = () => {
+  const handleCreateReport = async () => {
     if (!newReport.goalId || !newReport.startDate || !newReport.endDate) {
-      alert('⚠️ Please select a goal and provide start/end dates');
+      alert('?? Please select a goal and provide start/end dates');
       return;
     }
 
-    const selectedGoal = goals.find(g => g.id === newReport.goalId);
-    if (!selectedGoal) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/goals/progress-reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          connection_id:   activeConnectionId,
+          goal_id:         newReport.goalId,
+          period:          newReport.period,
+          start_date:      newReport.startDate,
+          end_date:        newReport.endDate,
+          achievements:    newReport.achievements.filter(a => a.trim() !== ''),
+          challenges:      newReport.challenges.filter(c => c.trim() !== ''),
+          next_steps:      newReport.nextSteps.filter(n => n.trim() !== ''),
+          mentee_feedback: newReport.menteeFeedback,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const refreshed = await fetch(`/api/goals/progress-reports?connection_id=${activeConnectionId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const rd = await refreshed.json();
+        if (rd.success) setProgressReports(rd.data.reports);
+      }
+    } catch { /* silent */ }
 
-    const report: ProgressReport = {
-      id: `report-${Date.now()}`,
-      goalId: newReport.goalId,
-      period: newReport.period,
-      startDate: newReport.startDate,
-      endDate: newReport.endDate,
-      achievements: newReport.achievements.filter(a => a.trim() !== ''),
-      challenges: newReport.challenges.filter(c => c.trim() !== ''),
-      nextSteps: newReport.nextSteps.filter(n => n.trim() !== ''),
-      menteeFeedback: newReport.menteeFeedback,
-      createdAt: new Date().toISOString()
-    };
-
-    setProgressReports([report, ...progressReports]);
     setShowProgressReport(false);
-    
-    // Reset form
-    setNewReport({
-      goalId: '',
-      period: 'weekly',
-      startDate: '',
-      endDate: '',
-      achievements: ['', '', ''],
-      challenges: ['', ''],
-      nextSteps: ['', '', ''],
-      menteeFeedback: ''
-    });
-    
-    alert('✅ Progress report created successfully!');
+    setNewReport({ goalId: '', period: 'weekly', startDate: '', endDate: '', achievements: ['', '', ''], challenges: ['', ''], nextSteps: ['', '', ''], menteeFeedback: '' });
+    alert('? Progress report created successfully!');
   };
 
-  const handleCreateReflection = () => {
+  const handleCreateReflection = async () => {
     if (!newReflection.title || !newReflection.content) {
-      alert('⚠️ Please provide a title and reflection content');
+      alert('?? Please provide a title and reflection content');
       return;
     }
-
-    const reflection = {
-      id: `reflection-${Date.now()}`,
-      category: newReflection.category,
-      title: newReflection.title,
-      content: newReflection.content,
-      sessionRating: newReflection.sessionRating,
-      keyTakeaways: newReflection.keyTakeaways.filter(t => t.trim() !== ''),
-      tags: newReflection.tags.split(',').map(t => t.trim()).filter(t => t !== ''),
-      isAnonymous: newReflection.isAnonymous,
-      author: newReflection.isAnonymous ? 'Anonymous Mentee' : 'Mentee',
-      date: new Date().toISOString(),
-      timestamp: 'Just now'
-    };
-
-    setReflections([reflection, ...reflections]);
-    setActivityResults({...activityResults, reflectionsPosted: activityResults.reflectionsPosted + 1});
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/reflections', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          connection_id: activeConnectionId,
+          category: newReflection.category,
+          title: newReflection.title,
+          content: newReflection.content,
+          rating: newReflection.sessionRating || undefined,
+          keyTakeaways: newReflection.keyTakeaways.filter(t => t.trim() !== ''),
+          tags: newReflection.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t !== ''),
+          isAnonymous: newReflection.isAnonymous,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Refresh from DB
+        const refreshed = await fetch(`/api/reflections?connection_id=${activeConnectionId}`, { headers: { Authorization: `Bearer ${token}` } });
+        const rd = await refreshed.json();
+        if (rd.success) setReflections(rd.data.reflections);
+      }
+    } catch { /* silent */ }
     setShowReflectionBoard(false);
-    
-    // Reset form
     setNewReflection({
       category: 'goal-progress',
       title: '',
@@ -1220,7 +1306,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
       isAnonymous: false
     });
     
-    alert('✅ Reflection posted successfully! Thank you for sharing your insights.');
+    alert('? Reflection posted successfully! Thank you for sharing your insights.');
   };
 
   const handleMilestoneToggle = (goalId: string, milestoneId: string) => {
@@ -1260,105 +1346,122 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
     }));
   };
 
-  const handleTaskToggle = (goalId: string, milestoneId: string, taskId: string) => {
+  const handleTaskToggle = async (goalId: string, milestoneId: string, taskId: string) => {
+    // Optimistic UI update
     setGoals(goals.map(goal => {
       if (goal.id !== goalId) return goal;
-      
       const updatedMilestones = goal.milestones.map(milestone => {
         if (milestone.id !== milestoneId) return milestone;
-        
         const updatedTasks = milestone.tasks.map(task => {
           if (task.id !== taskId) return task;
-          return {
-            ...task,
-            completed: !task.completed,
-            completedDate: !task.completed ? new Date().toISOString() : undefined
-          };
+          return { ...task, completed: !task.completed, completedDate: !task.completed ? new Date().toISOString() : undefined };
         });
-        
         const allTasksComplete = updatedTasks.every(t => t.completed);
-        return {
-          ...milestone,
-          tasks: updatedTasks,
-          completed: allTasksComplete,
-          completedDate: allTasksComplete ? new Date().toISOString() : undefined
-        };
+        return { ...milestone, tasks: updatedTasks, completed: allTasksComplete, completedDate: allTasksComplete ? new Date().toISOString() : undefined };
       });
-      
       const completedMilestones = updatedMilestones.filter(m => m.completed).length;
       const totalMilestones = updatedMilestones.length;
       const newProgress = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
       const allMilestonesComplete = updatedMilestones.every(m => m.completed);
-      
-      return {
-        ...goal,
-        milestones: updatedMilestones,
-        progress: newProgress,
-        status: allMilestonesComplete ? 'completed' as const : newProgress > 0 ? 'in-progress' as const : 'not-started' as const,
-        completedDate: allMilestonesComplete ? new Date().toISOString() : undefined
-      };
+      return { ...goal, milestones: updatedMilestones, progress: newProgress, status: allMilestonesComplete ? 'completed' as const : newProgress > 0 ? 'in-progress' as const : 'not-started' as const, completedDate: allMilestonesComplete ? new Date().toISOString() : undefined };
     }));
+
+    // Persist to DB
+    try {
+      const token = localStorage.getItem('token');
+      const currentTask = goals.find(g => g.id === goalId)?.milestones.find(m => m.id === milestoneId)?.tasks.find(t => t.id === taskId);
+      await fetch(`/api/goals/${goalId}/tasks/${taskId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ completed: !currentTask?.completed }),
+      });
+    } catch { /* silent - optimistic update already applied */ }
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#1A1F5E] via-[#0072CE] to-[#1A1F5E] text-white">
+      <div className="bg-[#1A1F5E] text-white">
         <div className="max-w-[1920px] mx-auto px-12 sm:px-16 lg:px-20 py-12">
           <button
-            onClick={() => navigate('/mentorship-activities')}
+            onClick={() => navigate(isMentorView ? '/my-mentees' : '/mentorship-activities')}
             className="flex items-center space-x-2 text-white/80 hover:text-white mb-6 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span>Back to My Mentors</span>
+            <span>{isMentorView ? 'Back to My Mentees' : 'Back to My Mentors'}</span>
           </button>
-          
-          {/* Mentor Info Header */}
-          {mentorData && (
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-6 border border-white/20">
-              <div className="flex items-center gap-6">
-                <img
-                  src={mentorData.image}
-                  alt={mentorData.name}
-                  className="w-20 h-20 rounded-full border-4 border-white shadow-xl"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h2 className="text-2xl font-bold text-white">{mentorData.name}</h2>
-                    <Award className="w-6 h-6 text-yellow-400" />
-                  </div>
-                  <p className="text-white/80 text-lg mb-2">{mentorData.role} • {mentorData.company}</p>
-                  <div className="flex items-center gap-4 text-sm text-white/70">
-                    <div className="flex items-center gap-1">
-                      <MapPin className="w-4 h-4" />
-                      <span>{mentorData.location}</span>
+
+          {/* Person Info Header */}
+          {isMentorView ? (
+            menteeData && (
+              <div className="bg-white/10 backdrop-blur-sm -2xl p-6 mb-6 border border-white/20">
+                <div className="flex items-center gap-6">
+                  <img
+                    src={menteeData.image}
+                    alt={menteeData.name}
+                    className="w-20 h-20 -full border-4 border-white shadow-xl"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h2 className="text-2xl font-bold text-white">{menteeData.name}</h2>
+                      <span className="bg-[#E83E2D]/80 text-white text-xs font-semibold px-3 py-1 -full">Your Mentee</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
-                      <span>Since {new Date(mentorData.relationshipStartDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      <span>{mentorData.sessionsCompleted} sessions completed</span>
+                    {menteeData.bio && <p className="text-white/70 text-sm mb-2 line-clamp-2">{menteeData.bio}</p>}
+                    <div className="flex items-center gap-4 text-sm text-white/70">
+                      {menteeData.location && (
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-4 h-4" />
+                          <span>{menteeData.location}</span>
+                        </div>
+                      )}
+                      {menteeData.connectedSince && (
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          <span>Connected {new Date(menteeData.connectedSince).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-                {mentorData.nextSession && (
-                  <div className="bg-green-500 rounded-xl px-6 py-4 text-center">
-                    <p className="text-xs text-green-100 mb-1">Next Session</p>
-                    <p className="text-white font-bold">
-                      {new Date(mentorData.nextSession).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </p>
-                  </div>
-                )}
               </div>
-            </div>
+            )
+          ) : (
+            mentorData && (
+              <div className="bg-white/10 backdrop-blur-sm -2xl p-6 mb-6 border border-white/20">
+                <div className="flex items-center gap-6">
+                  <img
+                    src={mentorData.image}
+                    alt={mentorData.name}
+                    className="w-20 h-20 -full border-4 border-white shadow-xl"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h2 className="text-2xl font-bold text-white">{mentorData.name}</h2>
+                      <Award className="w-6 h-6 text-yellow-400" />
+                    </div>
+                    <p className="text-white/80 text-lg mb-2">{mentorData.role} � {mentorData.company}</p>
+                    <div className="flex items-center gap-4 text-sm text-white/70">
+                      {mentorData.location && (
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-4 h-4" />
+                          <span>{mentorData.location}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
           )}
           
           <div className="text-center">
-            <h1 className="text-4xl text-white font-bold mb-3">Mentorship Activities & Progress</h1>
+            <h1 className="text-4xl text-white font-bold mb-3">
+              {isMentorView ? 'Mentee Activities & Progress' : 'Mentorship Activities & Progress'}
+            </h1>
             <p className="text-xl text-white/80 max-w-3xl mx-auto">
-              Track goals, manage learning paths, and measure your development progress
+              {isMentorView
+                ? 'Review goals, track progress, and guide your mentee\'s development'
+                : 'Track goals, manage learning paths, and measure your development progress'}
             </p>
           </div>
         </div>
@@ -1367,49 +1470,49 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
       {/* Stats Dashboard */}
       <div className="max-w-[1920px] mx-auto px-12 sm:px-16 lg:px-20 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white -xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 text-sm mb-1">Total Goals</p>
                 <p className="text-3xl font-bold text-gray-900">{totalGoals}</p>
               </div>
-              <div className="bg-[#1A1F5E]/10 p-3 rounded-lg">
+              <div className="bg-[#1A1F5E]/10 p-3 -lg">
                 <Target className="w-6 h-6 text-[#0072CE]" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white -xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 text-sm mb-1">In Progress</p>
                 <p className="text-3xl font-bold text-gray-900">{inProgressGoals}</p>
               </div>
-              <div className="bg-yellow-100 p-3 rounded-lg">
-                <Clock className="w-6 h-6 text-yellow-600" />
+              <div className="bg-[#1A1F5E]/10 p-3 -lg">
+                <Clock className="w-6 h-6 text-[#1A1F5E]" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white -xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 text-sm mb-1">Completed</p>
                 <p className="text-3xl font-bold text-gray-900">{completedGoals}</p>
               </div>
-              <div className="bg-green-100 p-3 rounded-lg">
-                <CheckCircle className="w-6 h-6 text-green-600" />
+              <div className="bg-[#1A1F5E]/10 p-3 -lg">
+                <CheckCircle className="w-6 h-6 text-[#1A1F5E]" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white -xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 text-sm mb-1">Avg. Progress</p>
                 <p className="text-3xl font-bold text-gray-900">{averageProgress}%</p>
               </div>
-              <div className="bg-[#1A1F5E]/10 p-3 rounded-lg">
+              <div className="bg-[#1A1F5E]/10 p-3 -lg">
                 <TrendingUp className="w-6 h-6 text-[#0072CE]" />
               </div>
             </div>
@@ -1417,7 +1520,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8">
+        <div className="bg-white -xl shadow-sm border border-gray-100 mb-8">
           <div className="border-b border-gray-200">
             <div className="flex space-x-8 px-6">
               {[
@@ -1452,16 +1555,16 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
           {/* Tab Content */}
           <div className="p-6">
             {/* Teams Meeting Quick Access */}
-            <div className="mb-6 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] rounded-xl p-6 text-white">
+            <div className="mb-6 bg-[#1A1F5E] -xl p-6 text-white">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <div className="bg-white/20 p-3 rounded-lg">
+                  <div className="bg-white/20 p-3 -lg">
                     <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M17 3H7C5.89543 3 5 3.89543 5 5V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V5C19 3.89543 18.1046 3 17 3Z"/>
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold">Need to discuss with your mentor?</h3>
+                    <h3 className="text-2xl text-white font-bold mb-3">Need to discuss with your mentor?</h3>
                     <p className="text-white/80 text-sm">Schedule or join a Microsoft Teams meeting</p>
                   </div>
                 </div>
@@ -1469,7 +1572,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                   href="https://teams.microsoft.com/l/meetup-join/19%3ameeting_mentorship_session"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-white text-[#0072CE] hover:bg-[#1A1F5E]/5 px-6 py-3 rounded-lg font-semibold flex items-center space-x-2 transition-colors"
+                  className="bg-white text-[#0072CE] hover:bg-[#1A1F5E]/5 px-6 py-3 -lg font-semibold flex items-center space-x-2 transition-colors"
                 >
                   <span>Open Teams</span>
                   <ChevronRight className="w-5 h-5" />
@@ -1480,86 +1583,168 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
             {/* INTERACTIVE ACTIVITIES TAB */}
             {activeTab === 'activities' && (
               <div className="space-y-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Interactive Activities</h2>
-                  <p className="text-gray-600">Engage with tools designed to strengthen your mentorship relationship</p>
-                </div>
+                {isMentorView ? (
+                  /* -- MENTOR ACTIVITIES DASHBOARD -- */
+                  <>
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900 mb-2">Mentor Dashboard</h2>
+                      <p className="text-gray-600">Manage your mentee's activities, set quiz questions, and track their engagement</p>
+                    </div>
 
-                {/* Activities Grid */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  {/* Reflection Board */}
-                  <button
-                    onClick={() => setShowReflectionBoard(true)}
-                    className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl shadow-sm border-2 border-orange-200 p-8 hover:shadow-lg hover:scale-105 transition-all text-left group"
-                  >
-                    <div className="w-16 h-16 bg-orange-600 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                      <BookOpen className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-3">Reflection Board</h3>
-                    <p className="text-gray-600 mb-4">Share and explore mentorship reflections and growth insights</p>
-                    <div className="text-orange-600 font-medium flex items-center">
-                      Start Activity →
-                    </div>
-                  </button>
-
-                  {/* Mentorship Challenge Game */}
-                  <button
-                    onClick={() => setShowWordwallGame(true)}
-                    className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl shadow-sm border-2 border-pink-200 p-8 hover:shadow-lg hover:scale-105 transition-all text-left group"
-                  >
-                    <div className="w-16 h-16 bg-pink-600 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                      <Trophy className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-3">Mentorship Challenge</h3>
-                    <p className="text-gray-600 mb-4">Test your mentorship knowledge with our quiz game</p>
-                    <div className="text-pink-600 font-medium flex items-center">
-                      Start Activity →
-                    </div>
-                  </button>
-                </div>
-
-                {/* Activity Stats Dashboard */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6 mt-8">
-                  <h3 className="text-xl font-bold text-gray-900 mb-6">Your Activity Progress</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                    <div className="text-center p-6 bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] rounded-xl border border-[#0072CE]/30">
-                      <div className="text-4xl font-bold text-[#1A1F5E] mb-2">{activityResults.reflectionsPosted}</div>
-                      <div className="text-sm font-medium text-gray-700">Reflections Posted</div>
-                    </div>
-                    <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
-                      <div className="text-4xl font-bold text-green-900 mb-2">{activityResults.activitiesCompleted}</div>
-                      <div className="text-sm font-medium text-gray-700">Activities Completed</div>
-                    </div>
-                    <div className="text-center p-6 bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl border border-pink-200">
-                      <div className="text-4xl font-bold text-pink-900 mb-2">{activityResults.gameHighScore}</div>
-                      <div className="text-sm font-medium text-gray-700">Quiz High Score</div>
-                    </div>
-                  </div>
-
-                  {/* Teams Meeting CTA */}
-                  <div className="mt-6 bg-gradient-to-r from-[#F4F4F4] to-[#F4F4F4] border-2 border-[#0072CE]/30 rounded-xl p-6\">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4\">
-                        <div className="w-12 h-12 bg-[#0072CE] rounded-lg flex items-center justify-center\">
-                          <MessageSquare className="w-6 h-6 text-white\" />
+                    {/* Mentor Action Cards */}
+                    <div className="grid md:grid-cols-3 gap-6">
+                      {/* View Reflections */}
+                      <button
+                        onClick={() => setActiveTab('reflections')}
+                        className="bg-[#F4F4F4] -xl shadow-sm border-2 border-[#E5E7EB] p-8 hover:shadow-lg hover:scale-105 transition-all text-left group"
+                      >
+                        <div className="w-14 h-14 bg-[#1A1F5E] -lg flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                          <BookOpen className="w-7 h-7 text-white" />
                         </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-1\">Discuss your progress with your mentor</h4>
-                          <p className="text-sm text-gray-600\">Schedule a Teams call to review your activities and get feedback</p>
+                        <h3 className="text-lg font-bold text-gray-900 mb-2">Mentee Reflections</h3>
+                        <p className="text-gray-600 text-sm mb-3">Read your mentee's reflection entries and growth insights</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[#1A1F5E] font-medium text-sm">View Reflections ?</span>
+                          <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] text-xs font-bold px-2 py-1 -full">{reflections.length}</span>
+                        </div>
+                      </button>
+
+                      {/* Manage Quiz Questions */}
+                      <button
+                        onClick={() => setShowQuizManager(true)}
+                        className="bg-gradient-to-br from-[#1A1F5E]/5 to-[#0072CE]/10 -xl shadow-sm border-2 border-[#0072CE]/30 p-8 hover:shadow-lg hover:scale-105 transition-all text-left group"
+                      >
+                        <div className="w-14 h-14 bg-[#1A1F5E] -lg flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                          <Trophy className="w-7 h-7 text-white" />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900 mb-2">Set Quiz Questions</h3>
+                        <p className="text-gray-600 text-sm mb-3">Choose and customise which questions appear in your mentee's challenge game</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[#0072CE] font-medium text-sm">Manage Questions ?</span>
+                          <span className="bg-[#0072CE]/10 text-[#1A1F5E] text-xs font-bold px-2 py-1 -full">{activeQuestionIds.length} active</span>
+                        </div>
+                      </button>
+
+                      {/* Mentee Progress Overview */}
+                      <button
+                        onClick={() => setActiveTab('goals')}
+                        className="bg-[#F4F4F4] -xl shadow-sm border-2 border-[#E5E7EB] p-8 hover:shadow-lg hover:scale-105 transition-all text-left group"
+                      >
+                        <div className="w-14 h-14 bg-[#1A1F5E] -lg flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                          <TrendingUp className="w-7 h-7 text-white" />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900 mb-2">Mentee Progress</h3>
+                        <p className="text-gray-600 text-sm mb-3">Review goal progress, milestones, and progress reports</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[#1A1F5E] font-medium text-sm">View Progress ?</span>
+                          <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] text-xs font-bold px-2 py-1 -full">{goals.length} goals</span>
+                        </div>
+                      </button>
+                    </div>
+
+                    {/* Mentee Activity Stats */}
+                    <div className="bg-white -xl border border-gray-200 p-6">
+                      <h3 className="text-xl font-bold text-gray-900 mb-6">Mentee Activity Overview</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div className="text-center p-5 bg-[#F4F4F4] -xl border border-[#E5E7EB]">
+                          <div className="text-3xl font-bold text-[#1A1F5E] mb-1">{reflections.length}</div>
+                          <div className="text-sm font-medium text-gray-700">Reflections</div>
+                        </div>
+                        <div className="text-center p-5 bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] -xl border border-[#0072CE]/30">
+                          <div className="text-3xl font-bold text-[#1A1F5E] mb-1">{goals.length}</div>
+                          <div className="text-sm font-medium text-gray-700">Goals Set</div>
+                        </div>
+                        <div className="text-center p-5 bg-[#F4F4F4] -xl border border-[#E5E7EB]">
+                          <div className="text-3xl font-bold text-[#1A1F5E] mb-1">{goals.filter(g => g.status === 'completed').length}</div>
+                          <div className="text-sm font-medium text-gray-700">Goals Completed</div>
+                        </div>
+                        <div className="text-center p-5 bg-[#F4F4F4] -xl border border-[#E5E7EB]">
+                          <div className="text-3xl font-bold text-[#1A1F5E] mb-1">{sessions.filter((s: any) => s.status === 'completed').length}</div>
+                          <div className="text-sm font-medium text-gray-700">Sessions Done</div>
                         </div>
                       </div>
-                      <a
-                        href="https://teams.microsoft.com/l/meetup-join/19%3ameeting_progress_review"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-6 py-3 rounded-lg font-semibold flex items-center space-x-2 transition-colors whitespace-nowrap"
-                      >
-                        <span>Open Teams</span>
-                        <ChevronRight className="w-5 h-5\" />
-                      </a>
                     </div>
-                  </div>
-                </div>
+                  </>
+                ) : (
+                  /* -- MENTEE ACTIVITIES DASHBOARD -- */
+                  <>
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900 mb-2">Interactive Activities</h2>
+                      <p className="text-gray-600">Engage with tools designed to strengthen your mentorship journey</p>
+                    </div>
+
+                    {/* Activities Grid */}
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {/* Reflection Board */}
+                      <button
+                        onClick={() => setShowReflectionBoard(true)}
+                        className="bg-[#F4F4F4] -xl shadow-sm border-2 border-[#E5E7EB] p-8 hover:shadow-lg hover:scale-105 transition-all text-left group"
+                      >
+                        <div className="w-16 h-16 bg-[#1A1F5E] -lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                          <BookOpen className="w-8 h-8 text-white" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-3">Reflection Board</h3>
+                        <p className="text-gray-600 mb-4">Share and explore mentorship reflections and growth insights</p>
+                        <div className="text-[#1A1F5E] font-medium flex items-center">Start Activity ?</div>
+                      </button>
+
+                      {/* Mentorship Challenge Game */}
+                      <button
+                        onClick={() => setShowWordwallGame(true)}
+                        className="bg-[#F4F4F4] -xl shadow-sm border-2 border-[#E5E7EB] p-8 hover:shadow-lg hover:scale-105 transition-all text-left group"
+                      >
+                        <div className="w-16 h-16 bg-[#E83E2D] -lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                          <Trophy className="w-8 h-8 text-white" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-3">Mentorship Challenge</h3>
+                        <p className="text-gray-600 mb-4">Test your mentorship knowledge with our quiz game</p>
+                        <div className="text-[#E83E2D] font-medium flex items-center">Start Activity ?</div>
+                      </button>
+                    </div>
+
+                    {/* Activity Stats Dashboard */}
+                    <div className="bg-white -xl border border-gray-200 p-6 mt-8">
+                      <h3 className="text-xl font-bold text-gray-900 mb-6">Your Activity Progress</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                        <div className="text-center p-6 bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] -xl border border-[#0072CE]/30">
+                          <div className="text-4xl font-bold text-[#1A1F5E] mb-2">{reflections.length}</div>
+                          <div className="text-sm font-medium text-gray-700">Reflections Posted</div>
+                        </div>
+                        <div className="text-center p-6 bg-[#F4F4F4] -xl border border-[#E5E7EB]">
+                          <div className="text-4xl font-bold text-[#1A1F5E] mb-2">{goals.filter(g => g.status === 'completed').length + sessions.filter(s => s.status === 'completed').length}</div>
+                          <div className="text-sm font-medium text-gray-700">Activities Completed</div>
+                        </div>
+                        <div className="text-center p-6 bg-[#F4F4F4] -xl border border-[#E5E7EB]">
+                          <div className="text-4xl font-bold text-[#1A1F5E] mb-2">{gameHighScore}</div>
+                          <div className="text-sm font-medium text-gray-700">Quiz High Score</div>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 bg-gradient-to-r from-[#F4F4F4] to-[#F4F4F4] border-2 border-[#0072CE]/30 -xl p-6">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <div className="w-12 h-12 bg-[#0072CE] -lg flex items-center justify-center">
+                              <MessageSquare className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-gray-900 mb-1">Discuss your progress with your mentor</h4>
+                              <p className="text-sm text-gray-600">Schedule a Teams call to review your activities and get feedback</p>
+                            </div>
+                          </div>
+                          <a
+                            href="https://teams.microsoft.com/l/meetup-join/19%3ameeting_progress_review"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-6 py-3 -lg font-semibold flex items-center space-x-2 transition-colors whitespace-nowrap"
+                          >
+                            <span>Open Teams</span>
+                            <ChevronRight className="w-5 h-5" />
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
@@ -1569,33 +1754,51 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">SMART Goals</h2>
-                    <p className="text-gray-600">Specific, Measurable, Achievable, Relevant, Time-bound goals</p>
+                    <p className="text-gray-600">
+                      {isMentorView
+                        ? 'Review and guide your mentee\'s goals � track progress and provide feedback'
+                        : 'Specific, Measurable, Achievable, Relevant, Time-bound goals'}
+                    </p>
                   </div>
-                  <button
-                    onClick={() => setShowCreateGoal(true)}
-                    className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-                  >
-                    <Plus className="w-5 h-5" />
-                    <span>Create Goal</span>
-                  </button>
+                  {!isMentorView ? (
+                    <button
+                      onClick={() => setShowCreateGoal(true)}
+                      className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-4 py-2 -lg flex items-center space-x-2 transition-colors"
+                    >
+                      <Plus className="w-5 h-5" />
+                      <span>Create Goal</span>
+                    </button>
+                  ) : (
+                    <div className="flex items-center space-x-2 bg-[#1A1F5E]/10 text-[#1A1F5E] px-4 py-2 -lg text-sm font-medium">
+                      <Users className="w-4 h-4" />
+                      <span>Goals are set by your mentee</span>
+                    </div>
+                  )}
                 </div>
+                {isMentorView && goals.length === 0 && (
+                  <div className="bg-[#F4F4F4] border border-[#E5E7EB] -2xl p-8 text-center">
+                    <Target className="w-12 h-12 text-[#8C8C8C] mx-auto mb-3" />
+                    <h3 className="text-lg font-semibold text-[#333333] mb-2">No goals created yet</h3>
+                    <p className="text-[#8C8C8C] text-sm">Encourage your mentee to create SMART goals so you can track and guide their progress.</p>
+                  </div>
+                )}
 
                 {/* Goals List */}
                 <div className="space-y-4">
                   {goals.map(goal => (
-                    <div key={goal.id} className="bg-gray-50 rounded-xl p-6 border border-gray-200 hover:shadow-md transition-all">
+                    <div key={goal.id} className="bg-gray-50 -xl p-6 border border-gray-200 hover:shadow-md transition-all">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <div className="flex items-center space-x-3 mb-2">
                             <h3 className="text-xl font-semibold text-gray-900">{goal.title}</h3>
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            <span className={`px-3 py-1 -full text-xs font-medium ${
                               goal.priority === 'high' ? 'bg-red-100 text-red-700' :
                               goal.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
                               'bg-gray-100 text-gray-700'
                             }`}>
                               {goal.priority} priority
                             </span>
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            <span className={`px-3 py-1 -full text-xs font-medium ${
                               goal.status === 'completed' ? 'bg-green-100 text-green-700' :
                               goal.status === 'in-progress' ? 'bg-[#1A1F5E]/10 text-[#1A1F5E]' :
                               goal.status === 'blocked' ? 'bg-red-100 text-red-700' :
@@ -1634,9 +1837,9 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                           <span className="text-sm font-medium text-gray-700">Overall Progress</span>
                           <span className="text-sm font-bold text-[#0072CE]">{goal.progress}%</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div className="w-full bg-gray-200 -full h-3">
                           <div
-                            className="bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] h-3 rounded-full transition-all duration-500"
+                            className="bg-[#1A1F5E] h-3 -full transition-all duration-500"
                             style={{ width: `${goal.progress}%` }}
                           />
                         </div>
@@ -1647,7 +1850,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                         {goal.milestones.map(milestone => (
                           <div
                             key={milestone.id}
-                            className={`p-3 rounded-lg border-2 cursor-pointer hover:shadow-md transition-shadow ${
+                            className={`p-3 -lg border-2 cursor-pointer hover:shadow-md transition-shadow ${
                               milestone.completed
                                 ? 'bg-green-50 border-green-300'
                                 : 'bg-white border-gray-200'
@@ -1662,7 +1865,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                                   e.stopPropagation();
                                   handleMilestoneToggle(goal.id, milestone.id);
                                 }}
-                                className="w-4 h-4 text-green-600 rounded cursor-pointer"
+                                className="w-4 h-4 text-green-600  cursor-pointer"
                               />
                               <span className={`text-xs font-medium ${
                                 milestone.completed ? 'text-green-900 line-through' : 'text-gray-900'
@@ -1686,28 +1889,46 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">Progress Reports</h2>
-                    <p className="text-gray-600">Weekly and monthly progress tracking</p>
+                    <p className="text-gray-600">
+                      {isMentorView
+                        ? 'Review your mentee\'s progress reports and add your feedback'
+                        : 'Weekly and monthly progress tracking � document your achievements and challenges'}
+                    </p>
                   </div>
-                  <button
-                    onClick={() => setShowProgressReport(true)}
-                    className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-4 py-2 rounded-lg flex items-center space-x-2"
-                  >
-                    <Plus className="w-5 h-5" />
-                    <span>Create Report</span>
-                  </button>
+                  {!isMentorView ? (
+                    <button
+                      onClick={() => setShowProgressReport(true)}
+                      className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-4 py-2 -lg flex items-center space-x-2"
+                    >
+                      <Plus className="w-5 h-5" />
+                      <span>Create Report</span>
+                    </button>
+                  ) : (
+                    <div className="flex items-center space-x-2 bg-[#1A1F5E]/10 text-[#1A1F5E] px-4 py-2 -lg text-sm font-medium">
+                      <FileText className="w-4 h-4" />
+                      <span>Reports are submitted by your mentee</span>
+                    </div>
+                  )}
                 </div>
+                {isMentorView && progressReports.length === 0 && (
+                  <div className="bg-[#F4F4F4] border border-[#E5E7EB] -2xl p-8 text-center">
+                    <BarChart3 className="w-12 h-12 text-[#8C8C8C] mx-auto mb-3" />
+                    <h3 className="text-lg font-semibold text-[#333333] mb-2">No reports yet</h3>
+                    <p className="text-[#8C8C8C] text-sm">Once your mentee submits a progress report, it will appear here for you to review and provide feedback.</p>
+                  </div>
+                )}
 
                 {/* Reports List */}
                 <div className="space-y-4">
                   {progressReports.map(report => {
                     const goal = goals.find(g => g.id === report.goalId);
                     return (
-                      <div key={report.id} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-all">
+                      <div key={report.id} className="bg-white -xl border border-gray-200 p-6 hover:shadow-md transition-all">
                         <div className="flex items-start justify-between mb-4">
                           <div>
                             <h3 className="text-lg font-semibold text-gray-900 mb-1">{goal?.title}</h3>
                             <p className="text-sm text-gray-600">
-                              {report.period === 'weekly' ? 'Weekly Report' : 'Monthly Report'} • 
+                              {report.period === 'weekly' ? 'Weekly Report' : 'Monthly Report'} � 
                               {new Date(report.startDate).toLocaleDateString()} - {new Date(report.endDate).toLocaleDateString()}
                             </p>
                           </div>
@@ -1723,7 +1944,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                             <ul className="space-y-1">
                               {report.achievements.map((achievement, idx) => (
                                 <li key={idx} className="text-sm text-gray-600 flex items-start space-x-2">
-                                  <span className="text-green-600 mt-0.5">•</span>
+                                  <span className="text-green-600 mt-0.5">�</span>
                                   <span>{achievement}</span>
                                 </li>
                               ))}
@@ -1738,7 +1959,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                             <ul className="space-y-1">
                               {report.challenges.map((challenge, idx) => (
                                 <li key={idx} className="text-sm text-gray-600 flex items-start space-x-2">
-                                  <span className="text-yellow-600 mt-0.5">•</span>
+                                  <span className="text-yellow-600 mt-0.5">�</span>
                                   <span>{challenge}</span>
                                 </li>
                               ))}
@@ -1753,7 +1974,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                             <ul className="space-y-1">
                               {report.nextSteps.map((step, idx) => (
                                 <li key={idx} className="text-sm text-gray-600 flex items-start space-x-2">
-                                  <span className="text-[#0072CE] mt-0.5">•</span>
+                                  <span className="text-[#0072CE] mt-0.5">�</span>
                                   <span>{step}</span>
                                 </li>
                               ))}
@@ -1764,7 +1985,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                         {report.mentorFeedback && (
                           <div className="mt-4 pt-4 border-t border-gray-200">
                             <h4 className="font-semibold text-gray-900 mb-2">Mentor Feedback</h4>
-                            <p className="text-sm text-gray-700 bg-[#F4F4F4] p-3 rounded-lg">{report.mentorFeedback}</p>
+                            <p className="text-sm text-gray-700 bg-[#F4F4F4] p-3 -lg">{report.mentorFeedback}</p>
                           </div>
                         )}
                       </div>
@@ -1788,7 +2009,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                       {learningPaths.map(path => (
                         <div
                           key={path.id}
-                          className={`rounded-xl border-2 p-6 hover:shadow-lg transition-all ${
+                          className={`-xl border-2 p-6 hover:shadow-lg transition-all ${
                             path.enrolled ? 'bg-[#0072CE]/10 border-[#0072CE]/40' : 'bg-white border-gray-200'
                           }`}
                         >
@@ -1797,7 +2018,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                               <div className="flex items-center space-x-2 mb-2">
                                 <h3 className="text-xl font-semibold text-gray-900">{path.title}</h3>
                                 {path.enrolled && (
-                                  <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-2 py-1 rounded-full text-xs font-medium">
+                                  <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-2 py-1 -full text-xs font-medium">
                                     Enrolled
                                   </span>
                                 )}
@@ -1826,9 +2047,9 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                                 <span className="text-sm font-medium text-gray-700">Progress</span>
                                 <span className="text-sm font-bold text-[#0072CE]">{path.progress}%</span>
                               </div>
-                              <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div className="w-full bg-gray-200 -full h-2">
                                 <div
-                                  className="bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] h-2 rounded-full"
+                                  className="bg-[#1A1F5E] h-2 -full"
                                   style={{ width: `${path.progress}%` }}
                                 />
                               </div>
@@ -1841,7 +2062,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                               {path.modules.slice(0, 3).map(module => (
                                 <div
                                   key={module.id}
-                                  className={`flex items-center justify-between p-3 rounded-lg ${
+                                  className={`flex items-center justify-between p-3 -lg ${
                                     module.completed ? 'bg-green-50' : 'bg-white'
                                   }`}
                                 >
@@ -1853,11 +2074,11 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                                     )}
                                     <div>
                                       <p className="font-medium text-gray-900 text-sm">{module.title}</p>
-                                      <p className="text-xs text-gray-600">{module.resources.length} resources • {module.duration}</p>
+                                      <p className="text-xs text-gray-600">{module.resources.length} resources � {module.duration}</p>
                                     </div>
                                   </div>
                                   {module.assessment && !module.assessment.completed && (
-                                    <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-xs font-medium">
+                                    <span className="bg-yellow-100 text-yellow-700 px-2 py-1  text-xs font-medium">
                                       Assessment
                                     </span>
                                   )}
@@ -1874,10 +2095,10 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                               if (path.enrolled) {
                                 setSelectedLearningPath(path);
                               } else {
-                                alert('🎉 Enrolled in ' + path.title + '!');
+                                alert('?? Enrolled in ' + path.title + '!');
                               }
                             }}
-                            className={`w-full py-2 rounded-lg font-medium transition-colors ${
+                            className={`w-full py-2 -lg font-medium transition-colors ${
                               path.enrolled
                                 ? 'bg-[#0072CE] hover:bg-[#1A1F5E] text-white'
                                 : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
@@ -1900,7 +2121,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                       <span>Back to All Paths</span>
                     </button>
 
-                    <div className="bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] rounded-2xl p-8 text-white mb-6">
+                    <div className="bg-[#1A1F5E] -2xl p-8 text-white mb-6">
                       <div className="flex items-start justify-between">
                         <div>
                           <h1 className="text-3xl font-bold mb-2">{selectedLearningPath.title}</h1>
@@ -1925,9 +2146,9 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                           <div className="text-white/80 text-sm">Complete</div>
                         </div>
                       </div>
-                      <div className="w-full bg-[#0072CE] rounded-full h-3 mt-6">
+                      <div className="w-full bg-[#0072CE] -full h-3 mt-6">
                         <div
-                          className="bg-white h-3 rounded-full transition-all"
+                          className="bg-white h-3 -full transition-all"
                           style={{ width: `${selectedLearningPath.progress}%` }}
                         />
                       </div>
@@ -1936,14 +2157,14 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                     {/* Modules List */}
                     <div className="space-y-4">
                       {selectedLearningPath.modules.map((module, idx) => (
-                        <div key={module.id} className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden">
+                        <div key={module.id} className="bg-white -xl border-2 border-gray-200 overflow-hidden">
                           <button
                             onClick={() => setSelectedModule(selectedModule?.id === module.id ? null : module)}
                             className="w-full p-6 text-left hover:bg-gray-50 transition-colors"
                           >
                             <div className="flex items-start justify-between">
                               <div className="flex items-start space-x-4 flex-1">
-                                <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold ${
+                                <div className={`flex-shrink-0 w-10 h-10 -full flex items-center justify-center font-bold ${
                                   module.completed ? 'bg-green-100 text-green-700' : 'bg-[#1A1F5E]/10 text-[#1A1F5E]'
                                 }`}>
                                   {module.completed ? <CheckCircle className="w-6 h-6" /> : idx + 1}
@@ -1962,7 +2183,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                                     </span>
                                     {module.completed && module.completedDate && (
                                       <span className="text-green-600 text-xs">
-                                        ✓ Completed {new Date(module.completedDate).toLocaleDateString()}
+                                        ? Completed {new Date(module.completedDate).toLocaleDateString()}
                                       </span>
                                     )}
                                   </div>
@@ -1985,10 +2206,10 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                                       setSelectedResource(resource);
                                       setShowResourceViewer(true);
                                     }}
-                                    className="bg-white rounded-lg border border-gray-200 p-4 hover:border-[#0072CE]/40 hover:shadow-md transition-all text-left"
+                                    className="bg-white -lg border border-gray-200 p-4 hover:border-[#0072CE]/40 hover:shadow-md transition-all text-left"
                                   >
                                     <div className="flex items-start space-x-3">
-                                      <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center ${
+                                      <div className={`flex-shrink-0 w-12 h-12 -lg flex items-center justify-center ${
                                         resource.type === 'video' ? 'bg-red-100' : 'bg-[#1A1F5E]/10'
                                       }`}>
                                         {resource.type === 'video' ? (
@@ -2027,20 +2248,20 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                               </div>
 
                               {module.assessment && (
-                                <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                <div className="mt-4 bg-yellow-50 border border-yellow-200 -lg p-4">
                                   <div className="flex items-start justify-between">
                                     <div>
                                       <h5 className="font-semibold text-gray-900 mb-1">{module.assessment.title}</h5>
                                       <p className="text-sm text-gray-600 mb-2">
-                                        {module.assessment.questions} questions • Passing score: {module.assessment.passingScore}%
+                                        {module.assessment.questions} questions � Passing score: {module.assessment.passingScore}%
                                       </p>
                                       {module.assessment.attempts > 0 && (
                                         <p className="text-xs text-gray-500">
-                                          Attempts: {module.assessment.attempts} • Best score: {module.assessment.bestScore}%
+                                          Attempts: {module.assessment.attempts} � Best score: {module.assessment.bestScore}%
                                         </p>
                                       )}
                                     </div>
-                                    <button className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                                    <button className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 -lg text-sm font-medium">
                                       {module.assessment.completed ? 'Retake' : 'Start Assessment'}
                                     </button>
                                   </div>
@@ -2059,59 +2280,171 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
             {/* TEAMS MEETINGS TAB */}
             {activeTab === 'feedback' && (
               <div className="space-y-6">
-                <div className="text-center py-12">
-                  <div className="max-w-2xl mx-auto">
-                    <div className="w-24 h-24 bg-[#1A1F5E]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-[#1A1F5E]">Teams Meetings</h2>
+                    <p className="text-[#8C8C8C]">Scheduled sessions for this mentorship connection</p>
+                  </div>
+                  <button
+                    onClick={() => setShowNewSession(true)}
+                    className="bg-[#1A1F5E] text-white font-semibold px-6 py-3 -full transition-all duration-200 hover:opacity-90 hover:scale-105 shadow-lg flex items-center space-x-2"
+                  >
+                    <Plus className="w-5 h-5" />
+                    <span>Schedule Session</span>
+                  </button>
+                </div>
+
+                {sessions.length === 0 ? (
+                  <div className="bg-white -3xl shadow-xl p-12 border border-[#E5E7EB] text-center">
+                    <div className="w-16 h-16 bg-[#1A1F5E]/10 -full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-[#1A1F5E]" viewBox="0 0 24 24" fill="none">
                         <path d="M17 3H7C5.89543 3 5 3.89543 5 5V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V5C19 3.89543 18.1046 3 17 3Z" fill="#5059C9"/>
                         <path d="M9 7H15M9 11H15M9 15H12" stroke="white" strokeWidth="2" strokeLinecap="round"/>
                       </svg>
                     </div>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-4">Schedule Feedback Session via Microsoft Teams</h2>
-                    <p className="text-lg text-gray-600 mb-8">
-                      For feedback discussions, performance reviews, and mentorship conversations, please use Microsoft Teams.
-                    </p>
-                    
-                    <div className="bg-[#F4F4F4] border-2 border-[#0072CE]/30 rounded-xl p-8 mb-8">
-                      <h3 className="text-xl font-semibold text-gray-900 mb-4">What to discuss in Teams:</h3>
-                      <div className="grid md:grid-cols-2 gap-4 text-left">
-                        <div className="flex items-start space-x-3">
-                          <CheckCircle className="w-5 h-5 text-[#0072CE] mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700">Session feedback and ratings</span>
+                    <h3 className="text-xl font-semibold text-[#333333] mb-2">No sessions scheduled yet</h3>
+                    <p className="text-[#8C8C8C] mb-6">Schedule your first Teams meeting to get started</p>
+                    <button
+                      onClick={() => setShowNewSession(true)}
+                      className="bg-[#1A1F5E] text-white font-semibold px-8 py-3 -full hover:opacity-90 transition-all"
+                    >
+                      Schedule First Session
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {sessions.map((session: any) => {
+                      const isPast = new Date(session.scheduled_at) < new Date();
+                      const statusColor = session.status === 'completed' ? 'bg-green-100 text-green-700'
+                        : session.status === 'cancelled' ? 'bg-[#8C8C8C]/10 text-[#8C8C8C]'
+                        : isPast ? 'bg-yellow-100 text-yellow-700'
+                        : 'bg-[#0072CE]/10 text-[#0072CE]';
+                      const statusLabel = session.status === 'completed' ? 'Completed'
+                        : session.status === 'cancelled' ? 'Cancelled'
+                        : isPast ? 'Past'
+                        : 'Scheduled';
+                      return (
+                        <div key={session.session_id} className="bg-white -3xl shadow-xl p-6 border border-[#E5E7EB]">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3 mb-2">
+                                <h3 className="text-xl font-semibold text-[#333333]">{session.title}</h3>
+                                <span className={`px-3 py-1 -full text-xs font-semibold ${statusColor}`}>
+                                  {statusLabel}
+                                </span>
+                              </div>
+                              {session.description && (
+                                <p className="text-[#8C8C8C] text-sm mb-3">{session.description}</p>
+                              )}
+                              <div className="flex items-center space-x-6 text-sm text-[#8C8C8C]">
+                                <span className="flex items-center space-x-1">
+                                  <Clock className="w-4 h-4" />
+                                  <span>{new Date(session.scheduled_at).toLocaleString()}</span>
+                                </span>
+                                <span className="flex items-center space-x-1">
+                                  <Target className="w-4 h-4" />
+                                  <span>{session.duration_minutes} min</span>
+                                </span>
+                              </div>
+                            </div>
+                            {session.meeting_link && (
+                              <a
+                                href={session.meeting_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="ml-4 bg-[#1A1F5E] text-white px-5 py-2 -full text-sm font-semibold hover:opacity-90 transition-all flex items-center space-x-2 whitespace-nowrap"
+                              >
+                                <span>Join Teams</span>
+                                <ChevronRight className="w-4 h-4" />
+                              </a>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-start space-x-3">
-                          <CheckCircle className="w-5 h-5 text-[#0072CE] mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700">360-degree feedback reviews</span>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* New Session Modal */}
+                {showNewSession && (
+                  <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white -3xl shadow-2xl max-w-lg w-full p-8 border border-[#E5E7EB]">
+                      <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-2xl font-bold text-[#1A1F5E]">Schedule Teams Session</h2>
+                        <button onClick={() => setShowNewSession(false)} className="text-[#8C8C8C] hover:text-[#333333]">
+                          <X className="w-6 h-6" />
+                        </button>
+                      </div>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-[#333333] mb-2">Session Title *</label>
+                          <input
+                            value={newSession.title}
+                            onChange={e => setNewSession(s => ({ ...s, title: e.target.value }))}
+                            placeholder="e.g. Monthly check-in, Goal review..."
+                            className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
+                          />
                         </div>
-                        <div className="flex items-start space-x-3">
-                          <CheckCircle className="w-5 h-5 text-[#0072CE] mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700">Performance evaluations</span>
+                        <div>
+                          <label className="block text-sm font-semibold text-[#333333] mb-2">Date & Time *</label>
+                          <input
+                            type="datetime-local"
+                            value={newSession.scheduled_at}
+                            onChange={e => setNewSession(s => ({ ...s, scheduled_at: e.target.value }))}
+                            className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
+                          />
                         </div>
-                        <div className="flex items-start space-x-3">
-                          <CheckCircle className="w-5 h-5 text-[#0072CE] mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700">Goal progress discussions</span>
+                        <div>
+                          <label className="block text-sm font-semibold text-[#333333] mb-2">Duration (minutes)</label>
+                          <select
+                            value={newSession.duration_minutes}
+                            onChange={e => setNewSession(s => ({ ...s, duration_minutes: parseInt(e.target.value) }))}
+                            className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
+                          >
+                            <option value="30">30 minutes</option>
+                            <option value="45">45 minutes</option>
+                            <option value="60">60 minutes</option>
+                            <option value="90">90 minutes</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-[#333333] mb-2">Teams Meeting Link</label>
+                          <input
+                            value={newSession.meeting_link}
+                            onChange={e => setNewSession(s => ({ ...s, meeting_link: e.target.value }))}
+                            placeholder="https://teams.microsoft.com/..."
+                            className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-[#333333] mb-2">Description</label>
+                          <textarea
+                            value={newSession.description}
+                            onChange={e => setNewSession(s => ({ ...s, description: e.target.value }))}
+                            placeholder="What will you discuss?"
+                            rows={2}
+                            className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all resize-none"
+                          />
+                        </div>
+                        <div className="flex space-x-3 pt-2">
+                          <button
+                            onClick={() => setShowNewSession(false)}
+                            className="flex-1 bg-transparent text-[#1A1F5E] font-semibold px-6 py-3 -full border-2 border-[#1A1F5E] hover:bg-[#1A1F5E] hover:text-white transition-all"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={handleCreateSession}
+                            disabled={sessionLoading}
+                            className="flex-1 bg-[#1A1F5E] text-white font-semibold px-6 py-3 -full hover:opacity-90 transition-all disabled:opacity-50"
+                          >
+                            {sessionLoading ? 'Scheduling...' : 'Schedule Session'}
+                          </button>
                         </div>
                       </div>
                     </div>
-
-                    <a
-                      href="https://teams.microsoft.com/l/meetup-join/19%3ameeting_feedback_session"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center space-x-3 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white px-8 py-4 rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transition-all"
-                    >
-                      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M17 3H7C5.89543 3 5 3.89543 5 5V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V5C19 3.89543 18.1046 3 17 3Z"/>
-                      </svg>
-                      <span>Open Microsoft Teams</span>
-                      <ChevronRight className="w-5 h-5" />
-                    </a>
-                    
-                    <p className="text-sm text-gray-500 mt-6">
-                      Your mentor will receive a notification. You can also schedule meetings directly from your Teams calendar.
-                    </p>
                   </div>
-                </div>
+                )}
               </div>
             )}
 
@@ -2122,7 +2455,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
       {/* Goal Details Modal */}
       {selectedGoal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white -2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between">
               <h2 className="text-2xl font-bold text-gray-900">{selectedGoal.title}</h2>
               <button
@@ -2135,7 +2468,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
 
             <div className="p-6 space-y-6">
               {/* SMART Breakdown */}
-              <div className="bg-[#F4F4F4] rounded-xl p-6">
+              <div className="bg-[#F4F4F4] -xl p-6">
                 <h3 className="font-semibold text-gray-900 mb-4">SMART Goal Breakdown</h3>
                 <div className="grid gap-4">
                   {[
@@ -2158,7 +2491,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                 <h3 className="font-semibold text-gray-900 mb-4">Milestones & Tasks</h3>
                 <div className="space-y-3">
                   {selectedGoal.milestones.map(milestone => (
-                    <div key={milestone.id} className="border border-gray-200 rounded-lg">
+                    <div key={milestone.id} className="border border-gray-200 -lg">
                       <button
                         onClick={() => setExpandedMilestone(expandedMilestone === milestone.id ? null : milestone.id)}
                         className="w-full p-4 flex items-center justify-between hover:bg-gray-50"
@@ -2171,7 +2504,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                               e.stopPropagation();
                               handleMilestoneToggle(selectedGoal.id, milestone.id);
                             }}
-                            className="w-5 h-5 text-green-600 rounded cursor-pointer"
+                            className="w-5 h-5 text-green-600  cursor-pointer"
                           />
                           <div className="text-left">
                             <h4 className={`font-medium ${
@@ -2199,18 +2532,18 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                             {milestone.tasks.map(task => (
                               <div
                                 key={task.id}
-                                className="flex items-center space-x-3 bg-white p-3 rounded-lg hover:shadow-sm transition-shadow"
+                                className="flex items-center space-x-3 bg-white p-3 -lg hover:shadow-sm transition-shadow"
                               >
                                 <input
                                   type="checkbox"
                                   checked={task.completed}
                                   onChange={() => handleTaskToggle(task.id, milestone.id, task.id)}
-                                  className="w-4 h-4 text-[#0072CE] rounded cursor-pointer"
+                                  className="w-4 h-4 text-[#0072CE]  cursor-pointer"
                                 />
                                 <span className={`flex-1 text-sm ${task.completed ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
                                   {task.title}
                                 </span>
-                                <span className={`text-xs px-2 py-1 rounded ${
+                                <span className={`text-xs px-2 py-1  ${
                                   task.assignedTo === 'mentee' ? 'bg-[#1A1F5E]/10 text-[#1A1F5E]' : 'bg-[#1A1F5E]/10 text-[#1A1F5E]'
                                 }`}>
                                   {task.assignedTo}
@@ -2239,430 +2572,401 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
       {activeTab === 'resources' && (
         <div className="max-w-[1920px] mx-auto px-12 sm:px-16 lg:px-20 py-8">
           <div className="space-y-8">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Mentorship Resources & Guides</h2>
-              <p className="text-gray-600">Educational articles and best practices to enhance your mentorship journey</p>
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="h-1 w-12 bg-[#E83E2D] -full mb-4" />
+                <h2 className="text-3xl font-bold text-[#1A1F5E]">Resources & Guides</h2>
+                <p className="text-[#8C8C8C] mt-2">
+                  {isMentorView
+                    ? 'Upload guides, articles, and videos to support your mentee\'s development'
+                    : 'Learning materials provided by your mentor � browse and download'}
+                </p>
+              </div>
+              {isMentorView && (
+                <button
+                  onClick={() => setShowUploadResource(true)}
+                  className="bg-[#1A1F5E] text-white font-semibold px-6 py-3 -full flex items-center space-x-2 hover:opacity-90 hover:scale-105 transition-all shadow-lg"
+                >
+                  <Upload className="w-5 h-5" />
+                  <span>Upload Resource</span>
+                </button>
+              )}
             </div>
 
-            {/* Mentorship Mixer Article */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-              <div className="bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] p-8 rounded-t-xl">
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-                    <Users className="w-8 h-8 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-white">Mentorship Mixer: Navigating Common Scenarios</h3>
-                    <p className="text-white/80">Interactive scenarios and best practices</p>
-                  </div>
+            {/* Search */}
+            <input
+              value={resourceSearch}
+              onChange={e => setResourceSearch(e.target.value)}
+              placeholder="Search resources..."
+              className="w-full max-w-md px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
+            />
+
+            {/* Resource Grid */}
+            {dbResources.filter(r =>
+              !resourceSearch || r.title?.toLowerCase().includes(resourceSearch.toLowerCase()) || r.description?.toLowerCase().includes(resourceSearch.toLowerCase())
+            ).length === 0 ? (
+              <div className="bg-white -3xl shadow-xl p-12 border border-[#E5E7EB] text-center">
+                <BookOpen className="w-12 h-12 text-[#8C8C8C] mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-[#333333] mb-2">
+                  {resourceSearch ? 'No results found' : isMentorView ? 'No resources uploaded yet' : 'No resources available yet'}
+                </h3>
+                <p className="text-[#8C8C8C] mb-4">
+                  {resourceSearch ? 'Try a different search term' : isMentorView
+                    ? 'Upload guides, articles, or videos to help your mentee grow.'
+                    : 'Your mentor hasn\'t uploaded any resources yet. Check back soon.'}
+                </p>
+                {isMentorView && !resourceSearch && (
+                  <button
+                    onClick={() => setShowUploadResource(true)}
+                    className="bg-[#1A1F5E] text-white font-semibold px-6 py-3 -full hover:opacity-90 transition-all shadow-lg"
+                  >
+                    Upload Your First Resource
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {dbResources
+                  .filter(r => !resourceSearch || r.title?.toLowerCase().includes(resourceSearch.toLowerCase()) || r.description?.toLowerCase().includes(resourceSearch.toLowerCase()))
+                  .map((resource: any) => {
+                    const typeIconBg = resource.type === 'video' ? 'bg-red-100' : resource.type === 'article' ? 'bg-[#0072CE]/10' : 'bg-green-100';
+                    const typeIconColor = resource.type === 'video' ? 'text-red-600' : resource.type === 'article' ? 'text-[#0072CE]' : 'text-green-600';
+                    const TypeIcon = resource.type === 'video' ? Play : resource.type === 'article' ? FileText : BookOpen;
+                    return (
+                      <a
+                        key={resource.id}
+                        href={resource.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-white -3xl shadow-xl p-6 border-t-4 border-t-[#1A1F5E] border border-[#E5E7EB] hover:shadow-2xl transition-shadow duration-300 flex flex-col"
+                      >
+                        <div className="flex items-start space-x-4 mb-4">
+                          <div className={`flex-shrink-0 w-12 h-12 ${typeIconBg} -2xl flex items-center justify-center`}>
+                            <TypeIcon className={`w-6 h-6 ${typeIconColor}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-semibold text-[#333333] mb-1 line-clamp-2">{resource.title}</h3>
+                            <div className="flex items-center space-x-2">
+                              <span className="px-2 py-0.5 -full text-xs font-semibold bg-[#1A1F5E]/10 text-[#1A1F5E] capitalize">{resource.type}</span>
+                              {resource.category && (
+                                <span className="px-2 py-0.5 -full text-xs font-semibold bg-[#F4F4F4] text-[#8C8C8C]">{resource.category}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        {resource.description && (
+                          <p className="text-[#8C8C8C] text-sm leading-relaxed mb-4 flex-1 line-clamp-3">{resource.description}</p>
+                        )}
+                        <div className="flex items-center justify-between mt-auto pt-4 border-t border-[#E5E7EB]">
+                          <span className="text-xs text-[#8C8C8C]">by {resource.uploadedBy || 'Forvis Mazars'}</span>
+                          <span className="text-[#0072CE] text-sm font-semibold flex items-center space-x-1">
+                            {isMentorView ? (
+                              <><span>View</span><ChevronRight className="w-4 h-4" /></>
+                            ) : (
+                              <><Download className="w-4 h-4" /><span>Download / Open</span></>
+                            )}
+                          </span>
+                        </div>
+                      </a>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* UPLOAD RESOURCE MODAL (Mentor only) */}
+      {showUploadResource && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white -3xl max-w-xl w-full shadow-2xl border border-[#E5E7EB]">
+            <div className="p-6 border-b border-[#E5E7EB] flex items-center justify-between bg-[#1A1F5E] -t-3xl">
+              <div>
+                <h2 className="text-2xl font-bold text-white">Upload Resource</h2>
+                <p className="text-white/80 text-sm mt-1">Share a guide, article, or video with your mentee</p>
+              </div>
+              <button onClick={() => { setShowUploadResource(false); setNewResource({ title: '', description: '', url: '', type: 'article', category: '' }); }} className="text-white hover:text-white/70 transition-colors">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-8 space-y-5">
+              <div>
+                <label className="block text-sm font-semibold text-[#333333] mb-2">Resource Title *</label>
+                <input
+                  type="text"
+                  value={newResource.title}
+                  onChange={e => setNewResource(r => ({ ...r, title: e.target.value }))}
+                  placeholder="e.g., Introduction to Leadership Frameworks"
+                  className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-[#333333] mb-2">Type *</label>
+                  <select
+                    value={newResource.type}
+                    onChange={e => setNewResource(r => ({ ...r, type: e.target.value as any }))}
+                    className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
+                  >
+                    <option value="article">Article / PDF</option>
+                    <option value="video">Video</option>
+                    <option value="guide">Guide / Template</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-[#333333] mb-2">Category</label>
+                  <input
+                    type="text"
+                    value={newResource.category}
+                    onChange={e => setNewResource(r => ({ ...r, category: e.target.value }))}
+                    placeholder="e.g., Leadership, Technical"
+                    className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
+                  />
                 </div>
               </div>
-              <div className="p-8 prose max-w-none">
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="text-xl font-bold text-gray-900 mb-3">Understanding Mentorship Dynamics</h4>
-                    <p className="text-gray-700 leading-relaxed">
-                      Effective mentorship requires navigating complex interpersonal situations with empathy, wisdom, and adaptability. 
-                      This guide explores common scenarios you'll encounter and provides evidence-based approaches to handle them successfully.
-                    </p>
-                  </div>
-
-                  <div className="bg-[#F4F4F4] border-l-4 border-[#0072CE] p-6 rounded-r-lg">
-                    <h5 className="font-bold text-[#1A1F5E] mb-3 flex items-center">
-                      <span className="w-8 h-8 bg-[#0072CE] text-white rounded-full flex items-center justify-center mr-3 text-sm">1</span>
-                      Scenario: First Meeting Nerves
-                    </h5>
-                    <p className="text-gray-800 mb-4">
-                      <strong>Situation:</strong> Your mentee arrives for the first session appearing nervous, giving short answers, 
-                      and avoiding eye contact. The conversation feels forced and uncomfortable.
-                    </p>
-                    <div className="bg-white rounded-lg p-4 mb-3">
-                      <p className="font-semibold text-gray-900 mb-2">❌ What NOT to do:</p>
-                      <ul className="list-disc list-inside text-gray-700 space-y-1">
-                        <li>Jump straight into setting ambitious goals without building rapport</li>
-                        <li>Interpret their nervousness as disinterest or lack of commitment</li>
-                        <li>Dominate the conversation with your own achievements</li>
-                      </ul>
-                    </div>
-                    <div className="bg-green-50 rounded-lg p-4">
-                      <p className="font-semibold text-green-900 mb-2">✓ Best Approach:</p>
-                      <ul className="list-disc list-inside text-gray-800 space-y-2">
-                        <li><strong>Share your own first-time experiences:</strong> Vulnerability builds connection. Talk about your own nervousness when starting similar relationships.</li>
-                        <li><strong>Use icebreaker activities:</strong> Start with low-stakes questions about interests, hobbies, or recent experiences.</li>
-                        <li><strong>Establish psychological safety:</strong> Explicitly state that this is a judgment-free zone where all questions are welcome.</li>
-                        <li><strong>Ask open-ended questions:</strong> Instead of "Did you prepare?" try "What are you hoping to get out of our time together?"</li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="bg-[#F4F4F4] border-l-4 border-[#0072CE] p-6 rounded-r-lg">
-                    <h5 className="font-bold text-[#1A1F5E] mb-3 flex items-center">
-                      <span className="w-8 h-8 bg-[#0072CE] text-white rounded-full flex items-center justify-center mr-3 text-sm">2</span>
-                      Scenario: Dealing with Setbacks
-                    </h5>
-                    <p className="text-gray-800 mb-4">
-                      <strong>Situation:</strong> Your mentee failed to achieve a goal you set together. They seem discouraged 
-                      and are avoiding discussing what went wrong.
-                    </p>
-                    <div className="bg-white rounded-lg p-4 mb-3">
-                      <p className="font-semibold text-gray-900 mb-2">❌ What NOT to do:</p>
-                      <ul className="list-disc list-inside text-gray-700 space-y-1">
-                        <li>Minimize their feelings with phrases like "It's not a big deal"</li>
-                        <li>Simply tell them to "try harder next time"</li>
-                        <li>Focus on what they did wrong</li>
-                        <li>Change the subject to avoid discomfort</li>
-                      </ul>
-                    </div>
-                    <div className="bg-green-50 rounded-lg p-4">
-                      <p className="font-semibold text-green-900 mb-2">✓ Best Approach:</p>
-                      <ul className="list-disc list-inside text-gray-800 space-y-2">
-                        <li><strong>Normalize failure as learning:</strong> Share your own failure stories and what you learned from them.</li>
-                        <li><strong>Conduct a root cause analysis together:</strong> "Let's explore what happened without judgment. What factors contributed to this outcome?"</li>
-                        <li><strong>Extract the lessons:</strong> Turn setbacks into data points. "What would you do differently if you could try again?"</li>
-                        <li><strong>Adjust goals collaboratively:</strong> Perhaps the goal was unrealistic, or external factors changed. Adapt together.</li>
-                        <li><strong>Celebrate effort and growth:</strong> Acknowledge the courage it took to attempt the goal and any partial progress made.</li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-r from-[#F4F4F4] to-[#F4F4F4] border-2 border-[#0072CE]/30 p-6 rounded-lg">
-                    <h5 className="font-bold text-gray-900 mb-3">🎯 Key Principles for All Scenarios</h5>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="bg-white p-4 rounded-lg">
-                        <h6 className="font-semibold text-[#1A1F5E] mb-2">Active Listening</h6>
-                        <p className="text-sm text-gray-700">Fully focus on understanding before responding. Repeat back what you heard to confirm.</p>
-                      </div>
-                      <div className="bg-white p-4 rounded-lg">
-                        <h6 className="font-semibold text-[#1A1F5E] mb-2">Curiosity Over Judgment</h6>
-                        <p className="text-sm text-gray-700">Approach situations with genuine curiosity rather than assumptions or criticism.</p>
-                      </div>
-                      <div className="bg-white p-4 rounded-lg">
-                        <h6 className="font-semibold text-[#1A1F5E] mb-2">Empowerment</h6>
-                        <p className="text-sm text-gray-700">Guide mentees to find their own solutions rather than prescribing answers.</p>
-                      </div>
-                      <div className="bg-white p-4 rounded-lg">
-                        <h6 className="font-semibold text-[#1A1F5E] mb-2">Cultural Sensitivity</h6>
-                        <p className="text-sm text-gray-700">Be aware of different communication styles and cultural contexts.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div>
+                <label className="block text-sm font-semibold text-[#333333] mb-2">URL / Link *</label>
+                <input
+                  type="url"
+                  value={newResource.url}
+                  onChange={e => setNewResource(r => ({ ...r, url: e.target.value }))}
+                  placeholder="https://..."
+                  className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-[#333333] mb-2">Description</label>
+                <textarea
+                  rows={3}
+                  value={newResource.description}
+                  onChange={e => setNewResource(r => ({ ...r, description: e.target.value }))}
+                  placeholder="Brief description of what this resource covers..."
+                  className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all resize-none"
+                />
+              </div>
+              <div className="flex space-x-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => { setShowUploadResource(false); setNewResource({ title: '', description: '', url: '', type: 'article', category: '' }); }}
+                  className="flex-1 bg-transparent text-[#1A1F5E] font-semibold px-6 py-3 -full border-2 border-[#1A1F5E] hover:bg-[#1A1F5E] hover:text-white transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!newResource.title || !newResource.url) { alert('Please fill in the title and URL.'); return; }
+                    try {
+                      const token = localStorage.getItem('token');
+                      const res = await fetch('/api/resources', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                        body: JSON.stringify({ ...newResource, connection_id: activeConnectionId }),
+                      });
+                      const data = await res.json();
+                      if (data.success) {
+                        setDbResources((prev: any[]) => [data.data, ...prev]);
+                        setShowUploadResource(false);
+                        setNewResource({ title: '', description: '', url: '', type: 'article', category: '' });
+                        alert('? Resource uploaded successfully!');
+                      } else {
+                        alert('Failed to upload resource. Please try again.');
+                      }
+                    } catch { alert('Failed to upload resource. Please check your connection.'); }
+                  }}
+                  className="flex-1 bg-[#1A1F5E] text-white font-semibold px-6 py-3 -full hover:opacity-90 transition-all shadow-lg"
+                >
+                  Upload Resource
+                </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
 
-            {/* Power of Words Article */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-              <div className="bg-gradient-to-r from-green-600 to-emerald-700 p-8 rounded-t-xl">
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-                    <MessageSquare className="w-8 h-8 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-white">The Power of Words: Communication Mastery</h3>
-                    <p className="text-green-100">How language shapes mentorship relationships</p>
-                  </div>
-                </div>
+      {/* QUIZ MANAGER MODAL (Mentor only) */}
+      {showQuizManager && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white -3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-[#E5E7EB]">
+            <div className="sticky top-0 p-6 border-b border-[#E5E7EB] flex items-center justify-between bg-[#1A1F5E] -t-3xl z-10">
+              <div>
+                <h2 className="text-2xl font-bold text-white">Manage Quiz Questions</h2>
+                <p className="text-white/80 text-sm mt-1">Choose which questions appear in your mentee's Mentorship Challenge</p>
               </div>
-              <div className="p-8 prose max-w-none">
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="text-xl font-bold text-gray-900 mb-3">Why Words Matter in Mentorship</h4>
-                    <p className="text-gray-700 leading-relaxed">
-                      The language we use as mentors can either empower or diminish. Research shows that specific communication patterns 
-                      significantly impact mentee confidence, engagement, and outcomes. This guide provides evidence-based language strategies 
-                      to maximize the positive impact of your mentorship.
-                    </p>
-                  </div>
-
-                  <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6">
-                    <h5 className="font-bold text-green-900 mb-4 text-lg flex items-center">
-                      <span className="text-2xl mr-3">✓</span>
-                      Empowering Phrases to Use
-                    </h5>
-                    <div className="space-y-4">
-                      <div className="bg-white rounded-lg p-5 shadow-sm">
-                        <p className="font-semibold text-green-900 text-lg mb-2">"What are your thoughts on this?"</p>
-                        <p className="text-gray-700 mb-3"><strong>Why it works:</strong> This invites their perspective and shows you value their input as equally important.</p>
-                        <p className="text-sm text-gray-600 italic">Use when: Discussing options, solving problems, or making decisions together.</p>
-                      </div>
-
-                      <div className="bg-white rounded-lg p-5 shadow-sm">
-                        <p className="font-semibold text-green-900 text-lg mb-2">"I believe in your ability to..."</p>
-                        <p className="text-gray-700 mb-3"><strong>Why it works:</strong> Explicit expressions of confidence boost self-efficacy and motivation.</p>
-                        <p className="text-sm text-gray-600 italic">Use when: Your mentee is doubting themselves or facing a challenging task.</p>
-                      </div>
-
-                      <div className="bg-white rounded-lg p-5 shadow-sm">
-                        <p className="font-semibold text-green-900 text-lg mb-2">"Let's explore this together"</p>
-                        <p className="text-gray-700 mb-3"><strong>Why it works:</strong> Creates partnership and shared learning rather than a hierarchical dynamic.</p>
-                        <p className="text-sm text-gray-600 italic">Use when: Entering unfamiliar territory or tackling complex problems.</p>
-                      </div>
-
-                      <div className="bg-white rounded-lg p-5 shadow-sm">
-                        <p className="font-semibold text-green-900 text-lg mb-2">"Tell me more about..."</p>
-                        <p className="text-gray-700 mb-3"><strong>Why it works:</strong> Shows genuine interest and encourages deeper sharing.</p>
-                        <p className="text-sm text-gray-600 italic">Use when: Your mentee mentions something significant but doesn't elaborate.</p>
-                      </div>
-
-                      <div className="bg-white rounded-lg p-5 shadow-sm">
-                        <p className="font-semibold text-green-900 text-lg mb-2">"I notice you've grown in..."</p>
-                        <p className="text-gray-700 mb-3"><strong>Why it works:</strong> Specific recognition of progress reinforces positive behaviors and builds confidence.</p>
-                        <p className="text-sm text-gray-600 italic">Use when: You observe improvement in specific skills or behaviors.</p>
-                      </div>
-
-                      <div className="bg-white rounded-lg p-5 shadow-sm">
-                        <p className="font-semibold text-green-900 text-lg mb-2">"What support do you need from me?"</p>
-                        <p className="text-gray-700 mb-3"><strong>Why it works:</strong> Puts them in control of the mentorship and shows you're there to serve their needs.</p>
-                        <p className="text-sm text-gray-600 italic">Use when: Setting up new goals or when they seem stuck.</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6">
-                    <h5 className="font-bold text-red-900 mb-4 text-lg flex items-center">
-                      <span className="text-2xl mr-3">✗</span>
-                      Phrases to Avoid
-                    </h5>
-                    <div className="space-y-4">
-                      <div className="bg-white rounded-lg p-5 shadow-sm border-l-4 border-red-400">
-                        <p className="font-semibold text-red-900 text-lg mb-2">"You should just..."</p>
-                        <p className="text-gray-700 mb-2"><strong>Why it's problematic:</strong> Dismisses their perspective and sounds prescriptive rather than collaborative.</p>
-                        <p className="text-green-700 font-medium">Better alternative: "Have you considered..." or "One option might be..."</p>
-                      </div>
-
-                      <div className="bg-white rounded-lg p-5 shadow-sm border-l-4 border-red-400">
-                        <p className="font-semibold text-red-900 text-lg mb-2">"That's wrong" or "You're wrong"</p>
-                        <p className="text-gray-700 mb-2"><strong>Why it's problematic:</strong> Shuts down conversation, discourages future sharing, and damages psychological safety.</p>
-                        <p className="text-green-700 font-medium">Better alternative: "I see it differently..." or "Another perspective is..."</p>
-                      </div>
-
-                      <div className="bg-white rounded-lg p-5 shadow-sm border-l-4 border-red-400">
-                        <p className="font-semibold text-red-900 text-lg mb-2">"When I was your age..."</p>
-                        <p className="text-gray-700 mb-2"><strong>Why it's problematic:</strong> Centers the conversation on you rather than them, and different contexts make direct comparisons unhelpful.</p>
-                        <p className="text-green-700 font-medium">Better alternative: "I once faced something similar..." (if truly relevant)</p>
-                      </div>
-
-                      <div className="bg-white rounded-lg p-5 shadow-sm border-l-4 border-red-400">
-                        <p className="font-semibold text-red-900 text-lg mb-2">"Don't worry about it"</p>
-                        <p className="text-gray-700 mb-2"><strong>Why it's problematic:</strong> Minimizes their legitimate concerns and stops them from processing emotions.</p>
-                        <p className="text-green-700 font-medium">Better alternative: "That sounds challenging. What specifically concerns you?"</p>
-                      </div>
-
-                      <div className="bg-white rounded-lg p-5 shadow-sm border-l-4 border-red-400">
-                        <p className="font-semibold text-red-900 text-lg mb-2">"I'm too busy for this right now"</p>
-                        <p className="text-gray-700 mb-2"><strong>Why it's problematic:</strong> Signals that mentorship is a burden rather than a priority.</p>
-                        <p className="text-green-700 font-medium">Better alternative: "I want to give this my full attention. Can we schedule time tomorrow?"</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 p-6 rounded-lg">
-                    <h5 className="font-bold text-gray-900 mb-3">💡 Communication Framework: LISTEN</h5>
-                    <div className="space-y-3">
-                      <div className="flex items-start space-x-3">
-                        <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">L</div>
-                        <div>
-                          <p className="font-semibold text-gray-900">Look for non-verbal cues</p>
-                          <p className="text-sm text-gray-700">Body language often communicates more than words</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">I</div>
-                        <div>
-                          <p className="font-semibold text-gray-900">Inquire with curiosity</p>
-                          <p className="text-sm text-gray-700">Ask questions to understand, not to judge</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">S</div>
-                        <div>
-                          <p className="font-semibold text-gray-900">Silence your inner voice</p>
-                          <p className="text-sm text-gray-700">Resist planning your response while they're speaking</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">T</div>
-                        <div>
-                          <p className="font-semibold text-gray-900">Take time to understand</p>
-                          <p className="text-sm text-gray-700">Don't rush to solutions; fully understand the situation first</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">E</div>
-                        <div>
-                          <p className="font-semibold text-gray-900">Empathize genuinely</p>
-                          <p className="text-sm text-gray-700">Connect with their emotions, not just their words</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0">N</div>
-                        <div>
-                          <p className="font-semibold text-gray-900">Nod and affirm</p>
-                          <p className="text-sm text-gray-700">Show you're engaged through small verbal and non-verbal acknowledgments</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <button onClick={() => setShowQuizManager(false)} className="text-white hover:text-white/70 transition-colors">
+                <X className="w-6 h-6" />
+              </button>
             </div>
 
-            {/* Safe Space Article */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-              <div className="bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] p-8 rounded-t-xl">
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-                    <Lock className="w-8 h-8 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-white">Creating a Safe Space: Psychological Safety Guide</h3>
-                    <p className="text-white/80">Building trust and confidentiality in mentorship</p>
-                  </div>
+            <div className="p-8 space-y-6">
+              {/* Active count banner */}
+              <div className="flex items-center justify-between bg-[#0072CE]/10 border border-[#0072CE]/30 -2xl px-5 py-3">
+                <span className="text-[#1A1F5E] font-semibold text-sm">{activeQuestionIds.length} of {gameQuestions.length + customQuestions.length} questions active</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setActiveQuestionIds([...gameQuestions.map(q => q.id), ...customQuestions.map(q => q.id)])}
+                    className="text-xs font-semibold text-[#0072CE] hover:underline"
+                  >
+                    Select all
+                  </button>
+                  <span className="text-[#8C8C8C]">�</span>
+                  <button
+                    onClick={() => setActiveQuestionIds([])}
+                    className="text-xs font-semibold text-[#E83E2D] hover:underline"
+                  >
+                    Clear all
+                  </button>
                 </div>
               </div>
-              <div className="p-8 prose max-w-none">
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="text-xl font-bold text-gray-900 mb-3">What is Psychological Safety?</h4>
-                    <p className="text-gray-700 leading-relaxed">
-                      Psychological safety is the foundation of effective mentorship. It's the shared belief that the relationship is safe 
-                      for interpersonal risk-taking—asking questions, admitting mistakes, sharing concerns, and being vulnerable without 
-                      fear of judgment or negative consequences. Research by Amy Edmondson shows that psychological safety is the number 
-                      one predictor of team and relationship effectiveness.
-                    </p>
-                  </div>
 
-                  <div className="bg-[#F4F4F4] border-l-4 border-[#0072CE] p-6 rounded-r-lg">
-                    <h5 className="font-bold text-[#1A1F5E] mb-4 text-lg">🛡️ The Pillars of Safe Space</h5>
-                    <div className="space-y-4">
-                      <div className="bg-white p-5 rounded-lg shadow-sm">
-                        <h6 className="font-semibold text-gray-900 mb-2">1. Confidentiality</h6>
-                        <p className="text-gray-700 mb-3">
-                          What is shared stays between you, except in cases of harm or legal obligations. Explicitly establish 
-                          confidentiality boundaries at the start and honor them absolutely.
-                        </p>
-                        <p className="text-sm text-[#1A1F5E] font-medium">Action: "Everything we discuss here is confidential unless you give me permission to share it or there's a safety concern."</p>
+              {/* Built-in questions */}
+              <div>
+                <h3 className="text-sm font-bold text-[#8C8C8C] uppercase tracking-wide mb-3">Built-in Questions</h3>
+                <div className="space-y-3">
+                  {gameQuestions.map(q => {
+                    const isActive = activeQuestionIds.includes(q.id);
+                    return (
+                      <div
+                        key={q.id}
+                        onClick={() => setActiveQuestionIds(prev => isActive ? prev.filter(id => id !== q.id) : [...prev, q.id])}
+                        className={`flex items-start gap-4 p-4 -2xl border-2 cursor-pointer transition-all ${isActive ? 'border-[#1A1F5E] bg-[#1A1F5E]/5' : 'border-[#E5E7EB] bg-white hover:border-[#0072CE]/40'}`}
+                      >
+                        <div className={`flex-shrink-0 w-6 h-6 -full border-2 flex items-center justify-center mt-0.5 ${isActive ? 'border-[#1A1F5E] bg-[#1A1F5E]' : 'border-[#8C8C8C]'}`}>
+                          {isActive && <Check className="w-3 h-3 text-white" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-[#333333] mb-1">{q.question}</p>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs px-2 py-0.5 -full bg-[#1A1F5E]/10 text-[#1A1F5E] font-medium">{q.category}</span>
+                            <span className="text-xs text-[#8C8C8C]">Answer: {q.options[q.correctAnswer]}</span>
+                          </div>
+                        </div>
                       </div>
+                    );
+                  })}
+                </div>
+              </div>
 
-                      <div className="bg-white p-5 rounded-lg shadow-sm">
-                        <h6 className="font-semibold text-gray-900 mb-2">2. Non-Judgment</h6>
-                        <p className="text-gray-700 mb-3">
-                          Approach all conversations with curiosity rather than criticism. Even when you disagree, focus on 
-                          understanding their perspective before sharing yours.
-                        </p>
-                        <p className="text-sm text-[#1A1F5E] font-medium">Action: Replace "Why did you do that?" with "Help me understand your thinking..."</p>
-                      </div>
-
-                      <div className="bg-white p-5 rounded-lg shadow-sm">
-                        <h6 className="font-semibold text-gray-900 mb-2">3. Active Support</h6>
-                        <p className="text-gray-700 mb-3">
-                          Demonstrate that you're invested in their success and wellbeing. This means celebrating wins, 
-                          supporting through challenges, and being consistently available within agreed boundaries.
-                        </p>
-                        <p className="text-sm text-[#1A1F5E] font-medium">Action: "I'm here for you. What kind of support would be most helpful right now?"</p>
-                      </div>
-
-                      <div className="bg-white p-5 rounded-lg shadow-sm">
-                        <h6 className="font-semibold text-gray-900 mb-2">4. Boundaries & Respect</h6>
-                        <p className="text-gray-700 mb-3">
-                          Healthy boundaries protect both parties. Be clear about time commitments, communication channels, 
-                          and the scope of your mentorship. Respect their autonomy in all decisions.
-                        </p>
-                        <p className="text-sm text-[#1A1F5E] font-medium">Action: Co-create a mentorship agreement outlining expectations, boundaries, and goals.</p>
-                      </div>
-
-                      <div className="bg-white p-5 rounded-lg shadow-sm">
-                        <h6 className="font-semibold text-gray-900 mb-2">5. Cultural Humility</h6>
-                        <p className="text-gray-700 mb-3">
-                          Recognize that your mentee's experiences, especially around identity, may be vastly different from yours. 
-                          Approach cultural differences with humility and a learning mindset.
-                        </p>
-                        <p className="text-sm text-[#1A1F5E] font-medium">Action: "I may not fully understand your experience. Please help me understand how your background influences this situation."</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 p-6 rounded-lg">
-                    <h5 className="font-bold text-gray-900 mb-4 text-lg flex items-center">
-                      <span className="text-2xl mr-3">⚠️</span>
-                      When to Break Confidentiality
-                    </h5>
-                    <p className="text-gray-700 mb-4">While confidentiality is paramount, there are specific situations where you must act:</p>
-                    <ul className="space-y-2 text-gray-800">
-                      <li className="flex items-start">
-                        <span className="font-bold mr-2">•</span>
-                        <span><strong>Immediate danger:</strong> If your mentee expresses intent to harm themselves or others</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="font-bold mr-2">•</span>
-                        <span><strong>Abuse or harassment:</strong> Ongoing abuse, discrimination, or harassment situations</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="font-bold mr-2">•</span>
-                        <span><strong>Legal obligations:</strong> When legally required to report (varies by jurisdiction)</span>
-                      </li>
-                    </ul>
-                    <p className="text-sm text-gray-600 mt-4 italic">
-                      Always inform your mentee about these boundaries upfront and, when possible, involve them in the process of seeking help.
-                    </p>
-                  </div>
-
-                  <div className="bg-white border-2 border-[#0072CE]/30 rounded-lg p-6">
-                    <h5 className="font-bold text-gray-900 mb-4 text-lg">🔑 Support Resources Available</h5>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="bg-[#F4F4F4] p-4 rounded-lg">
-                        <h6 className="font-semibold text-[#1A1F5E] mb-2">Mental Health Resources</h6>
-                        <p className="text-sm text-gray-700 mb-3">Access to counseling services, employee assistance programs, and support groups</p>
-                        <button className="text-[#0072CE] font-medium text-sm hover:text-[#1A1F5E]">Learn More →</button>
-                      </div>
-
-                      <div className="bg-[#F4F4F4] p-4 rounded-lg">
-                        <h6 className="font-semibold text-[#1A1F5E] mb-2">Conflict Resolution</h6>
-                        <p className="text-sm text-gray-700 mb-3">Mediation services for difficult mentorship situations or relationship challenges</p>
-                        <button className="text-[#0072CE] font-medium text-sm hover:text-[#1A1F5E]">Get Support →</button>
-                      </div>
-
-                      <div className="bg-[#F4F4F4] p-4 rounded-lg">
-                        <h6 className="font-semibold text-[#1A1F5E] mb-2">DEI Support</h6>
-                        <p className="text-sm text-gray-700 mb-3">Resources for addressing bias, discrimination, or identity-related concerns</p>
-                        <button className="text-[#0072CE] font-medium text-sm hover:text-[#1A1F5E]">Access Resources →</button>
-                      </div>
-
-                      <div className="bg-pink-50 p-4 rounded-lg">
-                        <h6 className="font-semibold text-pink-900 mb-2">Anonymous Feedback</h6>
-                        <p className="text-sm text-gray-700 mb-3">Submit concerns or feedback anonymously to program administrators</p>
-                        <button className="text-pink-600 font-medium text-sm hover:text-pink-800">Submit Feedback →</button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-r from-[#F4F4F4] to-[#F4F4F4] border-2 border-[#0072CE]/30 p-6 rounded-lg">
-                    <h5 className="font-bold text-gray-900 mb-3">💭 Reflection Questions for Mentors</h5>
-                    <p className="text-gray-700 mb-4">Regularly assess the psychological safety of your mentorship relationship:</p>
-                    <ul className="space-y-2 text-gray-800">
-                      <li className="flex items-start">
-                        <span className="text-[#0072CE] font-bold mr-2">❓</span>
-                        <span>Does my mentee feel comfortable admitting when they don't understand something?</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-[#0072CE] font-bold mr-2">❓</span>
-                        <span>Can they share failures or mistakes without fear of judgment?</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-[#0072CE] font-bold mr-2">❓</span>
-                        <span>Do they bring up difficult topics or only share "safe" information?</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-[#0072CE] font-bold mr-2">❓</span>
-                        <span>Have I modeled vulnerability by sharing my own challenges?</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-[#0072CE] font-bold mr-2">❓</span>
-                        <span>When was the last time I explicitly checked in on their wellbeing?</span>
-                      </li>
-                    </ul>
+              {/* Custom questions */}
+              {customQuestions.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-bold text-[#8C8C8C] uppercase tracking-wide mb-3">Your Custom Questions</h3>
+                  <div className="space-y-3">
+                    {customQuestions.map(q => {
+                      const isActive = activeQuestionIds.includes(q.id);
+                      return (
+                        <div
+                          key={q.id}
+                          className={`flex items-start gap-4 p-4 -2xl border-2 cursor-pointer transition-all ${isActive ? 'border-[#E83E2D] bg-[#E83E2D]/5' : 'border-[#E5E7EB] bg-white hover:border-[#E83E2D]/40'}`}
+                          onClick={() => setActiveQuestionIds(prev => isActive ? prev.filter(id => id !== q.id) : [...prev, q.id])}
+                        >
+                          <div className={`flex-shrink-0 w-6 h-6 -full border-2 flex items-center justify-center mt-0.5 ${isActive ? 'border-[#E83E2D] bg-[#E83E2D]' : 'border-[#8C8C8C]'}`}>
+                            {isActive && <Check className="w-3 h-3 text-white" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-[#333333] mb-1">{q.question}</p>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs px-2 py-0.5 -full bg-[#E83E2D]/10 text-[#E83E2D] font-medium">Custom</span>
+                              <span className="text-xs text-[#8C8C8C]">Answer: {q.options[q.correctAnswer]}</span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={e => { e.stopPropagation(); setCustomQuestions(prev => prev.filter(cq => cq.id !== q.id)); setActiveQuestionIds(prev => prev.filter(id => id !== q.id)); }}
+                            className="text-[#8C8C8C] hover:text-[#E83E2D] transition-colors flex-shrink-0"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
+              )}
+
+              {/* Add custom question */}
+              <div className="bg-[#F4F4F4] -2xl p-6 border border-[#E5E7EB]">
+                <h3 className="text-sm font-bold text-[#333333] mb-4 flex items-center gap-2">
+                  <Plus className="w-4 h-4 text-[#0072CE]" />
+                  Add a Custom Question
+                </h3>
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    value={newCustomQ.question}
+                    onChange={e => setNewCustomQ(q => ({ ...q, question: e.target.value }))}
+                    placeholder="Question text..."
+                    className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all text-sm"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    {newCustomQ.options.map((opt, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="correctAnswer"
+                          checked={newCustomQ.correctAnswer === i}
+                          onChange={() => setNewCustomQ(q => ({ ...q, correctAnswer: i }))}
+                          className="text-[#1A1F5E] flex-shrink-0"
+                          title="Mark as correct answer"
+                        />
+                        <input
+                          type="text"
+                          value={opt}
+                          onChange={e => { const opts = [...newCustomQ.options]; opts[i] = e.target.value; setNewCustomQ(q => ({ ...q, options: opts })); }}
+                          placeholder={`Option ${i + 1}${i === newCustomQ.correctAnswer ? ' ? correct' : ''}`}
+                          className="flex-1 px-3 py-2 -xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] transition-all text-xs"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      value={newCustomQ.category}
+                      onChange={e => setNewCustomQ(q => ({ ...q, category: e.target.value }))}
+                      placeholder="Category (e.g. Leadership)"
+                      className="px-3 py-2 -xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] transition-all text-xs"
+                    />
+                    <input
+                      type="text"
+                      value={newCustomQ.explanation}
+                      onChange={e => setNewCustomQ(q => ({ ...q, explanation: e.target.value }))}
+                      placeholder="Explanation (optional)"
+                      className="px-3 py-2 -xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] transition-all text-xs"
+                    />
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (!newCustomQ.question.trim() || newCustomQ.options.some(o => !o.trim())) {
+                        alert('Please fill in the question and all 4 options.');
+                        return;
+                      }
+                      const id = Date.now();
+                      const q: GameQuestion = { id, question: newCustomQ.question, options: newCustomQ.options, correctAnswer: newCustomQ.correctAnswer, category: newCustomQ.category || 'Custom', explanation: newCustomQ.explanation };
+                      setCustomQuestions(prev => [...prev, q]);
+                      setActiveQuestionIds(prev => [...prev, id]);
+                      setNewCustomQ({ question: '', options: ['', '', '', ''], correctAnswer: 0, category: '', explanation: '' });
+                    }}
+                    className="bg-[#1A1F5E] text-white font-semibold px-5 py-2 -full text-sm hover:opacity-90 transition-all"
+                  >
+                    Add Question
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setShowQuizManager(false)}
+                  className="flex-1 bg-transparent text-[#1A1F5E] font-semibold px-6 py-3 -full border-2 border-[#1A1F5E] hover:bg-[#1A1F5E] hover:text-white transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => { setShowQuizManager(false); alert(`? Quiz updated � ${activeQuestionIds.length} questions active for your mentee.`); }}
+                  className="flex-1 bg-[#1A1F5E] text-white font-semibold px-6 py-3 -full hover:opacity-90 transition-all shadow-lg"
+                >
+                  Save Quiz Settings
+                </button>
               </div>
             </div>
           </div>
@@ -2676,37 +2980,39 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">Reflection Board</h2>
-                <p className="text-gray-600">Private space to share reflections between you and your mentor/mentee</p>
+                <p className="text-gray-600">
+                  {isMentorView
+                    ? 'Read your mentee\'s reflections � their growth journey, insights, and session takeaways'
+                    : 'Your private space to record reflections and growth insights from each session'}
+                </p>
               </div>
-              <button
-                onClick={() => {
-                  console.log('Reflection Board button clicked!');
-                  setShowReflectionBoard(true);
-                  console.log('showReflectionBoard set to true');
-                }}
-                className="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all flex items-center space-x-2"
-              >
-                <Plus className="w-5 h-5" />
-                <span>New Reflection</span>
-              </button>
+              {!isMentorView && (
+                <button
+                  onClick={() => setShowReflectionBoard(true)}
+                  className="bg-[#1A1F5E] hover:opacity-90 text-white px-6 py-3 -lg font-semibold hover:shadow-lg transition-all flex items-center space-x-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  <span>New Reflection</span>
+                </button>
+              )}
             </div>
 
             {/* Stats Overview */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] rounded-xl p-6 border-2 border-[#0072CE]/30">
-                <div className="text-4xl font-bold text-[#1A1F5E] mb-2">{activityResults.reflectionsPosted}</div>
+              <div className="bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] -xl p-6 border-2 border-[#0072CE]/30">
+                <div className="text-4xl font-bold text-[#1A1F5E] mb-2">{reflections.length}</div>
                 <div className="text-sm font-medium text-gray-700">Reflections Posted</div>
               </div>
-              <div className="bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] rounded-xl p-6 border-2 border-[#0072CE]/30">
-                <div className="text-4xl font-bold text-[#1A1F5E] mb-2">{activityResults.sessionsRated}</div>
-                <div className="text-sm font-medium text-gray-700">Sessions Rated</div>
+              <div className="bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] -xl p-6 border-2 border-[#0072CE]/30">
+                <div className="text-4xl font-bold text-[#1A1F5E] mb-2">{sessions.length}</div>
+                <div className="text-sm font-medium text-gray-700">Sessions Scheduled</div>
               </div>
-              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border-2 border-green-200">
-                <div className="text-4xl font-bold text-green-900 mb-2">{activityResults.averageRating}</div>
-                <div className="text-sm font-medium text-gray-700">Avg Session Rating</div>
+              <div className="bg-[#F4F4F4] -xl p-6 border-2 border-[#E5E7EB]">
+                <div className="text-4xl font-bold text-green-900 mb-2">{goals.filter(g => g.status === 'completed').length}</div>
+                <div className="text-sm font-medium text-gray-700">Goals Completed</div>
               </div>
-              <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 border-2 border-orange-200">
-                <div className="text-4xl font-bold text-orange-900 mb-2">24</div>
+              <div className="bg-[#F4F4F4] -xl p-6 border-2 border-[#E5E7EB]">
+                <div className="text-4xl font-bold text-blue-900 mb-2">24</div>
                 <div className="text-sm font-medium text-gray-700">Days Active</div>
               </div>
             </div>
@@ -2715,16 +3021,16 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
             <div className="space-y-6">
               {/* User Created Reflections */}
               {reflections.map((reflection) => (
-                <div key={reflection.id} className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl shadow-lg border-2 border-orange-200 overflow-hidden">
+                <div key={reflection.id} className="bg-[#F4F4F4] -xl shadow-lg border-2 border-[#E5E7EB] overflow-hidden">
                   <div className="p-6">
                     <div className="flex items-start space-x-4 mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-amber-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="w-12 h-12 bg-[#1A1F5E] -full flex items-center justify-center flex-shrink-0">
                         <span className="text-white font-bold text-lg">YOU</span>
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
                           <h4 className="font-bold text-gray-900">{reflection.author}</h4>
-                          <span className="px-3 py-1 bg-orange-200 text-orange-900 rounded-full text-xs font-medium">
+                          <span className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] -full text-xs font-medium">
                             {reflection.category.replace('-', ' ')}
                           </span>
                           <span className="text-sm text-gray-500">{reflection.timestamp}</span>
@@ -2747,15 +3053,15 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                     </p>
 
                     {reflection.keyTakeaways.filter((t: string) => t.trim() !== '').length > 0 && (
-                      <div className="bg-white border-l-4 border-orange-500 rounded-r-lg p-4 mb-4">
-                        <h4 className="font-semibold text-orange-900 mb-2 flex items-center">
+                      <div className="bg-white border-l-4 border-[#1A1F5E] -r-lg p-4 mb-4">
+                        <h4 className="font-semibold text-[#1A1F5E] mb-2 flex items-center">
                           <CheckCircle className="w-5 h-5 mr-2" />
                           Key Takeaways
                         </h4>
                         <ul className="space-y-1">
                           {reflection.keyTakeaways.filter((t: string) => t.trim() !== '').map((takeaway: string, idx: number) => (
                             <li key={idx} className="text-sm text-gray-700 flex items-start">
-                              <span className="text-orange-600 mr-2">✓</span>
+                              <span className="text-[#1A1F5E] mr-2">?</span>
                               <span>{takeaway}</span>
                             </li>
                           ))}
@@ -2766,7 +3072,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                     {reflection.tags.length > 0 && (
                       <div className="flex flex-wrap gap-2">
                         {reflection.tags.map((tag: string, idx: number) => (
-                          <span key={idx} className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                          <span key={idx} className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] -full text-xs font-medium">
                             #{tag}
                           </span>
                         ))}
@@ -2776,167 +3082,35 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                 </div>
               ))}
 
-              {/* Reflection 1 - Mentee */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-6">
-                  <div className="flex items-start space-x-4 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-white font-bold text-lg">M</span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h4 className="font-bold text-gray-900">Mentee Reflection</h4>
-                        <span className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] rounded-full text-xs font-medium">
-                          Goal Progress
-                        </span>
-                        <span className="text-sm text-gray-500">2 days ago</span>
-                      </div>
-                      <div className="flex items-center space-x-2 mb-3">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className={`w-4 h-4 ${i < 5 ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Breakthrough Session on Leadership Communication</h3>
-                  <p className="text-gray-700 leading-relaxed mb-4">
-                    Today's session was transformative. We discussed how to handle difficult conversations with team members, 
-                    and my mentor shared a framework for approaching conflict with curiosity instead of defensiveness. 
-                    I practiced using "I" statements and asking clarifying questions. This shift in mindset has already 
-                    changed how I'm thinking about an upcoming conversation with a colleague.
-                  </p>
-
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 rounded-r-lg p-4 mb-4">
-                    <h4 className="font-semibold text-green-900 mb-2 flex items-center">
-                      <CheckCircle className="w-5 h-5 mr-2" />
-                      Key Takeaways
-                    </h4>
-                    <ul className="space-y-1">
-                      <li className="text-sm text-gray-700 flex items-start">
-                        <span className="text-green-600 mr-2">✓</span>
-                        <span>Replace "You always..." with "I notice..." statements</span>
-                      </li>
-                      <li className="text-sm text-gray-700 flex items-start">
-                        <span className="text-green-600 mr-2">✓</span>
-                        <span>Ask "Help me understand..." to show curiosity</span>
-                      </li>
-                      <li className="text-sm text-gray-700 flex items-start">
-                        <span className="text-green-600 mr-2">✓</span>
-                        <span>Practice the conversation beforehand with a trusted friend</span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">#communication</span>
-                    <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">#leadership</span>
-                    <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">#conflict-resolution</span>
-                  </div>
+              {/* Empty State */}
+              {reflections.length === 0 && (
+                <div className="bg-[#F4F4F4] border-2 border-[#E5E7EB] -xl p-8 text-center">
+                  <Lightbulb className="w-16 h-16 text-[#1A1F5E] mx-auto mb-4" />
+                  {isMentorView ? (
+                    <>
+                      <h3 className="text-xl font-bold text-gray-900 mb-3">No reflections yet</h3>
+                      <p className="text-gray-600 max-w-2xl mx-auto">
+                        Your mentee hasn't written any reflections yet. Encourage them to share insights after each session.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="text-xl font-bold text-gray-900 mb-3">Ready to reflect on your latest session?</h3>
+                      <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+                        Reflections help you process learnings, track growth, and strengthen your mentorship relationship.
+                        Share insights, challenges, or breakthroughs from your sessions.
+                      </p>
+                      <button
+                        onClick={() => setShowReflectionBoard(true)}
+                        className="bg-[#1A1F5E] hover:opacity-90 text-white px-8 py-3 -lg font-semibold hover:shadow-lg transition-all inline-flex items-center space-x-2"
+                      >
+                        <Plus className="w-5 h-5" />
+                        <span>Write a Reflection</span>
+                      </button>
+                    </>
+                  )}
                 </div>
-              </div>
-
-              {/* Reflection 2 - Mentor Response */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden ml-12">
-                <div className="p-6">
-                  <div className="flex items-start space-x-4 mb-4">
-                    <div className="w-10 h-10 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-white font-bold">M</span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-1">
-                        <h4 className="font-bold text-gray-900">Mentor Response</h4>
-                        <span className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] rounded-full text-xs font-medium">
-                          Feedback
-                        </span>
-                        <span className="text-sm text-gray-500">1 day ago</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <p className="text-gray-700 leading-relaxed">
-                    I'm so proud of how you're implementing these concepts! The shift from defensive to curious is exactly 
-                    what transforms relationships. Remember, it's okay if the conversation doesn't go perfectly—what matters 
-                    is your intention and approach. Let me know how it goes, and we can debrief in our next session.
-                  </p>
-                </div>
-              </div>
-
-              {/* Reflection 3 - Anonymous Mentee */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-6">
-                  <div className="flex items-start space-x-4 mb-4">
-                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                      <User className="w-6 h-6 text-gray-500" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h4 className="font-bold text-gray-900">Anonymous</h4>
-                        <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
-                          Challenge
-                        </span>
-                        <span className="text-sm text-gray-500">1 week ago</span>
-                      </div>
-                      <div className="flex items-center space-x-2 mb-3">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className={`w-4 h-4 ${i < 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Struggling with Imposter Syndrome</h3>
-                  <p className="text-gray-700 leading-relaxed mb-4">
-                    I finally opened up about feeling like a fraud despite my accomplishments. My mentor shared that even 
-                    senior leaders experience this, which was validating. We identified that my imposter syndrome spikes 
-                    when I'm learning something new—which is actually a sign I'm growing, not failing. This reframe was powerful.
-                  </p>
-
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 rounded-r-lg p-4 mb-4">
-                    <h4 className="font-semibold text-green-900 mb-2 flex items-center">
-                      <CheckCircle className="w-5 h-5 mr-2" />
-                      Action Items
-                    </h4>
-                    <ul className="space-y-1">
-                      <li className="text-sm text-gray-700 flex items-start">
-                        <span className="text-green-600 mr-2">✓</span>
-                        <span>Start a "wins journal" to track accomplishments</span>
-                      </li>
-                      <li className="text-sm text-gray-700 flex items-start">
-                        <span className="text-green-600 mr-2">✓</span>
-                        <span>Recognize discomfort as a growth signal, not failure</span>
-                      </li>
-                      <li className="text-sm text-gray-700 flex items-start">
-                        <span className="text-green-600 mr-2">✓</span>
-                        <span>Share my learning journey to help normalize struggles</span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">#imposter-syndrome</span>
-                    <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">#growth-mindset</span>
-                    <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">#self-confidence</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Empty State Prompt */}
-              <div className="bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl p-8 text-center">
-                <Lightbulb className="w-16 h-16 text-orange-600 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Ready to reflect on your latest session?</h3>
-                <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-                  Reflections help you process learnings, track growth, and strengthen your mentorship relationship. 
-                  Share insights, challenges, or breakthroughs from your sessions.
-                </p>
-                <button
-                  onClick={() => setShowReflectionBoard(true)}
-                  className="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg transition-all inline-flex items-center space-x-2"
-                >
-                  <Plus className="w-5 h-5" />
-                  <span>Write a Reflection</span>
-                </button>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -2945,8 +3119,8 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
       {/* CREATE PROGRESS REPORT MODAL */}
       {showProgressReport && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-green-600 to-teal-600">
+          <div className="bg-white -2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-[#1A1F5E]">
               <div>
                 <h2 className="text-2xl font-bold text-white">Mentee Progress Report</h2>
                 <p className="text-green-100 text-sm">Document mentee's achievements and challenges</p>
@@ -2969,7 +3143,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                   <select 
                     value={newReport.goalId} 
                     onChange={(e) => setNewReport({...newReport, goalId: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
+                    className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
                   >
                     <option value="">Choose a goal to report on...</option>
                     {goals.map(goal => (
@@ -2979,7 +3153,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                     ))}
                   </select>
                   {newReport.goalId && (
-                    <div className="mt-3 p-4 bg-[#F4F4F4] border border-[#0072CE]/30 rounded-lg">
+                    <div className="mt-3 p-4 bg-[#F4F4F4] border border-[#0072CE]/30 -lg">
                       {(() => {
                         const selectedGoal = goals.find(g => g.id === newReport.goalId);
                         return selectedGoal ? (
@@ -2995,7 +3169,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                                 <Calendar className="w-3 h-3 mr-1" />
                                 Due: {new Date(selectedGoal.targetDate).toLocaleDateString()}
                               </span>
-                              <span className={`px-2 py-0.5 rounded ${
+                              <span className={`px-2 py-0.5  ${
                                 selectedGoal.status === 'completed' ? 'bg-green-100 text-green-700' :
                                 selectedGoal.status === 'in-progress' ? 'bg-[#1A1F5E]/10 text-[#1A1F5E]' :
                                 'bg-gray-100 text-gray-700'
@@ -3019,10 +3193,10 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                     <select 
                       value={newReport.period} 
                       onChange={(e) => setNewReport({...newReport, period: e.target.value as 'weekly' | 'monthly'})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
+                      className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
                     >
-                      <option value="weekly">📅 Weekly Report</option>
-                      <option value="monthly">📊 Monthly Report</option>
+                      <option value="weekly">?? Weekly Report</option>
+                      <option value="monthly">?? Monthly Report</option>
                     </select>
                   </div>
 
@@ -3035,7 +3209,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                       type="date"
                       value={newReport.startDate}
                       onChange={(e) => setNewReport({...newReport, startDate: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
+                      className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
                     />
                   </div>
 
@@ -3048,7 +3222,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                       type="date"
                       value={newReport.endDate}
                       onChange={(e) => setNewReport({...newReport, endDate: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
+                      className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
                     />
                   </div>
                 </div>
@@ -3056,7 +3230,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                 {/* Achievements */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    🎉 Mentee's Key Achievements
+                    ?? Mentee's Key Achievements
                   </label>
                   <div className="space-y-2">
                     <input
@@ -3064,21 +3238,21 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                       value={newReport.achievements[0]}
                       onChange={(e) => setNewReport({...newReport, achievements: [e.target.value, newReport.achievements[1], newReport.achievements[2]]})}
                       placeholder="Achievement 1 (e.g., Mentee completed milestone X)"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
+                      className="w-full px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
                     />
                     <input
                       type="text"
                       value={newReport.achievements[1]}
                       onChange={(e) => setNewReport({...newReport, achievements: [newReport.achievements[0], e.target.value, newReport.achievements[2]]})}
                       placeholder="Achievement 2"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
+                      className="w-full px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
                     />
                     <input
                       type="text"
                       value={newReport.achievements[2]}
                       onChange={(e) => setNewReport({...newReport, achievements: [newReport.achievements[0], newReport.achievements[1], e.target.value]})}
                       placeholder="Achievement 3"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
+                      className="w-full px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
                     />
                   </div>
                   <p className="text-xs text-gray-500 mt-1">What did the mentee accomplish during this period?</p>
@@ -3087,7 +3261,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                 {/* Challenges */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    ⚠️ Challenges Faced by Mentee
+                    ?? Challenges Faced by Mentee
                   </label>
                   <div className="space-y-2">
                     <input
@@ -3095,14 +3269,14 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                       value={newReport.challenges[0]}
                       onChange={(e) => setNewReport({...newReport, challenges: [e.target.value, newReport.challenges[1]]})}
                       placeholder="Challenge 1 (e.g., Mentee struggling with time management)"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
+                      className="w-full px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
                     />
                     <input
                       type="text"
                       value={newReport.challenges[1]}
                       onChange={(e) => setNewReport({...newReport, challenges: [newReport.challenges[0], e.target.value]})}
                       placeholder="Challenge 2"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
+                      className="w-full px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
                     />
                   </div>
                   <p className="text-xs text-gray-500 mt-1">What obstacles did the mentee encounter?</p>
@@ -3111,7 +3285,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                 {/* Next Steps */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    🎯 Recommended Next Steps for Mentee
+                    ?? Recommended Next Steps for Mentee
                   </label>
                   <div className="space-y-2">
                     <input
@@ -3119,21 +3293,21 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                       value={newReport.nextSteps[0]}
                       onChange={(e) => setNewReport({...newReport, nextSteps: [e.target.value, newReport.nextSteps[1], newReport.nextSteps[2]]})}
                       placeholder="Next step 1 (e.g., Recommend mentee focus on milestone Y)"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
+                      className="w-full px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
                     />
                     <input
                       type="text"
                       value={newReport.nextSteps[1]}
                       onChange={(e) => setNewReport({...newReport, nextSteps: [newReport.nextSteps[0], e.target.value, newReport.nextSteps[2]]})}
                       placeholder="Next step 2"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
+                      className="w-full px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
                     />
                     <input
                       type="text"
                       value={newReport.nextSteps[2]}
                       onChange={(e) => setNewReport({...newReport, nextSteps: [newReport.nextSteps[0], newReport.nextSteps[1], e.target.value]})}
                       placeholder="Next step 3"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
+                      className="w-full px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E]"
                     />
                   </div>
                   <p className="text-xs text-gray-500 mt-1">What are the recommended action items for the mentee's next period?</p>
@@ -3142,20 +3316,20 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                 {/* Overall Feedback */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    💭 Mentor's Overall Assessment
+                    ?? Mentor's Overall Assessment
                   </label>
                   <textarea
                     rows={4}
                     value={newReport.menteeFeedback}
                     onChange={(e) => setNewReport({...newReport, menteeFeedback: e.target.value})}
                     placeholder="Share your observations on the mentee's progress, growth areas, strengths demonstrated, and recommendations for continued development..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E] resize-none"
+                    className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-green-500 focus:border-[#1A1F5E] resize-none"
                   />
                 </div>
 
                 {/* Goal Progress Preview */}
                 {newReport.goalId && (
-                  <div className="bg-gradient-to-r from-green-50 to-teal-50 border-2 border-green-200 rounded-xl p-6">
+                  <div className="bg-[#F4F4F4] border-2 border-[#E5E7EB] -xl p-6">
                     <h3 className="font-bold text-gray-900 mb-3 flex items-center">
                       <BarChart3 className="w-5 h-5 text-green-600 mr-2" />
                       Goal Progress Snapshot
@@ -3170,20 +3344,20 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                             <span className="text-sm text-gray-700">Overall Progress</span>
                             <span className="text-lg font-bold text-green-700">{selectedGoal.progress}%</span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-3">
+                          <div className="w-full bg-gray-200 -full h-3">
                             <div 
-                              className="bg-gradient-to-r from-green-500 to-teal-500 h-3 rounded-full transition-all"
+                              className="bg-[#1A1F5E] h-3 -full transition-all"
                               style={{ width: `${selectedGoal.progress}%` }}
                             />
                           </div>
                           <div className="grid grid-cols-2 gap-4 mt-4">
-                            <div className="bg-white rounded-lg p-3">
+                            <div className="bg-white -lg p-3">
                               <p className="text-xs text-gray-600 mb-1">Milestones</p>
                               <p className="text-lg font-bold text-gray-900">
                                 {selectedGoal.milestones.filter(m => m.completed).length} / {selectedGoal.milestones.length}
                               </p>
                             </div>
-                            <div className="bg-white rounded-lg p-3">
+                            <div className="bg-white -lg p-3">
                               <p className="text-xs text-gray-600 mb-1">Status</p>
                               <p className={`text-sm font-semibold ${
                                 selectedGoal.status === 'completed' ? 'text-green-700' :
@@ -3205,14 +3379,14 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowProgressReport(false)}
-                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-all"
+                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 -lg font-semibold transition-all"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={handleCreateReport}
-                    className="flex-1 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all"
+                    className="flex-1 bg-[#1A1F5E] hover:from-green-700 hover:to-teal-700 text-white px-6 py-3 -lg font-semibold shadow-lg hover:shadow-xl transition-all"
                   >
                     Create Report
                   </button>
@@ -3226,8 +3400,8 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
       {/* CREATE GOAL MODAL */}
       {showCreateGoal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-[#0072CE] to-[#1A1F5E]">
+          <div className="bg-white -2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-[#1A1F5E]">
               <div>
                 <h2 className="text-2xl font-bold text-white">Create SMART Goal</h2>
                 <p className="text-white/80 text-sm">Specific, Measurable, Achievable, Relevant, Time-bound</p>
@@ -3252,7 +3426,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                     value={newGoal.title}
                     onChange={(e) => setNewGoal({...newGoal, title: e.target.value})}
                     placeholder="e.g., Improve Public Speaking Skills"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                    className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   />
                   <p className="text-xs text-gray-500 mt-1">Be specific and clear about what you want to achieve</p>
                 </div>
@@ -3267,7 +3441,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                     value={newGoal.description}
                     onChange={(e) => setNewGoal({...newGoal, description: e.target.value})}
                     placeholder="Describe your goal in detail. What will you accomplish? Why is this important?"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] resize-none"
+                    className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] resize-none"
                   />
                 </div>
 
@@ -3280,7 +3454,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                     <select 
                       value={newGoal.category} 
                       onChange={(e) => setNewGoal({...newGoal, category: e.target.value as any})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                      className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     >
                       <option value="technical">Technical Skills</option>
                       <option value="leadership">Leadership & Management</option>
@@ -3298,11 +3472,11 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                     <select 
                       value={newGoal.priority} 
                       onChange={(e) => setNewGoal({...newGoal, priority: e.target.value as any})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                      className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     >
-                      <option value="high">🔴 High Priority</option>
-                      <option value="medium">🟡 Medium Priority</option>
-                      <option value="low">🟢 Low Priority</option>
+                      <option value="high">?? High Priority</option>
+                      <option value="medium">?? Medium Priority</option>
+                      <option value="low">?? Low Priority</option>
                     </select>
                   </div>
                 </div>
@@ -3317,7 +3491,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                       type="date"
                       value={newGoal.targetDate}
                       onChange={(e) => setNewGoal({...newGoal, targetDate: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                      className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     />
                     <p className="text-xs text-gray-500 mt-1">When do you want to achieve this goal?</p>
                   </div>
@@ -3327,7 +3501,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                     <label className="block text-sm font-semibold text-gray-900 mb-2">
                       Review Frequency
                     </label>
-                    <select className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]">
+                    <select className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]">
                       <option value="weekly" selected>Weekly</option>
                       <option value="biweekly">Bi-weekly</option>
                       <option value="monthly">Monthly</option>
@@ -3346,7 +3520,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                     value={newGoal.measurable}
                     onChange={(e) => setNewGoal({...newGoal, measurable: e.target.value})}
                     placeholder="e.g., Present at 3 team meetings, Receive positive feedback from 5+ colleagues, Complete a public speaking course"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] resize-none"
+                    className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] resize-none"
                   />
                   <p className="text-xs text-gray-500 mt-1">Define specific, measurable criteria for success</p>
                 </div>
@@ -3363,14 +3537,14 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                         value={newGoal.actionSteps[0]}
                         onChange={(e) => setNewGoal({...newGoal, actionSteps: [e.target.value, newGoal.actionSteps[1], newGoal.actionSteps[2]]})}
                         placeholder="Milestone 1"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                        className="w-full px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                       />
                       <input
                         type="date"
                         value={newGoal.actionStepDates[0]}
                         onChange={(e) => setNewGoal({...newGoal, actionStepDates: [e.target.value, newGoal.actionStepDates[1], newGoal.actionStepDates[2]]})}
                         placeholder="Due date"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                        className="w-full px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                       />
                     </div>
                     <div className="grid md:grid-cols-2 gap-3">
@@ -3379,14 +3553,14 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                         value={newGoal.actionSteps[1]}
                         onChange={(e) => setNewGoal({...newGoal, actionSteps: [newGoal.actionSteps[0], e.target.value, newGoal.actionSteps[2]]})}
                         placeholder="Milestone 2"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                        className="w-full px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                       />
                       <input
                         type="date"
                         value={newGoal.actionStepDates[1]}
                         onChange={(e) => setNewGoal({...newGoal, actionStepDates: [newGoal.actionStepDates[0], e.target.value, newGoal.actionStepDates[2]]})}
                         placeholder="Due date"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                        className="w-full px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                       />
                     </div>
                     <div className="grid md:grid-cols-2 gap-3">
@@ -3395,14 +3569,14 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                         value={newGoal.actionSteps[2]}
                         onChange={(e) => setNewGoal({...newGoal, actionSteps: [newGoal.actionSteps[0], newGoal.actionSteps[1], e.target.value]})}
                         placeholder="Milestone 3"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                        className="w-full px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                       />
                       <input
                         type="date"
                         value={newGoal.actionStepDates[2]}
                         onChange={(e) => setNewGoal({...newGoal, actionStepDates: [newGoal.actionStepDates[0], newGoal.actionStepDates[1], e.target.value]})}
                         placeholder="Due date"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                        className="w-full px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                       />
                     </div>
                   </div>
@@ -3419,7 +3593,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                     value={newGoal.resources}
                     onChange={(e) => setNewGoal({...newGoal, resources: e.target.value})}
                     placeholder="e.g., Online course, Mentor time, Books, Budget"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                    className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   />
                 </div>
 
@@ -3433,12 +3607,12 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                     value={newGoal.obstacles}
                     onChange={(e) => setNewGoal({...newGoal, obstacles: e.target.value})}
                     placeholder="What challenges might you face? How will you overcome them?"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] resize-none"
+                    className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] resize-none"
                   />
                 </div>
 
                 {/* SMART Goal Summary */}
-                <div className="bg-gradient-to-r from-[#F4F4F4] to-[#F4F4F4] border-2 border-[#0072CE]/30 rounded-xl p-6">
+                <div className="bg-gradient-to-r from-[#F4F4F4] to-[#F4F4F4] border-2 border-[#0072CE]/30 -xl p-6">
                   <h3 className="font-bold text-gray-900 mb-3 flex items-center">
                     <Target className="w-5 h-5 text-[#0072CE] mr-2" />
                     SMART Goal Checklist
@@ -3487,14 +3661,14 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowCreateGoal(false)}
-                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-all"
+                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 -lg font-semibold transition-all"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={handleCreateGoal}
-                    className="flex-1 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all"
+                    className="flex-1 bg-[#1A1F5E] hover:opacity-90 text-white px-6 py-3 -lg font-semibold shadow-lg hover:shadow-xl transition-all"
                   >
                     Create Goal
                   </button>
@@ -3508,7 +3682,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
       {/* SESSION RATING MODAL */}
       {showSessionRating && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white -2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200 flex items-center justify-between">
               <h2 className="text-2xl font-bold text-gray-900">Rate Your Session</h2>
               <button
@@ -3528,7 +3702,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                       <button
                         key={rating}
                         onClick={() => setSelectedRating(rating)}
-                        className={`w-16 h-16 rounded-xl border-2 transition-all flex items-center justify-center font-bold text-xl ${
+                        className={`w-16 h-16 -xl border-2 transition-all flex items-center justify-center font-bold text-xl ${
                           selectedRating === rating
                             ? 'border-[#0072CE] bg-[#0072CE] text-white scale-110'
                             : 'border-gray-300 hover:border-[#0072CE] hover:bg-[#1A1F5E]/5'
@@ -3547,7 +3721,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">What went well?</label>
                   <textarea
                     rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                    className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     placeholder="Share what you appreciated about this session..."
                   />
                 </div>
@@ -3555,17 +3729,16 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Areas for improvement</label>
                   <textarea
                     rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                    className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     placeholder="Any suggestions for future sessions..."
                   />
                 </div>
                 <button 
                   onClick={() => {
-                    setActivityResults({...activityResults, sessionsRated: activityResults.sessionsRated + 1});
                     setShowSessionRating(false);
                     alert('Thank you for your feedback! Your rating has been recorded.');
                   }}
-                  className="w-full bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-6 py-4 rounded-lg font-semibold transition-colors text-lg"
+                  className="w-full bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-6 py-4 -lg font-semibold transition-colors text-lg"
                 >
                   Submit Rating
                 </button>
@@ -3578,7 +3751,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
       {/* MENTORSHIP MIXER MODAL */}
       {showMentorshipMixer && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white -2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200 flex items-center justify-between">
               <h2 className="text-2xl font-bold text-gray-900">Mentorship Mixer</h2>
               <button
@@ -3592,45 +3765,45 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
               <p className="text-gray-600 mb-6">Interactive scenarios to improve your mentorship skills</p>
               
               <div className="space-y-6">
-                <div className="bg-[#F4F4F4] rounded-xl p-6 border border-[#0072CE]/30">
+                <div className="bg-[#F4F4F4] -xl p-6 border border-[#0072CE]/30">
                   <div className="flex items-center space-x-2 mb-3">
-                    <div className="w-8 h-8 bg-[#0072CE] text-white rounded-full flex items-center justify-center font-bold">1</div>
+                    <div className="w-8 h-8 bg-[#0072CE] text-white -full flex items-center justify-center font-bold">1</div>
                     <h3 className="font-bold text-gray-900">First Meeting Nerves</h3>
                   </div>
                   <p className="text-gray-700 mb-4">Your mentee seems nervous and quiet. What's the best approach?</p>
                   <div className="space-y-2">
-                    <button className="w-full text-left p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-[#0072CE] transition-all">
+                    <button className="w-full text-left p-4 bg-white border-2 border-gray-200 -lg hover:border-[#0072CE] transition-all">
                       <div className="font-medium text-gray-900">A) Jump straight into setting goals</div>
                     </button>
-                    <button className="w-full text-left p-4 bg-white border-2 border-[#0072CE] bg-[#F4F4F4] rounded-lg">
+                    <button className="w-full text-left p-4 bg-white border-2 border-[#0072CE] bg-[#F4F4F4] -lg">
                       <div className="font-medium text-[#1A1F5E] flex items-center justify-between">
                         <span>B) Share your own experiences to build rapport</span>
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Best Choice</span>
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 -full">Best Choice</span>
                       </div>
                     </button>
-                    <button className="w-full text-left p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-[#0072CE] transition-all">
+                    <button className="w-full text-left p-4 bg-white border-2 border-gray-200 -lg hover:border-[#0072CE] transition-all">
                       <div className="font-medium text-gray-900">C) Ask open-ended questions</div>
                     </button>
                   </div>
                 </div>
 
-                <div className="bg-[#F4F4F4] rounded-xl p-6 border border-[#0072CE]/30">
+                <div className="bg-[#F4F4F4] -xl p-6 border border-[#0072CE]/30">
                   <div className="flex items-center space-x-2 mb-3">
-                    <div className="w-8 h-8 bg-[#0072CE] text-white rounded-full flex items-center justify-center font-bold">2</div>
+                    <div className="w-8 h-8 bg-[#0072CE] text-white -full flex items-center justify-center font-bold">2</div>
                     <h3 className="font-bold text-gray-900">Dealing with Setbacks</h3>
                   </div>
                   <p className="text-gray-700 mb-4">Your mentee didn't achieve their goal. How do you respond?</p>
                   <div className="space-y-2">
-                    <button className="w-full text-left p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-[#0072CE] transition-all">
+                    <button className="w-full text-left p-4 bg-white border-2 border-gray-200 -lg hover:border-[#0072CE] transition-all">
                       <div className="font-medium text-gray-900">A) Tell them to try harder</div>
                     </button>
-                    <button className="w-full text-left p-4 bg-white border-2 border-[#0072CE] bg-[#F4F4F4] rounded-lg">
+                    <button className="w-full text-left p-4 bg-white border-2 border-[#0072CE] bg-[#F4F4F4] -lg">
                       <div className="font-medium text-[#1A1F5E] flex items-center justify-between">
                         <span>B) Help them analyze and learn from it</span>
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Best Choice</span>
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 -full">Best Choice</span>
                       </div>
                     </button>
-                    <button className="w-full text-left p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-[#0072CE] transition-all">
+                    <button className="w-full text-left p-4 bg-white border-2 border-gray-200 -lg hover:border-[#0072CE] transition-all">
                       <div className="font-medium text-gray-900">C) Change the subject</div>
                     </button>
                   </div>
@@ -3638,11 +3811,10 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
 
                 <button 
                   onClick={() => {
-                    setActivityResults({...activityResults, mixerScenarios: activityResults.mixerScenarios + 2});
                     setShowMentorshipMixer(false);
                     alert('Great job! You completed 2 scenarios. Keep practicing to improve your mentorship skills.');
                   }}
-                  className="w-full bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-6 py-3 rounded-lg font-semibold"
+                  className="w-full bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-6 py-3 -lg font-semibold"
                 >
                   Complete Activity
                 </button>
@@ -3655,7 +3827,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
       {/* POWER OF WORDS MODAL */}
       {showPowerOfWords && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white -2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200 flex items-center justify-between">
               <h2 className="text-2xl font-bold text-gray-900">Power of Words</h2>
               <button
@@ -3669,38 +3841,38 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
               <p className="text-gray-600 mb-6">Learn how language shapes mentorship relationships</p>
               
               <div className="space-y-6">
-                <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6">
+                <div className="bg-green-50 border-2 border-green-200 -xl p-6">
                   <div className="flex items-center space-x-2 mb-4">
-                    <div className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-lg">✓</div>
+                    <div className="w-10 h-10 bg-[#1A1F5E] text-white -full flex items-center justify-center font-bold text-lg">?</div>
                     <h3 className="text-xl font-bold text-green-900">Empowering Phrases</h3>
                   </div>
                   <div className="space-y-3">
-                    <div className="bg-white rounded-lg p-4 border border-green-200">
+                    <div className="bg-white -lg p-4 border border-green-200">
                       <div className="font-semibold text-green-900 mb-1">"What are your thoughts on this?"</div>
                       <div className="text-sm text-gray-600">Invites their perspective and shows you value their input</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 border border-green-200">
+                    <div className="bg-white -lg p-4 border border-green-200">
                       <div className="font-semibold text-green-900 mb-1">"I believe in your ability to..."</div>
                       <div className="text-sm text-gray-600">Builds confidence and shows trust</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 border border-green-200">
+                    <div className="bg-white -lg p-4 border border-green-200">
                       <div className="font-semibold text-green-900 mb-1">"Let's explore this together"</div>
                       <div className="text-sm text-gray-600">Creates partnership and shared learning</div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6">
+                <div className="bg-red-50 border-2 border-red-200 -xl p-6">
                   <div className="flex items-center space-x-2 mb-4">
-                    <div className="w-10 h-10 bg-red-600 text-white rounded-full flex items-center justify-center font-bold text-lg">✗</div>
+                    <div className="w-10 h-10 bg-red-600 text-white -full flex items-center justify-center font-bold text-lg">?</div>
                     <h3 className="text-xl font-bold text-red-900">Phrases to Avoid</h3>
                   </div>
                   <div className="space-y-3">
-                    <div className="bg-white rounded-lg p-4 border border-red-200">
+                    <div className="bg-white -lg p-4 border border-red-200">
                       <div className="font-semibold text-red-900 mb-1">"You should just..."</div>
                       <div className="text-sm text-gray-600">Dismisses their perspective and sounds prescriptive</div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 border border-red-200">
+                    <div className="bg-white -lg p-4 border border-red-200">
                       <div className="font-semibold text-red-900 mb-1">"That's wrong"</div>
                       <div className="text-sm text-gray-600">Shuts down conversation and discourages sharing</div>
                     </div>
@@ -3709,11 +3881,10 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
 
                 <button 
                   onClick={() => {
-                    setActivityResults({...activityResults, wordsLearned: activityResults.wordsLearned + 5});
                     setShowPowerOfWords(false);
                     alert('Excellent! You learned 5 new empowering phrases. Keep using positive language!');
                   }}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold"
+                  className="w-full bg-[#1A1F5E] hover:opacity-90 text-white px-6 py-3 -lg font-semibold"
                 >
                   Complete Activity
                 </button>
@@ -3726,15 +3897,15 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
       {/* REFLECTION BOARD MODAL */}
       {showReflectionBoard && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-orange-500 to-amber-600">
+          <div className="bg-white -2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-[#1A1F5E]">
               <div>
                 <h2 className="text-2xl font-bold text-white">Reflection Board</h2>
-                <p className="text-orange-100 text-sm">Share your mentorship journey and learn from others</p>
+                <p className="text-blue-100 text-sm">Share your mentorship journey and learn from others</p>
               </div>
               <button
                 onClick={() => setShowReflectionBoard(false)}
-                className="text-white hover:text-orange-100 transition-colors"
+                className="text-white hover:text-blue-100 transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -3742,29 +3913,29 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
             
             <div className="p-8">
               {/* Reflection Prompt Suggestions */}
-              <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-xl p-6 mb-6">
+              <div className="bg-[#F4F4F4] border-2 border-[#E5E7EB] -xl p-6 mb-6">
                 <div className="flex items-start space-x-3 mb-4">
-                  <Lightbulb className="w-6 h-6 text-orange-600 flex-shrink-0 mt-1" />
+                  <Lightbulb className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
                   <div>
                     <h3 className="font-bold text-gray-900 mb-2">Need Inspiration? Try These Prompts:</h3>
                     <div className="grid md:grid-cols-2 gap-3">
-                      <button className="text-left bg-white hover:bg-orange-50 border border-orange-200 rounded-lg p-3 transition-all">
-                        <p className="text-sm font-medium text-gray-900">💡 What was the most valuable insight from today's session?</p>
+                      <button className="text-left bg-white hover:bg-[#1A1F5E]/5 border border-[#E5E7EB] -lg p-3 transition-all">
+                        <p className="text-sm font-medium text-gray-900">?? What was the most valuable insight from today's session?</p>
                       </button>
-                      <button className="text-left bg-white hover:bg-orange-50 border border-orange-200 rounded-lg p-3 transition-all">
-                        <p className="text-sm font-medium text-gray-900">🎯 Did I achieve my session goals? Why or why not?</p>
+                      <button className="text-left bg-white hover:bg-[#1A1F5E]/5 border border-[#E5E7EB] -lg p-3 transition-all">
+                        <p className="text-sm font-medium text-gray-900">?? Did I achieve my session goals? Why or why not?</p>
                       </button>
-                      <button className="text-left bg-white hover:bg-orange-50 border border-orange-200 rounded-lg p-3 transition-all">
-                        <p className="text-sm font-medium text-gray-900">🌱 How did today contribute to my growth?</p>
+                      <button className="text-left bg-white hover:bg-[#1A1F5E]/5 border border-[#E5E7EB] -lg p-3 transition-all">
+                        <p className="text-sm font-medium text-gray-900">?? How did today contribute to my growth?</p>
                       </button>
-                      <button className="text-left bg-white hover:bg-orange-50 border border-orange-200 rounded-lg p-3 transition-all">
-                        <p className="text-sm font-medium text-gray-900">🤔 What challenges came up and how did we address them?</p>
+                      <button className="text-left bg-white hover:bg-[#1A1F5E]/5 border border-[#E5E7EB] -lg p-3 transition-all">
+                        <p className="text-sm font-medium text-gray-900">?? What challenges came up and how did we address them?</p>
                       </button>
-                      <button className="text-left bg-white hover:bg-orange-50 border border-orange-200 rounded-lg p-3 transition-all">
-                        <p className="text-sm font-medium text-gray-900">📝 What action steps did we agree on?</p>
+                      <button className="text-left bg-white hover:bg-[#1A1F5E]/5 border border-[#E5E7EB] -lg p-3 transition-all">
+                        <p className="text-sm font-medium text-gray-900">?? What action steps did we agree on?</p>
                       </button>
-                      <button className="text-left bg-white hover:bg-orange-50 border border-orange-200 rounded-lg p-3 transition-all">
-                        <p className="text-sm font-medium text-gray-900">💭 What support or resources do I need next?</p>
+                      <button className="text-left bg-white hover:bg-[#1A1F5E]/5 border border-[#E5E7EB] -lg p-3 transition-all">
+                        <p className="text-sm font-medium text-gray-900">?? What support or resources do I need next?</p>
                       </button>
                     </div>
                   </div>
@@ -3778,49 +3949,49 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <button 
                       onClick={() => setNewReflection({...newReflection, category: 'goal-progress'})}
-                      className={`flex items-center space-x-2 px-4 py-3 border-2 rounded-lg transition-all ${newReflection.category === 'goal-progress' ? 'border-[#0072CE]/30 bg-[#F4F4F4]' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
+                      className={`flex items-center space-x-2 px-4 py-3 border-2 -lg transition-all ${newReflection.category === 'goal-progress' ? 'border-[#0072CE]/30 bg-[#F4F4F4]' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
                       <Target className={`w-5 h-5 ${newReflection.category === 'goal-progress' ? 'text-[#0072CE]' : 'text-gray-600'}`} />
                       <span className={`font-medium ${newReflection.category === 'goal-progress' ? 'text-[#1A1F5E]' : 'text-gray-700'}`}>Goal Progress</span>
                     </button>
                     <button 
                       onClick={() => setNewReflection({...newReflection, category: 'communication'})}
-                      className={`flex items-center space-x-2 px-4 py-3 border-2 rounded-lg transition-all ${newReflection.category === 'communication' ? 'border-[#0072CE]/30 bg-[#F4F4F4]' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
+                      className={`flex items-center space-x-2 px-4 py-3 border-2 -lg transition-all ${newReflection.category === 'communication' ? 'border-[#0072CE]/30 bg-[#F4F4F4]' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
                       <MessageSquare className={`w-5 h-5 ${newReflection.category === 'communication' ? 'text-[#0072CE]' : 'text-gray-600'}`} />
                       <span className={`font-medium ${newReflection.category === 'communication' ? 'text-[#1A1F5E]' : 'text-gray-700'}`}>Communication</span>
                     </button>
                     <button 
                       onClick={() => setNewReflection({...newReflection, category: 'skills-learned'})}
-                      className={`flex items-center space-x-2 px-4 py-3 border-2 rounded-lg transition-all ${newReflection.category === 'skills-learned' ? 'border-[#0072CE]/30 bg-[#F4F4F4]' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
+                      className={`flex items-center space-x-2 px-4 py-3 border-2 -lg transition-all ${newReflection.category === 'skills-learned' ? 'border-[#0072CE]/30 bg-[#F4F4F4]' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
                       <TrendingUp className={`w-5 h-5 ${newReflection.category === 'skills-learned' ? 'text-[#0072CE]' : 'text-gray-600'}`} />
                       <span className={`font-medium ${newReflection.category === 'skills-learned' ? 'text-[#1A1F5E]' : 'text-gray-700'}`}>Skills Learned</span>
                     </button>
                     <button 
                       onClick={() => setNewReflection({...newReflection, category: 'relationship'})}
-                      className={`flex items-center space-x-2 px-4 py-3 border-2 rounded-lg transition-all ${newReflection.category === 'relationship' ? 'border-[#0072CE]/30 bg-[#F4F4F4]' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
+                      className={`flex items-center space-x-2 px-4 py-3 border-2 -lg transition-all ${newReflection.category === 'relationship' ? 'border-[#0072CE]/30 bg-[#F4F4F4]' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
                       <Users className={`w-5 h-5 ${newReflection.category === 'relationship' ? 'text-[#0072CE]' : 'text-gray-600'}`} />
                       <span className={`font-medium ${newReflection.category === 'relationship' ? 'text-[#1A1F5E]' : 'text-gray-700'}`}>Relationship</span>
                     </button>
                     <button 
                       onClick={() => setNewReflection({...newReflection, category: 'challenge'})}
-                      className={`flex items-center space-x-2 px-4 py-3 border-2 rounded-lg transition-all ${newReflection.category === 'challenge' ? 'border-[#0072CE]/30 bg-[#F4F4F4]' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
+                      className={`flex items-center space-x-2 px-4 py-3 border-2 -lg transition-all ${newReflection.category === 'challenge' ? 'border-[#0072CE]/30 bg-[#F4F4F4]' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
                       <AlertCircle className={`w-5 h-5 ${newReflection.category === 'challenge' ? 'text-[#0072CE]' : 'text-gray-600'}`} />
                       <span className={`font-medium ${newReflection.category === 'challenge' ? 'text-[#1A1F5E]' : 'text-gray-700'}`}>Challenge</span>
                     </button>
                     <button 
                       onClick={() => setNewReflection({...newReflection, category: 'success'})}
-                      className={`flex items-center space-x-2 px-4 py-3 border-2 rounded-lg transition-all ${newReflection.category === 'success' ? 'border-[#0072CE]/30 bg-[#F4F4F4]' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
+                      className={`flex items-center space-x-2 px-4 py-3 border-2 -lg transition-all ${newReflection.category === 'success' ? 'border-[#0072CE]/30 bg-[#F4F4F4]' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
                       <CheckCircle className={`w-5 h-5 ${newReflection.category === 'success' ? 'text-[#0072CE]' : 'text-gray-600'}`} />
                       <span className={`font-medium ${newReflection.category === 'success' ? 'text-[#1A1F5E]' : 'text-gray-700'}`}>Success</span>
                     </button>
                     <button 
                       onClick={() => setNewReflection({...newReflection, category: 'insight'})}
-                      className={`flex items-center space-x-2 px-4 py-3 border-2 rounded-lg transition-all ${newReflection.category === 'insight' ? 'border-[#0072CE]/30 bg-[#F4F4F4]' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
+                      className={`flex items-center space-x-2 px-4 py-3 border-2 -lg transition-all ${newReflection.category === 'insight' ? 'border-[#0072CE]/30 bg-[#F4F4F4]' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
                       <Lightbulb className={`w-5 h-5 ${newReflection.category === 'insight' ? 'text-[#0072CE]' : 'text-gray-600'}`} />
                       <span className={`font-medium ${newReflection.category === 'insight' ? 'text-[#1A1F5E]' : 'text-gray-700'}`}>Insight</span>
                     </button>
                     <button 
                       onClick={() => setNewReflection({...newReflection, category: 'learning'})}
-                      className={`flex items-center space-x-2 px-4 py-3 border-2 rounded-lg transition-all ${newReflection.category === 'learning' ? 'border-[#0072CE]/30 bg-[#F4F4F4]' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
+                      className={`flex items-center space-x-2 px-4 py-3 border-2 -lg transition-all ${newReflection.category === 'learning' ? 'border-[#0072CE]/30 bg-[#F4F4F4]' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
                       <BookOpen className={`w-5 h-5 ${newReflection.category === 'learning' ? 'text-[#0072CE]' : 'text-gray-600'}`} />
                       <span className={`font-medium ${newReflection.category === 'learning' ? 'text-[#1A1F5E]' : 'text-gray-700'}`}>Learning</span>
                     </button>
@@ -3834,7 +4005,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                     type="text"
                     value={newReflection.title}
                     onChange={(e) => setNewReflection({...newReflection, title: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full px-4 py-3 border-2 border-gray-300 -lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="e.g., Learning to navigate difficult conversations"
                   />
                 </div>
@@ -3865,7 +4036,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                     rows={8}
                     value={newReflection.content}
                     onChange={(e) => setNewReflection({...newReflection, content: e.target.value})}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full px-4 py-3 border-2 border-gray-300 -lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Share your thoughts, insights, challenges, and learnings from your mentorship experience...
 
 What went well?
@@ -3889,7 +4060,7 @@ How are you feeling about your progress?"
                         type="text"
                         value={newReflection.keyTakeaways[0]}
                         onChange={(e) => setNewReflection({...newReflection, keyTakeaways: [e.target.value, newReflection.keyTakeaways[1], newReflection.keyTakeaways[2]]})}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                        className="flex-1 px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-blue-500"
                         placeholder="First key learning or action item"
                       />
                     </div>
@@ -3899,7 +4070,7 @@ How are you feeling about your progress?"
                         type="text"
                         value={newReflection.keyTakeaways[1]}
                         onChange={(e) => setNewReflection({...newReflection, keyTakeaways: [newReflection.keyTakeaways[0], e.target.value, newReflection.keyTakeaways[2]]})}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                        className="flex-1 px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-blue-500"
                         placeholder="Second key learning or action item"
                       />
                     </div>
@@ -3909,7 +4080,7 @@ How are you feeling about your progress?"
                         type="text"
                         value={newReflection.keyTakeaways[2]}
                         onChange={(e) => setNewReflection({...newReflection, keyTakeaways: [newReflection.keyTakeaways[0], newReflection.keyTakeaways[1], e.target.value]})}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                        className="flex-1 px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-blue-500"
                         placeholder="Third key learning or action item"
                       />
                     </div>
@@ -3923,7 +4094,7 @@ How are you feeling about your progress?"
                     type="text"
                     value={newReflection.tags}
                     onChange={(e) => setNewReflection({...newReflection, tags: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                    className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-blue-500"
                     placeholder="e.g., communication, leadership, feedback, growth-mindset"
                   />
                   <p className="text-xs text-gray-500 mt-1">Separate tags with commas</p>
@@ -3931,14 +4102,14 @@ How are you feeling about your progress?"
                 </div>
 
                 {/* Privacy Options */}
-                <div className="bg-[#F4F4F4] border-2 border-[#0072CE]/30 rounded-lg p-5">
+                <div className="bg-[#F4F4F4] border-2 border-[#0072CE]/30 -lg p-5">
                   <div className="flex items-start space-x-3">
                     <input
                       type="checkbox"
                       id="anonymous"
                       checked={newReflection.isAnonymous}
                       onChange={(e) => setNewReflection({...newReflection, isAnonymous: e.target.checked})}
-                      className="mt-1 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                      className="mt-1  border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                     <label htmlFor="anonymous" className="flex-1">
                       <span className="font-medium text-gray-900">Post Anonymously</span>
@@ -3954,13 +4125,13 @@ How are you feeling about your progress?"
                 <div className="flex space-x-4 pt-4">
                   <button
                     onClick={() => setShowReflectionBoard(false)}
-                    className="flex-1 px-6 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+                    className="flex-1 px-6 py-3 border-2 border-gray-300 -lg text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
                   >
                     Cancel
                   </button>
                   <button 
                     onClick={handleCreateReflection}
-                    className="flex-1 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all"
+                    className="flex-1 bg-[#1A1F5E] hover:opacity-90 text-white px-6 py-3 -lg font-semibold shadow-lg hover:shadow-xl transition-all"
                   >
                     Post Reflection
                   </button>
@@ -3973,10 +4144,10 @@ How are you feeling about your progress?"
       {/* RESOURCE VIEWER MODAL */}
       {showResourceViewer && selectedResource && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-[#0072CE] to-[#1A1F5E]">
+          <div className="bg-white -2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between bg-[#1A1F5E]">
               <div className="flex items-center space-x-3">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                <div className={`w-10 h-10 -lg flex items-center justify-center ${
                   selectedResource.type === 'video' ? 'bg-red-500' : 'bg-[#F4F4F4]0'
                 }`}>
                   {selectedResource.type === 'video' ? (
@@ -4025,7 +4196,7 @@ How are you feeling about your progress?"
                 <div>
                   <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
                     <iframe
-                      className="absolute top-0 left-0 w-full h-full rounded-lg"
+                      className="absolute top-0 left-0 w-full h-full -lg"
                       src={`https://www.youtube.com/embed/${selectedResource.videoId}`}
                       title={selectedResource.title}
                       frameBorder="0"
@@ -4043,11 +4214,11 @@ How are you feeling about your progress?"
               ) : selectedResource.type === 'article' ? (
                 <div>
                   <div className="prose max-w-none">
-                    <div className="bg-[#F4F4F4] border-l-4 border-[#0072CE] p-6 mb-6 rounded-r-lg">
+                    <div className="bg-[#F4F4F4] border-l-4 border-[#0072CE] p-6 mb-6 -r-lg">
                       <div className="flex items-center space-x-2 text-sm text-[#1A1F5E] mb-2">
                         <User className="w-4 h-4" />
                         <span className="font-medium">{selectedResource.author || 'Unknown Author'}</span>
-                        <span className="text-[#0072CE]">•</span>
+                        <span className="text-[#0072CE]">�</span>
                         <Clock className="w-4 h-4" />
                         <span>{selectedResource.readTime || '5 min read'}</span>
                       </div>
@@ -4073,7 +4244,7 @@ How are you feeling about your progress?"
                             </p>
                           </div>
 
-                          <div className="bg-gradient-to-r from-[#F4F4F4] to-[#F4F4F4] border-l-4 border-[#0072CE] p-6 rounded-r-lg my-6">
+                          <div className="bg-gradient-to-r from-[#F4F4F4] to-[#F4F4F4] border-l-4 border-[#0072CE] p-6 -r-lg my-6">
                             <h4 className="text-lg font-bold text-[#1A1F5E] mb-3 flex items-center">
                               <Lightbulb className="w-5 h-5 mr-2" />
                               Why This Matters
@@ -4093,7 +4264,7 @@ How are you feeling about your progress?"
                               a solid platform for continuous growth and development.
                             </p>
                             <div className="grid md:grid-cols-2 gap-4 my-6">
-                              <div className="bg-white border-2 border-gray-200 rounded-lg p-5">
+                              <div className="bg-white border-2 border-gray-200 -lg p-5">
                                 <h5 className="font-semibold text-gray-900 mb-2 flex items-center">
                                   <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
                                   Foundation Building
@@ -4102,7 +4273,7 @@ How are you feeling about your progress?"
                                   Establish strong fundamentals through consistent practice and iterative learning approaches.
                                 </p>
                               </div>
-                              <div className="bg-white border-2 border-gray-200 rounded-lg p-5">
+                              <div className="bg-white border-2 border-gray-200 -lg p-5">
                                 <h5 className="font-semibold text-gray-900 mb-2 flex items-center">
                                   <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
                                   Practical Application
@@ -4121,7 +4292,7 @@ How are you feeling about your progress?"
                             </p>
                             <ol className="space-y-4 ml-4">
                               <li className="flex items-start">
-                                <span className="flex-shrink-0 w-8 h-8 bg-[#0072CE] text-white rounded-full flex items-center justify-center font-bold text-sm mr-3 mt-1">1</span>
+                                <span className="flex-shrink-0 w-8 h-8 bg-[#0072CE] text-white -full flex items-center justify-center font-bold text-sm mr-3 mt-1">1</span>
                                 <div>
                                   <h5 className="font-semibold text-gray-900 mb-1">Assessment & Planning</h5>
                                   <p className="text-gray-600 leading-6">
@@ -4131,7 +4302,7 @@ How are you feeling about your progress?"
                                 </div>
                               </li>
                               <li className="flex items-start">
-                                <span className="flex-shrink-0 w-8 h-8 bg-[#0072CE] text-white rounded-full flex items-center justify-center font-bold text-sm mr-3 mt-1">2</span>
+                                <span className="flex-shrink-0 w-8 h-8 bg-[#0072CE] text-white -full flex items-center justify-center font-bold text-sm mr-3 mt-1">2</span>
                                 <div>
                                   <h5 className="font-semibold text-gray-900 mb-1">Active Learning & Practice</h5>
                                   <p className="text-gray-600 leading-6">
@@ -4141,7 +4312,7 @@ How are you feeling about your progress?"
                                 </div>
                               </li>
                               <li className="flex items-start">
-                                <span className="flex-shrink-0 w-8 h-8 bg-[#0072CE] text-white rounded-full flex items-center justify-center font-bold text-sm mr-3 mt-1">3</span>
+                                <span className="flex-shrink-0 w-8 h-8 bg-[#0072CE] text-white -full flex items-center justify-center font-bold text-sm mr-3 mt-1">3</span>
                                 <div>
                                   <h5 className="font-semibold text-gray-900 mb-1">Review & Refinement</h5>
                                   <p className="text-gray-600 leading-6">
@@ -4153,26 +4324,26 @@ How are you feeling about your progress?"
                             </ol>
                           </div>
 
-                          <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-6 my-6">
+                          <div className="bg-yellow-50 border-2 border-yellow-200 -lg p-6 my-6">
                             <h4 className="text-lg font-bold text-yellow-900 mb-3 flex items-center">
                               <AlertCircle className="w-5 h-5 mr-2" />
                               Common Pitfalls to Avoid
                             </h4>
                             <ul className="space-y-2 text-yellow-800">
                               <li className="flex items-start">
-                                <span className="text-yellow-600 mr-2 mt-1">•</span>
+                                <span className="text-yellow-600 mr-2 mt-1">�</span>
                                 <span>Rushing through foundational concepts without proper understanding</span>
                               </li>
                               <li className="flex items-start">
-                                <span className="text-yellow-600 mr-2 mt-1">•</span>
+                                <span className="text-yellow-600 mr-2 mt-1">�</span>
                                 <span>Neglecting to practice regularly and consistently</span>
                               </li>
                               <li className="flex items-start">
-                                <span className="text-yellow-600 mr-2 mt-1">•</span>
+                                <span className="text-yellow-600 mr-2 mt-1">�</span>
                                 <span>Avoiding feedback or constructive criticism</span>
                               </li>
                               <li className="flex items-start">
-                                <span className="text-yellow-600 mr-2 mt-1">•</span>
+                                <span className="text-yellow-600 mr-2 mt-1">�</span>
                                 <span>Setting unrealistic expectations or timelines</span>
                               </li>
                             </ul>
@@ -4180,7 +4351,7 @@ How are you feeling about your progress?"
 
                           <div className="space-y-4">
                             <h4 className="text-2xl font-bold text-gray-900 mt-8 mb-4">Key Takeaways</h4>
-                            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-6">
+                            <div className="bg-[#F4F4F4] border-2 border-[#E5E7EB] -lg p-6">
                               <ul className="space-y-3">
                                 <li className="flex items-start">
                                   <CheckCircle className="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
@@ -4218,7 +4389,7 @@ How are you feeling about your progress?"
                           </p>
                           </div>
 
-                          <div className="bg-[#F4F4F4] border-2 border-[#0072CE]/30 rounded-lg p-6 mt-8">
+                          <div className="bg-[#F4F4F4] border-2 border-[#0072CE]/30 -lg p-6 mt-8">
                             <h4 className="text-lg font-bold text-[#1A1F5E] mb-3">Ready to Move Forward?</h4>
                             <p className="text-[#1A1F5E] mb-4 leading-6">
                               Now that you've completed this article, apply what you've learned immediately. Start with small 
@@ -4236,7 +4407,7 @@ How are you feeling about your progress?"
                   <div className="mt-8 pt-6 border-t border-gray-200">
                     <button
                       onClick={handleMarkResourceComplete}
-                      className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-4 rounded-lg font-bold text-lg flex items-center justify-center space-x-2 transition-all shadow-lg hover:shadow-xl"
+                      className="w-full bg-[#1A1F5E] hover:opacity-90 text-white px-6 py-4 -lg font-bold text-lg flex items-center justify-center space-x-2 transition-all shadow-lg hover:shadow-xl"
                     >
                       <CheckCircle className="w-6 h-6" />
                       <span>Mark Module as Complete & Update Progress</span>
@@ -4254,7 +4425,7 @@ How are you feeling about your progress?"
                     href={selectedResource.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-4 inline-block bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-6 py-2 rounded-lg font-medium"
+                    className="mt-4 inline-block bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-6 py-2 -lg font-medium"
                   >
                     Open Resource
                   </a>
@@ -4268,11 +4439,11 @@ How are you feeling about your progress?"
       {/* WORDWALL GAME MODAL */}
       {showWordwallGame && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white -2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             {gameState === 'menu' && (
               <div className="p-8">
                 <div className="text-center mb-8">
-                  <div className="w-20 h-20 bg-gradient-to-br from-pink-500 to-[#1A1F5E] rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-20 h-20 bg-[#1A1F5E] -full flex items-center justify-center mx-auto mb-4">
                     <Trophy className="w-10 h-10 text-white" />
                   </div>
                   <h2 className="text-3xl font-bold text-gray-900 mb-2">Mentorship Challenge</h2>
@@ -4282,7 +4453,7 @@ How are you feeling about your progress?"
                 <div className="grid md:grid-cols-2 gap-6 mb-6">
                   <button
                     onClick={() => startGame('practice')}
-                    className="bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] border-2 border-[#0072CE]/40 rounded-xl p-8 hover:shadow-lg transition-all text-left"
+                    className="bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] border-2 border-[#0072CE]/40 -xl p-8 hover:shadow-lg transition-all text-left"
                   >
                     <div className="flex items-center justify-between mb-4">
                       <BookOpen className="w-8 h-8 text-[#0072CE]" />
@@ -4308,7 +4479,7 @@ How are you feeling about your progress?"
 
                   <button
                     onClick={() => startGame('challenge')}
-                    className="bg-gradient-to-br from-pink-50 to-[#F4F4F4] border-2 border-pink-300 rounded-xl p-8 hover:shadow-lg transition-all text-left"
+                    className="bg-[#F4F4F4] border-2 border-[#E83E2D]/30 -xl p-8 hover:shadow-lg transition-all text-left"
                   >
                     <div className="flex items-center justify-between mb-4">
                       <Zap className="w-8 h-8 text-pink-600" />
@@ -4333,18 +4504,18 @@ How are you feeling about your progress?"
                   </button>
                 </div>
 
-                <div className="bg-gray-50 rounded-xl p-6 mb-6">
+                <div className="bg-gray-50 -xl p-6 mb-6">
                   <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
                     <Star className="w-5 h-5 text-yellow-500 mr-2" />
                     Your Stats
                   </h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-2xl font-bold text-gray-900">{activityResults.gameHighScore}</p>
+                      <p className="text-2xl font-bold text-gray-900">{gameHighScore}</p>
                       <p className="text-sm text-gray-600">High Score</p>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-gray-900">{activityResults.activitiesCompleted}</p>
+                      <p className="text-2xl font-bold text-gray-900">{goals.filter(g => g.status === 'completed').length}</p>
                       <p className="text-sm text-gray-600">Games Played</p>
                     </div>
                   </div>
@@ -4352,7 +4523,7 @@ How are you feeling about your progress?"
 
                 <button
                   onClick={() => setShowWordwallGame(false)}
-                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-all"
+                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 -lg font-semibold transition-all"
                 >
                   Close
                 </button>
@@ -4364,8 +4535,8 @@ How are you feeling about your progress?"
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center space-x-4">
                     <span className="text-sm font-medium text-gray-600">Question {currentQuestion + 1}/{gameQuestions.length}</span>
-                    <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-3 py-1 rounded-full text-sm font-medium">
-                      {gameMode === 'practice' ? '🎓 Practice' : '⚡ Challenge'}
+                    <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-3 py-1 -full text-sm font-medium">
+                      {gameMode === 'practice' ? '?? Practice' : '? Challenge'}
                     </span>
                   </div>
                   <div className="flex items-center space-x-6">
@@ -4382,8 +4553,8 @@ How are you feeling about your progress?"
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-[#1A1F5E]/10 to-pink-100 rounded-xl p-6 mb-6">
-                  <span className="inline-block bg-white px-3 py-1 rounded-full text-xs font-medium text-[#1A1F5E] mb-3">
+                <div className="bg-gradient-to-r from-[#1A1F5E]/10 to-pink-100 -xl p-6 mb-6">
+                  <span className="inline-block bg-white px-3 py-1 -full text-xs font-medium text-[#1A1F5E] mb-3">
                     {gameQuestions[currentQuestion].category}
                   </span>
                   <h3 className="text-xl font-bold text-gray-900 mb-4">{gameQuestions[currentQuestion].question}</h3>
@@ -4395,7 +4566,7 @@ How are you feeling about your progress?"
                       key={index}
                       onClick={() => handleAnswerSelect(index)}
                       disabled={selectedAnswer !== null}
-                      className={`w-full p-4 rounded-lg text-left transition-all ${
+                      className={`w-full p-4 -lg text-left transition-all ${
                         selectedAnswer === null
                           ? 'bg-white border-2 border-gray-200 hover:border-[#1A1F5E] hover:shadow-md'
                           : selectedAnswer === index
@@ -4408,7 +4579,7 @@ How are you feeling about your progress?"
                       }`}
                     >
                       <div className="flex items-center space-x-3">
-                        <span className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                        <span className={`flex-shrink-0 w-8 h-8 -full flex items-center justify-center font-bold ${
                           selectedAnswer === null
                             ? 'bg-gray-200 text-gray-700'
                             : index === gameQuestions[currentQuestion].correctAnswer
@@ -4432,19 +4603,19 @@ How are you feeling about your progress?"
                 </div>
 
                 {showFeedback && (
-                  <div className={`rounded-lg p-6 mb-6 ${
+                  <div className={`-lg p-6 mb-6 ${
                     selectedAnswer === gameQuestions[currentQuestion].correctAnswer
                       ? 'bg-green-50 border-2 border-green-200'
                       : 'bg-[#F4F4F4] border-2 border-[#0072CE]/30'
                   }`}>
                     <h4 className="font-bold text-gray-900 mb-2 flex items-center">
                       <Lightbulb className="w-5 h-5 mr-2" />
-                      {selectedAnswer === gameQuestions[currentQuestion].correctAnswer ? 'Correct! 🎉' : 'Learn More'}
+                      {selectedAnswer === gameQuestions[currentQuestion].correctAnswer ? 'Correct! ??' : 'Learn More'}
                     </h4>
                     <p className="text-gray-700">{gameQuestions[currentQuestion].explanation}</p>
                     {selectedAnswer === gameQuestions[currentQuestion].correctAnswer && gameMode === 'challenge' && (
                       <p className="mt-2 text-sm text-green-700 font-medium">
-                        ⚡ Time bonus: +{Math.floor(timeLeft * 2)} points
+                        ? Time bonus: +{Math.floor(timeLeft * 2)} points
                       </p>
                     )}
                   </div>
@@ -4453,9 +4624,9 @@ How are you feeling about your progress?"
                 {showFeedback && (
                   <button
                     onClick={nextQuestion}
-                    className="w-full bg-gradient-to-r from-[#0072CE] to-pink-600 hover:from-[#1A1F5E] hover:to-pink-700 text-white px-6 py-4 rounded-lg font-bold text-lg transition-all shadow-lg"
+                    className="w-full bg-gradient-to-r from-[#0072CE] to-pink-600 hover:from-[#1A1F5E] hover:to-pink-700 text-white px-6 py-4 -lg font-bold text-lg transition-all shadow-lg"
                   >
-                    {currentQuestion < gameQuestions.length - 1 ? 'Next Question →' : 'See Results 🏆'}
+                    {currentQuestion < gameQuestions.length - 1 ? 'Next Question ?' : 'See Results ??'}
                   </button>
                 )}
               </div>
@@ -4464,14 +4635,14 @@ How are you feeling about your progress?"
             {gameState === 'results' && (
               <div className="p-8">
                 <div className="text-center mb-8">
-                  <div className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-blue-500 -full flex items-center justify-center mx-auto mb-4">
                     <Trophy className="w-12 h-12 text-white" />
                   </div>
                   <h2 className="text-3xl font-bold text-gray-900 mb-2">Game Complete!</h2>
                   <p className="text-xl text-gray-600">{getScoreMessage()}</p>
                 </div>
 
-                <div className="bg-gradient-to-r from-[#1A1F5E]/10 to-pink-100 rounded-xl p-8 mb-6">
+                <div className="bg-gradient-to-r from-[#1A1F5E]/10 to-pink-100 -xl p-8 mb-6">
                   <div className="grid grid-cols-3 gap-6 text-center">
                     <div>
                       <p className="text-4xl font-bold text-[#1A1F5E] mb-1">{score}</p>
@@ -4488,18 +4659,18 @@ How are you feeling about your progress?"
                   </div>
                 </div>
 
-                {score > activityResults.gameHighScore && (
-                  <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 mb-6 text-center">
+                {score > gameHighScore && (
+                  <div className="bg-yellow-50 border-2 border-yellow-300 -lg p-4 mb-6 text-center">
                     <Star className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-                    <p className="font-bold text-yellow-900">🎉 New High Score!</p>
-                    <p className="text-sm text-yellow-800">You beat your previous record of {activityResults.gameHighScore} points!</p>
+                    <p className="font-bold text-yellow-900">?? New High Score!</p>
+                    <p className="text-sm text-yellow-800">You beat your previous record of {gameHighScore} points!</p>
                   </div>
                 )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     onClick={resetGame}
-                    className="bg-gradient-to-r from-[#0072CE] to-pink-600 hover:from-[#1A1F5E] hover:to-pink-700 text-white px-6 py-3 rounded-lg font-semibold transition-all"
+                    className="bg-gradient-to-r from-[#0072CE] to-pink-600 hover:from-[#1A1F5E] hover:to-pink-700 text-white px-6 py-3 -lg font-semibold transition-all"
                   >
                     Play Again
                   </button>
@@ -4508,7 +4679,7 @@ How are you feeling about your progress?"
                       setShowWordwallGame(false);
                       resetGame();
                     }}
-                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold transition-all"
+                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 -lg font-semibold transition-all"
                   >
                     Close
                   </button>
@@ -4523,3 +4694,7 @@ How are you feeling about your progress?"
 };
 
 export default MentorshipActivitiesEnhanced;
+
+
+
+

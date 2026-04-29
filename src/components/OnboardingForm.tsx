@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Users, Briefcase, Target, User, Clock, ArrowLeft, ArrowRight } from 'lucide-react';
 
@@ -100,7 +100,7 @@ export function OnboardingForm() {
         return (
           <div className="space-y-8">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-[#1A1F5E] -full flex items-center justify-center mx-auto">
                 <Users className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900">Welcome to DEI Cafe!</h2>
@@ -110,15 +110,15 @@ export function OnboardingForm() {
             <div className="grid gap-6">
               <button
                 onClick={() => setData({ ...data, role: 'mentor' })}
-                className={`p-6 rounded-2xl border-2 transition-all duration-200 text-left ${
+                className={`p-6 -2xl border-2 transition-all duration-200 text-left ${
                   data.role === 'mentor' 
-                    ? 'border-orange-500 bg-orange-50 shadow-lg scale-[1.02]' 
-                    : 'border-gray-200 hover:border-orange-300 hover:shadow-md'
+                    ? 'border-blue-500 bg-blue-50 shadow-lg scale-[1.02]' 
+                    : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
                 }`}
               >
                 <div className="flex items-center space-x-4">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                    data.role === 'mentor' ? 'bg-orange-500' : 'bg-gray-100'
+                  <div className={`w-12 h-12 -xl flex items-center justify-center ${
+                    data.role === 'mentor' ? 'bg-blue-500' : 'bg-gray-100'
                   }`}>
                     <Briefcase className={`w-6 h-6 ${data.role === 'mentor' ? 'text-white' : 'text-gray-600'}`} />
                   </div>
@@ -131,15 +131,15 @@ export function OnboardingForm() {
 
               <button
                 onClick={() => setData({ ...data, role: 'mentee' })}
-                className={`p-6 rounded-2xl border-2 transition-all duration-200 text-left ${
+                className={`p-6 -2xl border-2 transition-all duration-200 text-left ${
                   data.role === 'mentee' 
-                    ? 'border-orange-500 bg-orange-50 shadow-lg scale-[1.02]' 
-                    : 'border-gray-200 hover:border-orange-300 hover:shadow-md'
+                    ? 'border-blue-500 bg-blue-50 shadow-lg scale-[1.02]' 
+                    : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
                 }`}
               >
                 <div className="flex items-center space-x-4">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                    data.role === 'mentee' ? 'bg-orange-500' : 'bg-gray-100'
+                  <div className={`w-12 h-12 -xl flex items-center justify-center ${
+                    data.role === 'mentee' ? 'bg-blue-500' : 'bg-gray-100'
                   }`}>
                     <Target className={`w-6 h-6 ${data.role === 'mentee' ? 'text-white' : 'text-gray-600'}`} />
                   </div>
@@ -157,7 +157,7 @@ export function OnboardingForm() {
         return (
           <div className="space-y-8">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-[#1A1F5E] -full flex items-center justify-center mx-auto">
                 <User className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900">Tell us about yourself</h2>
@@ -171,7 +171,7 @@ export function OnboardingForm() {
                   type="text"
                   value={data.name}
                   onChange={(e) => setData({ ...data, name: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-[#1A1F5E]"
+                  className="w-full px-4 py-3 border border-gray-200 -xl focus:ring-2 focus:ring-blue-500 focus:border-[#1A1F5E]"
                   placeholder="Enter your full name"
                 />
               </div>
@@ -181,7 +181,7 @@ export function OnboardingForm() {
                 <select
                   value={data.location}
                   onChange={(e) => setData({ ...data, location: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-[#1A1F5E]"
+                  className="w-full px-4 py-3 border border-gray-200 -xl focus:ring-2 focus:ring-blue-500 focus:border-[#1A1F5E]"
                 >
                   <option value="">Select your location</option>
                   {locationOptions.map((location) => (
@@ -197,7 +197,7 @@ export function OnboardingForm() {
         return (
           <div className="space-y-8">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-[#1A1F5E] -full flex items-center justify-center mx-auto">
                 <Briefcase className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900">Your Expertise</h2>
@@ -214,10 +214,10 @@ export function OnboardingForm() {
                 <button
                   key={expertise}
                   onClick={() => handleArrayToggle('expertise', expertise)}
-                  className={`p-4 rounded-xl border-2 transition-all duration-200 text-sm font-medium ${
+                  className={`p-4 -xl border-2 transition-all duration-200 text-sm font-medium ${
                     data.expertise.includes(expertise)
-                      ? 'border-orange-500 bg-orange-50 text-orange-700 scale-95'
-                      : 'border-gray-200 text-gray-700 hover:border-orange-300'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700 scale-95'
+                      : 'border-gray-200 text-gray-700 hover:border-blue-300'
                   }`}
                 >
                   {expertise}
@@ -231,7 +231,7 @@ export function OnboardingForm() {
         return (
           <div className="space-y-8">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-[#1A1F5E] -full flex items-center justify-center mx-auto">
                 <Target className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900">Your Interests</h2>
@@ -243,10 +243,10 @@ export function OnboardingForm() {
                 <button
                   key={interest}
                   onClick={() => handleArrayToggle('interests', interest)}
-                  className={`p-4 rounded-xl border-2 transition-all duration-200 text-sm font-medium ${
+                  className={`p-4 -xl border-2 transition-all duration-200 text-sm font-medium ${
                     data.interests.includes(interest)
-                      ? 'border-orange-500 bg-orange-50 text-orange-700 scale-95'
-                      : 'border-gray-200 text-gray-700 hover:border-orange-300'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700 scale-95'
+                      : 'border-gray-200 text-gray-700 hover:border-blue-300'
                   }`}
                 >
                   {interest}
@@ -264,7 +264,7 @@ export function OnboardingForm() {
         return (
           <div className="space-y-8">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-[#1A1F5E] -full flex items-center justify-center mx-auto">
                 <Target className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900">Experience & Goals</h2>
@@ -279,7 +279,7 @@ export function OnboardingForm() {
                 <select
                   value={data.experience}
                   onChange={(e) => setData({ ...data, experience: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-[#1A1F5E]"
+                  className="w-full px-4 py-3 border border-gray-200 -xl focus:ring-2 focus:ring-blue-500 focus:border-[#1A1F5E]"
                 >
                   <option value="">Select your level</option>
                   {data.role === 'mentor' ? (
@@ -307,10 +307,10 @@ export function OnboardingForm() {
                     <button
                       key={goal}
                       onClick={() => handleArrayToggle('goals', goal)}
-                      className={`p-4 rounded-xl border-2 transition-all duration-200 text-sm font-medium text-left ${
+                      className={`p-4 -xl border-2 transition-all duration-200 text-sm font-medium text-left ${
                         data.goals.includes(goal)
-                          ? 'border-orange-500 bg-orange-50 text-orange-700'
-                          : 'border-gray-200 text-gray-700 hover:border-orange-300'
+                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          : 'border-gray-200 text-gray-700 hover:border-blue-300'
                       }`}
                     >
                       {goal}
@@ -326,7 +326,7 @@ export function OnboardingForm() {
         return (
           <div className="space-y-8">
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-[#1A1F5E] -full flex items-center justify-center mx-auto">
                 <Clock className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-3xl font-bold text-gray-900">Final Details</h2>
@@ -339,7 +339,7 @@ export function OnboardingForm() {
                 <select
                   value={data.availability}
                   onChange={(e) => setData({ ...data, availability: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-[#1A1F5E]"
+                  className="w-full px-4 py-3 border border-gray-200 -xl focus:ring-2 focus:ring-blue-500 focus:border-[#1A1F5E]"
                 >
                   <option value="">Select your availability</option>
                   <option value="1-2 hours/week">1-2 hours per week</option>
@@ -356,10 +356,10 @@ export function OnboardingForm() {
                     <button
                       key={language}
                       onClick={() => handleArrayToggle('languages', language)}
-                      className={`p-3 rounded-xl border-2 transition-all duration-200 text-sm font-medium ${
+                      className={`p-3 -xl border-2 transition-all duration-200 text-sm font-medium ${
                         data.languages.includes(language)
-                          ? 'border-orange-500 bg-orange-50 text-orange-700'
-                          : 'border-gray-200 text-gray-700 hover:border-orange-300'
+                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          : 'border-gray-200 text-gray-700 hover:border-blue-300'
                       }`}
                     >
                       {language}
@@ -377,7 +377,7 @@ export function OnboardingForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-yellow-50 to-red-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#F4F4F4] via-white to-[#F4F4F4] py-8 px-4">
       <div className="max-w-3xl mx-auto">
         {/* Progress Bar */}
         <div className="mb-8">
@@ -385,16 +385,16 @@ export function OnboardingForm() {
             <span>Step {currentStep} of {totalSteps}</span>
             <span>{Math.round((currentStep / totalSteps) * 100)}% Complete</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-gray-200 -full h-2">
             <div
-              className="bg-gradient-to-r from-orange-500 to-red-600 h-2 rounded-full transition-all duration-500 ease-out"
+              className="bg-[#1A1F5E] h-2 -full transition-all duration-500 ease-out"
               style={{ width: `${(currentStep / totalSteps) * 100}%` }}
             />
           </div>
         </div>
 
         {/* Form Content */}
-        <div className="bg-white rounded-2xl shadow-2xl p-8 border border-orange-100">
+        <div className="bg-white -2xl shadow-2xl p-8 border border-blue-100">
           {renderStep()}
 
           {/* Navigation */}
@@ -412,7 +412,7 @@ export function OnboardingForm() {
               <button
                 onClick={handleSubmit}
                 disabled={!canProceed()}
-                className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white font-semibold rounded-xl shadow-lg hover:opacity-90 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
+                className="flex items-center space-x-2 px-8 py-3 bg-[#1A1F5E] text-white font-semibold -xl shadow-lg hover:opacity-90 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
               >
                 <span>Complete Profile</span>
                 <ArrowRight className="w-5 h-5" />
@@ -421,7 +421,7 @@ export function OnboardingForm() {
               <button
                 onClick={handleNext}
                 disabled={!canProceed()}
-                className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white font-semibold rounded-xl shadow-lg hover:opacity-90 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
+                className="flex items-center space-x-2 px-8 py-3 bg-[#1A1F5E] text-white font-semibold -xl shadow-lg hover:opacity-90 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:transform-none"
               >
                 <span>Next</span>
                 <ArrowRight className="w-5 h-5" />
@@ -433,3 +433,4 @@ export function OnboardingForm() {
     </div>
   );
 }
+

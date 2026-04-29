@@ -5,12 +5,12 @@ const MentorDetails = ({ mentor }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+      <div className="max-w-4xl mx-auto bg-white -xl shadow-lg overflow-hidden">
         <div className="flex flex-col md:flex-row items-center md:items-start p-8">
           <img
             src={mentor.avatar}
             alt={mentor.name}
-            className="w-40 h-40 rounded-full object-cover border-4 border-white shadow-md"
+            className="w-40 h-40 -full object-cover border-4 border-white shadow-md"
           />
           <div className="mt-6 md:mt-0 md:ml-8 text-center md:text-left">
             <h1 className="text-3xl font-bold text-gray-900">{mentor.name}</h1>
@@ -36,7 +36,7 @@ const MentorDetails = ({ mentor }) => {
             {mentor.expertise.map((skill, index) => (
               <span
                 key={index}
-                className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] rounded-full text-sm font-medium"
+                className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] -full text-sm font-medium"
               >
                 {skill}
               </span>
@@ -50,7 +50,7 @@ const MentorDetails = ({ mentor }) => {
               <span className="text-2xl font-bold text-gray-900">R{mentor.hourlyRate}</span>
               <span className="text-gray-600"> / hour</span>
             </div>
-            <button className="bg-[#0072CE] text-white px-6 py-2 rounded-lg hover:bg-[#1A1F5E] transition">
+            <button className="bg-[#0072CE] text-white px-6 py-2 -lg hover:bg-[#1A1F5E] transition">
               Book Session
             </button>
           </div>

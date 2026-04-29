@@ -140,14 +140,14 @@ export default function Dashboard() {
           <select 
             value={selectedTimeRange}
             onChange={(e) => setSelectedTimeRange(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+            className="px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
           >
             <option value="7d">Last 7 days</option>
             <option value="30d">Last 30 days</option>
             <option value="90d">Last 90 days</option>
             <option value="1y">Last year</option>
           </select>
-          <button className="flex items-center space-x-2 px-4 py-2 bg-[#0072CE] text-white rounded-lg hover:bg-[#1A1F5E]">
+          <button className="flex items-center space-x-2 px-4 py-2 bg-[#0072CE] text-white -lg hover:bg-[#1A1F5E]">
             <Download className="w-4 h-4" />
             <span>Export</span>
           </button>
@@ -156,7 +156,7 @@ export default function Dashboard() {
 
       {/* Key Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB] cursor-pointer hover:shadow-xl transition-shadow">
+        <div className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB] cursor-pointer hover:shadow-xl transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Users</p>
@@ -166,13 +166,13 @@ export default function Dashboard() {
                 +{adminAnalytics.overview.newUsersThisMonth} this month
               </p>
             </div>
-            <div className="w-12 h-12 bg-[#1A1F5E]/10 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-[#1A1F5E]/10 -xl flex items-center justify-center">
               <Users className="w-6 h-6 text-[#0072CE]" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB] cursor-pointer hover:shadow-xl transition-shadow">
+        <div className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB] cursor-pointer hover:shadow-xl transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Active Connections</p>
@@ -182,13 +182,13 @@ export default function Dashboard() {
                 {adminAnalytics.overview.pendingConnections} pending
               </p>
             </div>
-            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-              <Handshake className="w-6 h-6 text-green-600" />
+            <div className="w-12 h-12 bg-[#1A1F5E]/10 -xl flex items-center justify-center">
+              <Handshake className="w-6 h-6 text-[#1A1F5E]" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB] cursor-pointer hover:shadow-xl transition-shadow">
+        <div className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB] cursor-pointer hover:shadow-xl transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Revenue</p>
@@ -198,13 +198,13 @@ export default function Dashboard() {
                 +{adminAnalytics.overview.monthlyGrowth}% growth
               </p>
             </div>
-            <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-yellow-600" />
+            <div className="w-12 h-12 bg-[#1A1F5E]/10 -xl flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-[#1A1F5E]" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB] cursor-pointer hover:shadow-xl transition-shadow">
+        <div className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB] cursor-pointer hover:shadow-xl transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Completed Sessions</p>
@@ -214,7 +214,7 @@ export default function Dashboard() {
                 {adminAnalytics.overview.totalSessions - adminAnalytics.overview.completedSessions} scheduled
               </p>
             </div>
-            <div className="w-12 h-12 bg-[#1A1F5E]/10 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-[#1A1F5E]/10 -xl flex items-center justify-center">
               <Video className="w-6 h-6 text-[#1A1F5E]" />
             </div>
           </div>
@@ -224,7 +224,7 @@ export default function Dashboard() {
       {/* Charts and Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* User Growth Chart */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
+        <div className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB]">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center">
               <BarChart3 className="w-5 h-5 mr-2 text-[#0072CE]" />
@@ -238,7 +238,7 @@ export default function Dashboard() {
             {adminAnalytics.userMetrics.usersByCountry.slice(0, 5).map((country, index) => (
               <div key={country.country} className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className={`w-3 h-3 rounded-full ${index === 0 ? 'bg-[#0072CE]' : index === 1 ? 'bg-green-600' : index === 2 ? 'bg-yellow-600' : index === 3 ? 'bg-[#F4F4F4]0' : 'bg-gray-600'}`}></div>
+                  <div className={`w-3 h-3 -full ${index === 0 ? 'bg-[#0072CE]' : index === 1 ? 'bg-green-600' : index === 2 ? 'bg-yellow-600' : index === 3 ? 'bg-[#F4F4F4]0' : 'bg-gray-600'}`}></div>
                   <span className="text-sm font-medium text-gray-900">{country.country}</span>
                 </div>
                 <div className="flex items-center space-x-4">
@@ -254,7 +254,7 @@ export default function Dashboard() {
         </div>
 
         {/* System Health */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
+        <div className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB]">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center">
               <Activity className="w-5 h-5 mr-2 text-[#0072CE]" />
@@ -268,28 +268,28 @@ export default function Dashboard() {
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Server Uptime</span>
               <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-green-500 -full"></div>
                 <span className="text-sm font-medium">99.9%</span>
               </div>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Database Performance</span>
               <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-green-500 -full"></div>
                 <span className="text-sm font-medium">Optimal</span>
               </div>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">API Response Time</span>
               <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-yellow-500 -full"></div>
                 <span className="text-sm font-medium">245ms</span>
               </div>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Active Sessions</span>
               <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-[#F4F4F4]0 rounded-full"></div>
+                <div className="w-2 h-2 bg-[#F4F4F4]0 -full"></div>
                 <span className="text-sm font-medium">1,234</span>
               </div>
             </div>
@@ -298,7 +298,7 @@ export default function Dashboard() {
       </div>
 
       {/* System Alerts */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
+      <div className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB]">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center">
             <Bell className="w-5 h-5 mr-2 text-[#0072CE]" />
@@ -308,7 +308,7 @@ export default function Dashboard() {
         </div>
         <div className="space-y-3">
           {systemAlerts.map((alert) => (
-            <div key={alert.id} className={`flex items-center justify-between p-3 rounded-lg border ${
+            <div key={alert.id} className={`flex items-center justify-between p-3 -lg border ${
               alert.type === 'error' ? 'bg-red-50 border-red-200' :
               alert.type === 'warning' ? 'bg-yellow-50 border-yellow-200' :
               alert.type === 'success' ? 'bg-green-50 border-green-200' :
@@ -346,20 +346,20 @@ export default function Dashboard() {
               placeholder="Search users..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+              className="pl-10 pr-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
             />
           </div>
           <select 
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+            className="px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
             <option value="pending">Pending</option>
             <option value="inactive">Inactive</option>
           </select>
-          <button className="flex items-center space-x-2 px-4 py-2 bg-[#0072CE] text-white rounded-lg hover:bg-[#1A1F5E]">
+          <button className="flex items-center space-x-2 px-4 py-2 bg-[#0072CE] text-white -lg hover:bg-[#1A1F5E]">
             <Plus className="w-4 h-4" />
             <span>Add User</span>
           </button>
@@ -368,7 +368,7 @@ export default function Dashboard() {
 
       {/* User Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl shadow-lg p-4 border border-[#E5E7EB]">
+        <div className="bg-white -xl shadow-lg p-4 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Mentors</p>
@@ -377,7 +377,7 @@ export default function Dashboard() {
             <Users className="w-8 h-8 text-[#0072CE]" />
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-lg p-4 border border-[#E5E7EB]">
+        <div className="bg-white -xl shadow-lg p-4 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Mentees</p>
@@ -386,7 +386,7 @@ export default function Dashboard() {
             <Target className="w-8 h-8 text-green-600" />
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-lg p-4 border border-[#E5E7EB]">
+        <div className="bg-white -xl shadow-lg p-4 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Verified Experts</p>
@@ -395,7 +395,7 @@ export default function Dashboard() {
             <Award className="w-8 h-8 text-yellow-600" />
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-lg p-4 border border-[#E5E7EB]">
+        <div className="bg-white -xl shadow-lg p-4 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Premium Users</p>
@@ -407,7 +407,7 @@ export default function Dashboard() {
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-2xl shadow-lg border border-[#E5E7EB] overflow-hidden">
+      <div className="bg-white -2xl shadow-lg border border-[#E5E7EB] overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">Recent Users</h3>
         </div>
@@ -429,7 +429,7 @@ export default function Dashboard() {
                 <tr key={user.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="w-10 h-10 bg-[#1A1F5E]/10 rounded-full flex items-center justify-center">
+                      <div className="w-10 h-10 bg-[#1A1F5E]/10 -full flex items-center justify-center">
                         <span className="text-[#0072CE] font-medium">{user.name.charAt(0)}</span>
                       </div>
                       <div className="ml-4">
@@ -439,7 +439,7 @@ export default function Dashboard() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold -full ${
                       user.role === 'mentor' ? 'bg-[#1A1F5E]/10 text-[#1A1F5E]' : 'bg-green-100 text-green-800'
                     }`}>
                       {user.role}
@@ -450,7 +450,7 @@ export default function Dashboard() {
                     <select 
                       value={user.status}
                       onChange={(e) => handleStatusChange(user.id, e.target.value)}
-                      className={`text-xs font-semibold rounded-full px-2 py-1 border-0 ${
+                      className={`text-xs font-semibold -full px-2 py-1 border-0 ${
                         user.status === 'active' ? 'bg-green-100 text-green-800' :
                         user.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                         'bg-red-100 text-red-800'
@@ -498,11 +498,11 @@ export default function Dashboard() {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Connection Management</h2>
         <div className="flex items-center space-x-4">
-          <button className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+          <button className="flex items-center space-x-2 px-4 py-2 bg-[#1A1F5E] text-white -lg hover:opacity-90">
             <CheckCircle className="w-4 h-4" />
             <span>Approve All Pending</span>
           </button>
-          <button className="flex items-center space-x-2 px-4 py-2 bg-[#0072CE] text-white rounded-lg hover:bg-[#1A1F5E]">
+          <button className="flex items-center space-x-2 px-4 py-2 bg-[#0072CE] text-white -lg hover:bg-[#1A1F5E]">
             <Download className="w-4 h-4" />
             <span>Export Data</span>
           </button>
@@ -511,7 +511,7 @@ export default function Dashboard() {
 
       {/* Connection Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl shadow-lg p-4 border border-[#E5E7EB]">
+        <div className="bg-white -xl shadow-lg p-4 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Connections</p>
@@ -520,7 +520,7 @@ export default function Dashboard() {
             <Handshake className="w-8 h-8 text-[#0072CE]" />
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-lg p-4 border border-[#E5E7EB]">
+        <div className="bg-white -xl shadow-lg p-4 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Active</p>
@@ -529,7 +529,7 @@ export default function Dashboard() {
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-lg p-4 border border-[#E5E7EB]">
+        <div className="bg-white -xl shadow-lg p-4 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Pending</p>
@@ -538,7 +538,7 @@ export default function Dashboard() {
             <Clock className="w-8 h-8 text-yellow-600" />
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-lg p-4 border border-[#E5E7EB]">
+        <div className="bg-white -xl shadow-lg p-4 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Success Rate</p>
@@ -550,7 +550,7 @@ export default function Dashboard() {
       </div>
 
       {/* Connections Table */}
-      <div className="bg-white rounded-2xl shadow-lg border border-[#E5E7EB] overflow-hidden">
+      <div className="bg-white -2xl shadow-lg border border-[#E5E7EB] overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">Recent Connections</h3>
         </div>
@@ -572,7 +572,7 @@ export default function Dashboard() {
                 <tr key={connection.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="w-8 h-8 bg-[#1A1F5E]/10 rounded-full flex items-center justify-center">
+                      <div className="w-8 h-8 bg-[#1A1F5E]/10 -full flex items-center justify-center">
                         <span className="text-[#0072CE] text-sm font-medium">{connection.mentor.charAt(0)}</span>
                       </div>
                       <div className="ml-3">
@@ -582,7 +582,7 @@ export default function Dashboard() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                      <div className="w-8 h-8 bg-[#1A1F5E]/10 -full flex items-center justify-center">
                         <span className="text-green-600 text-sm font-medium">{connection.mentee.charAt(0)}</span>
                       </div>
                       <div className="ml-3">
@@ -591,7 +591,7 @@ export default function Dashboard() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold -full ${
                       connection.status === 'active' ? 'bg-green-100 text-green-800' :
                       connection.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                       connection.status === 'completed' ? 'bg-[#1A1F5E]/10 text-[#1A1F5E]' :
@@ -630,11 +630,11 @@ export default function Dashboard() {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Expert Directory Analytics</h2>
         <div className="flex items-center space-x-4">
-          <button className="flex items-center space-x-2 px-4 py-2 bg-[#0072CE] text-white rounded-lg hover:bg-[#1A1F5E]">
+          <button className="flex items-center space-x-2 px-4 py-2 bg-[#0072CE] text-white -lg hover:bg-[#1A1F5E]">
             <Plus className="w-4 h-4" />
             <span>Add Expert</span>
           </button>
-          <button className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+          <button className="flex items-center space-x-2 px-4 py-2 bg-[#1A1F5E] text-white -lg hover:opacity-90">
             <Upload className="w-4 h-4" />
             <span>Bulk Import</span>
           </button>
@@ -643,7 +643,7 @@ export default function Dashboard() {
 
       {/* Expertise Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl shadow-lg p-4 border border-[#E5E7EB]">
+        <div className="bg-white -xl shadow-lg p-4 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Questions</p>
@@ -652,7 +652,7 @@ export default function Dashboard() {
             <Lightbulb className="w-8 h-8 text-[#0072CE]" />
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-lg p-4 border border-[#E5E7EB]">
+        <div className="bg-white -xl shadow-lg p-4 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Answered</p>
@@ -661,7 +661,7 @@ export default function Dashboard() {
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-lg p-4 border border-[#E5E7EB]">
+        <div className="bg-white -xl shadow-lg p-4 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Avg Response Time</p>
@@ -670,7 +670,7 @@ export default function Dashboard() {
             <Clock className="w-8 h-8 text-yellow-600" />
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-lg p-4 border border-[#E5E7EB]">
+        <div className="bg-white -xl shadow-lg p-4 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Response Rate</p>
@@ -683,7 +683,7 @@ export default function Dashboard() {
 
       {/* Top Experts and Popular Topics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
+        <div className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB]">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center">
               <Award className="w-5 h-5 mr-2 text-[#0072CE]" />
@@ -693,13 +693,13 @@ export default function Dashboard() {
           </div>
           <div className="space-y-4">
             {adminAnalytics.expertiseMetrics.topExperts.map((expert, index) => (
-              <div key={expert.name} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <div key={expert.name} className="flex items-center justify-between p-3 -lg hover:bg-gray-50 cursor-pointer">
                 <div className="flex items-center space-x-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    index === 0 ? 'bg-yellow-100' : index === 1 ? 'bg-gray-100' : index === 2 ? 'bg-orange-100' : 'bg-[#1A1F5E]/10'
+                  <div className={`w-8 h-8 -full flex items-center justify-center ${
+                    index === 0 ? 'bg-yellow-100' : index === 1 ? 'bg-gray-100' : index === 2 ? 'bg-blue-100' : 'bg-[#1A1F5E]/10'
                   }`}>
                     <span className={`text-sm font-bold ${
-                      index === 0 ? 'text-yellow-600' : index === 1 ? 'text-gray-600' : index === 2 ? 'text-orange-600' : 'text-[#0072CE]'
+                      index === 0 ? 'text-yellow-600' : index === 1 ? 'text-gray-600' : index === 2 ? 'text-blue-600' : 'text-[#0072CE]'
                     }`}>
                       {index + 1}
                     </span>
@@ -721,7 +721,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
+        <div className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB]">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center">
               <TrendingUp className="w-5 h-5 mr-2 text-[#0072CE]" />
@@ -731,9 +731,9 @@ export default function Dashboard() {
           </div>
           <div className="space-y-4">
             {adminAnalytics.expertiseMetrics.popularTopics.map((topic, index) => (
-              <div key={topic.topic} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <div key={topic.topic} className="flex items-center justify-between p-3 -lg hover:bg-gray-50 cursor-pointer">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-[#1A1F5E]/10 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-[#1A1F5E]/10 -full flex items-center justify-center">
                     <Hash className="w-4 h-4 text-[#0072CE]" />
                   </div>
                   <div>
@@ -762,11 +762,11 @@ export default function Dashboard() {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Collaboration & Deals Analytics</h2>
         <div className="flex items-center space-x-4">
-          <button className="flex items-center space-x-2 px-4 py-2 bg-[#0072CE] text-white rounded-lg hover:bg-[#1A1F5E]">
+          <button className="flex items-center space-x-2 px-4 py-2 bg-[#0072CE] text-white -lg hover:bg-[#1A1F5E]">
             <Plus className="w-4 h-4" />
             <span>New Opportunity</span>
           </button>
-          <button className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+          <button className="flex items-center space-x-2 px-4 py-2 bg-[#1A1F5E] text-white -lg hover:opacity-90">
             <Download className="w-4 h-4" />
             <span>Export Report</span>
           </button>
@@ -775,7 +775,7 @@ export default function Dashboard() {
 
       {/* Collaboration Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl shadow-lg p-4 border border-[#E5E7EB]">
+        <div className="bg-white -xl shadow-lg p-4 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Opportunities</p>
@@ -784,7 +784,7 @@ export default function Dashboard() {
             <Briefcase className="w-8 h-8 text-[#0072CE]" />
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-lg p-4 border border-[#E5E7EB]">
+        <div className="bg-white -xl shadow-lg p-4 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Active Projects</p>
@@ -793,7 +793,7 @@ export default function Dashboard() {
             <Activity className="w-8 h-8 text-green-600" />
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-lg p-4 border border-[#E5E7EB]">
+        <div className="bg-white -xl shadow-lg p-4 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Completed Deals</p>
@@ -802,7 +802,7 @@ export default function Dashboard() {
             <CheckCircle className="w-8 h-8 text-yellow-600" />
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-lg p-4 border border-[#E5E7EB]">
+        <div className="bg-white -xl shadow-lg p-4 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Deal Value</p>
@@ -814,7 +814,7 @@ export default function Dashboard() {
       </div>
 
       {/* Top Sectors Performance */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
+      <div className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB]">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center">
             <PieChart className="w-5 h-5 mr-2 text-[#0072CE]" />
@@ -824,10 +824,10 @@ export default function Dashboard() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {adminAnalytics.collaborationMetrics.topSectors.map((sector, index) => (
-            <div key={sector.sector} className="p-4 rounded-lg border border-gray-200 hover:border-[#0072CE]/40 cursor-pointer transition-colors">
+            <div key={sector.sector} className="p-4 -lg border border-gray-200 hover:border-[#0072CE]/40 cursor-pointer transition-colors">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-gray-900">{sector.sector}</h4>
-                <span className={`w-3 h-3 rounded-full ${
+                <span className={`w-3 h-3 -full ${
                   index === 0 ? 'bg-[#0072CE]' : index === 1 ? 'bg-green-600' : index === 2 ? 'bg-yellow-600' : 'bg-[#F4F4F4]0'
                 }`}></span>
               </div>
@@ -859,11 +859,11 @@ export default function Dashboard() {
         <div className="max-w-[1920px] mx-auto px-8 sm:px-12 lg:px-16">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -xl flex items-center justify-center">
                 <Building2 className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-[#1A1F5E] to-[#0072CE] bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-[#1A1F5E] bg-clip-text text-transparent">
                   DEI Cafe
                 </h1>
                 <p className="text-xs text-gray-500">Admin Dashboard</p>
@@ -873,10 +873,10 @@ export default function Dashboard() {
             <div className="flex items-center space-x-4">
               <button className="relative p-2 text-gray-600 hover:text-gray-800 transition-colors">
                 <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 -full"></span>
               </button>
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-[#1A1F5E]/10 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-[#1A1F5E]/10 -full flex items-center justify-center">
                   <Shield className="w-4 h-4 text-[#0072CE]" />
                 </div>
                 <span className="text-gray-700 font-medium">Admin</span>
@@ -933,7 +933,7 @@ export default function Dashboard() {
       {/* Edit User Modal */}
       {showEditModal && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+          <div className="bg-white -2xl p-6 w-full max-w-md mx-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Edit User</h3>
               <button 
@@ -949,7 +949,7 @@ export default function Dashboard() {
                 <input 
                   type="text" 
                   defaultValue={selectedUser.name}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+                  className="w-full px-3 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
                 />
               </div>
               <div>
@@ -957,14 +957,14 @@ export default function Dashboard() {
                 <input 
                   type="email" 
                   defaultValue={selectedUser.email}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+                  className="w-full px-3 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
                 <select 
                   defaultValue={selectedUser.role}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+                  className="w-full px-3 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
                 >
                   <option value="mentor">Mentor</option>
                   <option value="mentee">Mentee</option>
@@ -974,7 +974,7 @@ export default function Dashboard() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                 <select 
                   defaultValue={selectedUser.status}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+                  className="w-full px-3 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
                 >
                   <option value="active">Active</option>
                   <option value="pending">Pending</option>
@@ -991,7 +991,7 @@ export default function Dashboard() {
               </button>
               <button 
                 onClick={() => setShowEditModal(false)}
-                className="px-4 py-2 bg-[#0072CE] text-white rounded-lg hover:bg-[#1A1F5E]"
+                className="px-4 py-2 bg-[#0072CE] text-white -lg hover:bg-[#1A1F5E]"
               >
                 Save Changes
               </button>

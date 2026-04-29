@@ -50,7 +50,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
       case 'connection':
         return <UserPlus className="w-5 h-5 text-[#0072CE]" />;
       case 'opportunity':
-        return <Briefcase className="w-5 h-5 text-orange-600" />;
+        return <Briefcase className="w-5 h-5 text-blue-600" />;
       case 'expert':
         return <Award className="w-5 h-5 text-yellow-600" />;
       case 'webinar':
@@ -106,7 +106,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
       />
 
       {/* Notification Panel */}
-      <div className="fixed top-16 right-4 w-96 max-h-[600px] bg-white rounded-xl shadow-2xl z-50 flex flex-col border border-gray-200">
+      <div className="fixed top-16 right-4 w-96 max-h-[600px] bg-white -xl shadow-2xl z-50 flex flex-col border border-gray-200">
         {!showPreferences ? (
           <>
             {/* Header */}
@@ -120,14 +120,14 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => setShowPreferences(true)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-gray-100 -lg transition-colors"
                   title="Settings"
                 >
                   <Settings className="w-5 h-5 text-gray-600" />
                 </button>
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-gray-100 -lg transition-colors"
                 >
                   <X className="w-5 h-5 text-gray-600" />
                 </button>
@@ -211,10 +211,10 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
                             <img
                               src={notification.avatar}
                               alt=""
-                              className="w-10 h-10 rounded-full object-cover"
+                              className="w-10 h-10 -full object-cover"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                            <div className="w-10 h-10 -full bg-gray-100 flex items-center justify-center">
                               {getNotificationIcon(notification.type)}
                             </div>
                           )}
@@ -237,7 +237,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
                             
                             {/* Unread indicator */}
                             {!notification.read && (
-                              <div className="w-2 h-2 bg-[#0072CE] rounded-full ml-2 mt-1" />
+                              <div className="w-2 h-2 bg-[#0072CE] -full ml-2 mt-1" />
                             )}
                           </div>
                         </div>
@@ -248,7 +248,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
                             e.stopPropagation();
                             deleteNotification(notification.id);
                           }}
-                          className="p-1 hover:bg-gray-200 rounded transition-colors flex-shrink-0"
+                          className="p-1 hover:bg-gray-200  transition-colors flex-shrink-0"
                           title="Delete"
                         >
                           <X className="w-4 h-4 text-gray-500" />
@@ -268,7 +268,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
               <h3 className="text-lg font-bold text-gray-900">Notification Settings</h3>
               <button
                 onClick={() => setShowPreferences(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-100 -lg transition-colors"
               >
                 <X className="w-5 h-5 text-gray-600" />
               </button>
@@ -280,13 +280,13 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
               <div className="space-y-3">
                 <h4 className="font-semibold text-gray-900">Browser Notifications</h4>
                 {!browserNotificationsEnabled ? (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <div className="bg-yellow-50 border border-yellow-200 -lg p-3">
                     <p className="text-sm text-yellow-800 mb-2">
                       Enable browser notifications to receive alerts even when you're not on this page.
                     </p>
                     <button
                       onClick={handleRequestBrowserNotifications}
-                      className="text-sm bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors"
+                      className="text-sm bg-yellow-600 text-white px-4 py-2 -lg hover:bg-yellow-700 transition-colors"
                     >
                       Enable Browser Notifications
                     </button>
@@ -298,7 +298,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
                       type="checkbox"
                       checked={notificationPreferences.enableBrowserNotifications}
                       onChange={(e) => updatePreferences({ enableBrowserNotifications: e.target.checked })}
-                      className="w-4 h-4 text-[#0072CE] rounded focus:ring-[#1A1F5E]/20"
+                      className="w-4 h-4 text-[#0072CE]  focus:ring-[#1A1F5E]/20"
                     />
                   </div>
                 )}
@@ -326,7 +326,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
                       type="checkbox"
                       checked={notificationPreferences[key as keyof typeof notificationPreferences] as boolean}
                       onChange={(e) => updatePreferences({ [key]: e.target.checked })}
-                      className="w-4 h-4 text-[#0072CE] rounded focus:ring-[#1A1F5E]/20"
+                      className="w-4 h-4 text-[#0072CE]  focus:ring-[#1A1F5E]/20"
                     />
                   </div>
                 ))}
@@ -339,7 +339,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
                   <select
                     value={notificationPreferences.sessionReminderMinutes}
                     onChange={(e) => updatePreferences({ sessionReminderMinutes: parseInt(e.target.value) })}
-                    className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                    className="text-sm border border-gray-300 -lg px-3 py-1.5 focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   >
                     <option value={5}>5 minutes</option>
                     <option value={15}>15 minutes</option>
@@ -357,7 +357,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
                     type="checkbox"
                     checked={notificationPreferences.enableEmailNotifications}
                     onChange={(e) => updatePreferences({ enableEmailNotifications: e.target.checked })}
-                    className="w-4 h-4 text-[#0072CE] rounded focus:ring-[#1A1F5E]/20"
+                    className="w-4 h-4 text-[#0072CE]  focus:ring-[#1A1F5E]/20"
                   />
                 </div>
               </div>
@@ -367,7 +367,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({ isOpen, onClose
             <div className="p-4 border-t border-gray-200">
               <button
                 onClick={() => setShowPreferences(false)}
-                className="w-full bg-[#0072CE] text-white px-4 py-2 rounded-lg hover:bg-[#1A1F5E] transition-colors font-medium"
+                className="w-full bg-[#0072CE] text-white px-4 py-2 -lg hover:bg-[#1A1F5E] transition-colors font-medium"
               >
                 Done
               </button>

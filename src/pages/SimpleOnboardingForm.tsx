@@ -36,7 +36,7 @@ const GOAL_OPTIONS = [
 ];
 
 const EXPERIENCE_LEVELS = [
-  'Junior (0–2 years)', 'Mid-level (3–5 years)', 'Senior (6–10 years)', 'Expert (10+ years)',
+  'Junior (0-2 years)', 'Mid-level (3-5 years)', 'Senior (6-10 years)', 'Expert (10+ years)',
 ];
 
 function toggle(arr: string[], v: string) {
@@ -46,7 +46,7 @@ function toggle(arr: string[], v: string) {
 function Chip({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
   return (
     <button type="button" onClick={onClick}
-      className={`px-4 py-3 rounded-2xl border-2 text-sm font-medium transition-all flex items-center gap-2 ${
+      className={`px-4 py-3 -2xl border-2 text-sm font-medium transition-all flex items-center gap-2 ${
         selected
           ? 'border-[#1A1F5E] bg-[#1A1F5E] text-white shadow-md'
           : 'border-[#E5E7EB] bg-white text-[#333333] hover:border-[#1A1F5E]/40'
@@ -130,25 +130,25 @@ export default function SimpleOnboardingForm() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F4F4F4] via-white to-[#F4F4F4] py-12 px-4">
       <div className="max-w-3xl mx-auto">
-        <div className="bg-white rounded-3xl shadow-xl border-t-4 border-t-[#1A1F5E] border border-[#E5E7EB] p-8">
+        <div className="bg-white -3xl shadow-xl border-t-4 border-t-[#1A1F5E] border border-[#E5E7EB] p-8">
 
           {/* Header */}
           <div className="mb-8">
             <img src="/assets/forvis-mazars-logo.png.png"
               alt="Forvis Mazars" className="h-10 sm:h-14 lg:h-16 object-contain mb-4" />
-            <div className="h-1 w-12 bg-[#E83E2D] rounded-full mb-3" />
+            <div className="h-1 w-12 bg-[#E83E2D] -full mb-3" />
             <h1 className="text-3xl font-bold text-[#1A1F5E] mb-1">Set up your profile</h1>
             <p className="text-[#8C8C8C]">Help us personalise your DEI Cafe experience</p>
             <div className="mt-4 flex items-center gap-2">
               {Array.from({ length: TOTAL }, (_, i) => (
-                <div key={i} className={`h-2 rounded-full transition-all duration-300 ${i + 1 <= step ? 'bg-[#1A1F5E]' : 'bg-[#E5E7EB]'} ${i + 1 === step ? 'w-16' : 'w-8'}`} />
+                <div key={i} className={`h-2 -full transition-all duration-300 ${i + 1 <= step ? 'bg-[#1A1F5E]' : 'bg-[#E5E7EB]'} ${i + 1 === step ? 'w-16' : 'w-8'}`} />
               ))}
               <span className="ml-2 text-xs text-[#8C8C8C]">Step {step} of {TOTAL}</span>
             </div>
           </div>
 
           {error && (
-            <div className="mb-6 bg-[#E83E2D]/10 border border-[#E83E2D]/30 text-[#E83E2D] px-5 py-4 rounded-2xl text-sm">{error}</div>
+            <div className="mb-6 bg-[#E83E2D]/10 border border-[#E83E2D]/30 text-[#E83E2D] px-5 py-4 -2xl text-sm">{error}</div>
           )}
 
           {/* ── Step 1: Role ─────────────────────────────────────────────── */}
@@ -167,13 +167,13 @@ export default function SimpleOnboardingForm() {
                   { value: 'both',   Icon: Users,     label: 'Both',    desc: 'I mentor others and also seek mentorship myself', accent: true  },
                 ] as const).map(({ value, Icon, label, desc, accent }) => (
                   <button key={value} type="button" onClick={() => setData({ ...data, role: value })}
-                    className={`p-6 rounded-2xl border-2 text-left transition-all relative ${
+                    className={`p-6 -2xl border-2 text-left transition-all relative ${
                       data.role === value
                         ? accent ? 'border-[#E83E2D] bg-[#E83E2D]/5 shadow-md' : 'border-[#1A1F5E] bg-[#1A1F5E]/5 shadow-md'
                         : 'border-[#E5E7EB] hover:border-[#1A1F5E]/30'
                     }`}
                   >
-                    {value === 'both' && <span className="absolute top-3 right-3 px-2 py-0.5 text-[10px] font-semibold bg-[#E83E2D]/10 text-[#E83E2D] rounded-full">Popular</span>}
+                    {value === 'both' && <span className="absolute top-3 right-3 px-2 py-0.5 text-[10px] font-semibold bg-[#E83E2D]/10 text-[#E83E2D] -full">Popular</span>}
                     <Icon className={`w-10 h-10 mb-3 ${data.role === value ? (accent ? 'text-[#E83E2D]' : 'text-[#1A1F5E]') : 'text-[#8C8C8C]'}`} />
                     <h3 className="text-lg font-semibold text-[#1A1F5E] mb-1">{label}</h3>
                     <p className="text-xs text-[#8C8C8C]">{desc}</p>
@@ -192,7 +192,7 @@ export default function SimpleOnboardingForm() {
               <div>
                 <label className="block text-sm font-semibold text-[#333333] mb-2">Full name</label>
                 <input type="text" value={data.name} onChange={e => setData({ ...data, name: e.target.value })}
-                  className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
+                  className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
                   placeholder="Your full name" />
               </div>
               <div>
@@ -200,7 +200,7 @@ export default function SimpleOnboardingForm() {
                   <Globe className="w-4 h-4 inline mr-1 text-[#8C8C8C]" />Location
                 </label>
                 <select value={data.location} onChange={e => setData({ ...data, location: e.target.value })}
-                  className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all">
+                  className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all">
                   <option value="">Select your country / region</option>
                   {LOCATION_OPTIONS.map(l => <option key={l} value={l}>{l}</option>)}
                 </select>
@@ -309,7 +309,7 @@ export default function SimpleOnboardingForm() {
               <div className="space-y-3">
                 {EXPERIENCE_LEVELS.map(level => (
                   <button key={level} type="button" onClick={() => setData({ ...data, experience: level })}
-                    className={`w-full px-6 py-4 rounded-2xl border-2 text-left font-medium transition-all ${
+                    className={`w-full px-6 py-4 -2xl border-2 text-left font-medium transition-all ${
                       data.experience === level
                         ? 'border-[#1A1F5E] bg-[#1A1F5E]/5 text-[#1A1F5E]'
                         : 'border-[#E5E7EB] text-[#333333] hover:border-[#1A1F5E]/30'
@@ -343,7 +343,7 @@ export default function SimpleOnboardingForm() {
               <div>
                 <label className="block text-sm font-semibold text-[#333333] mb-2">Availability per week</label>
                 <select value={data.availability} onChange={e => setData({ ...data, availability: e.target.value })}
-                  className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all">
+                  className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all">
                   <option value="">Select availability</option>
                   <option>1-2 hours/week</option>
                   <option>3-5 hours/week</option>
@@ -373,12 +373,12 @@ export default function SimpleOnboardingForm() {
             </button>
             {step < TOTAL ? (
               <button type="button" onClick={() => setStep(s => s + 1)} disabled={!canProceed()}
-                className="flex items-center gap-2 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white px-8 py-3 rounded-full font-semibold shadow-lg hover:opacity-90 hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:scale-100">
+                className="flex items-center gap-2 bg-[#1A1F5E] text-white px-8 py-3 -full font-semibold shadow-lg hover:opacity-90 hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:scale-100">
                 Next <ArrowRight className="w-5 h-5" />
               </button>
             ) : (
               <button type="button" onClick={handleSubmit} disabled={!canProceed() || loading}
-                className="flex items-center gap-2 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white px-8 py-3 rounded-full font-semibold shadow-lg hover:opacity-90 hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:scale-100">
+                className="flex items-center gap-2 bg-[#1A1F5E] text-white px-8 py-3 -full font-semibold shadow-lg hover:opacity-90 hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:scale-100">
                 {loading
                   ? <><Loader className="w-5 h-5 animate-spin" /> Creating profile…</>
                   : <><CheckCircle className="w-5 h-5" /> Complete registration</>}

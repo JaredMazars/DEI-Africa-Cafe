@@ -7,8 +7,9 @@ const router = express.Router();
 // ── GET /api/reflections ─────────────────────────────────────────────────────
 router.get('/', auth, async (req, res) => {
     try {
-        const { category, search } = req.query;
+        const { category, search, connection_id } = req.query;
         let where = "WHERE r.is_active = 1";
+        if (connection_id) where += ` AND r.connection_id = '${connection_id}'`;
         if (category && category !== 'all') where += ` AND r.category = '${category.replace(/'/g, "''")}'`;
         if (search) where += ` AND (r.title LIKE '%${search.replace(/'/g, "''")}%' OR r.content LIKE '%${search.replace(/'/g, "''")}%')`;
 
@@ -63,14 +64,15 @@ router.get('/:id/comments', auth, async (req, res) => {
 router.post('/', auth, async (req, res) => {
     try {
         const userId = req.user.id || req.user.user_id;
-        const { category, title, content, keyTakeaways, tags, rating, isAnonymous } = req.body;
+        const { category, title, content, keyTakeaways, tags, rating, isAnonymous, connection_id } = req.body;
         if (!title || !content) return res.status(400).json({ success: false, message: 'title and content required' });
 
         const ins = await executeQuery(`
-            INSERT INTO reflections (user_id, category, title, content, key_takeaways, tags, rating, is_anonymous, created_at, updated_at)
+            INSERT INTO reflections (user_id, connection_id, category, title, content, key_takeaways, tags, rating, is_anonymous, created_at, updated_at)
             OUTPUT INSERTED.id
             VALUES (
                 '${userId}',
+                ${connection_id ? `'${connection_id}'` : 'NULL'},
                 '${(category || 'General').replace(/'/g, "''")}',
                 '${title.replace(/'/g, "''")}',
                 '${content.replace(/'/g, "''")}',

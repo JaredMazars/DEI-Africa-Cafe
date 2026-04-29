@@ -124,7 +124,7 @@ const Calendar: React.FC = () => {
           {daysSessions.map(session => (
             <div
               key={session.id}
-              className={`mt-1 p-1 rounded text-xs truncate ${
+              className={`mt-1 p-1  text-xs truncate ${
                 session.status === 'completed'
                   ? 'bg-[#1A1F5E]/10 text-[#1A1F5E]'
                   : session.status === 'cancelled'
@@ -159,7 +159,7 @@ const Calendar: React.FC = () => {
         </div>
         <button
           onClick={() => setShowBookingModal(true)}
-          className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-6 py-2 rounded-lg font-medium transition-colors"
+          className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-6 py-2 -lg font-medium transition-colors"
         >
           Book New Session
         </button>
@@ -167,7 +167,7 @@ const Calendar: React.FC = () => {
 
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Calendar */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="lg:col-span-2 bg-white -xl shadow-sm border border-gray-100">
           {/* Calendar Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-100">
             <h2 className="text-xl font-semibold text-gray-900">
@@ -176,19 +176,19 @@ const Calendar: React.FC = () => {
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => navigateMonth('prev')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-100 -lg transition-colors"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <button
                 onClick={() => setCurrentDate(new Date())}
-                className="px-4 py-2 text-sm font-medium text-[#0072CE] hover:bg-[#1A1F5E]/5 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-[#0072CE] hover:bg-[#1A1F5E]/5 -lg transition-colors"
               >
                 Today
               </button>
               <button
                 onClick={() => navigateMonth('next')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-100 -lg transition-colors"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -217,7 +217,7 @@ const Calendar: React.FC = () => {
         <div className="space-y-6">
           {/* Selected Date Sessions */}
           {selectedDate && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div className="bg-white -xl shadow-sm border border-gray-100 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', {
                   weekday: 'long',
@@ -230,12 +230,12 @@ const Calendar: React.FC = () => {
               {getSessionsForDate(selectedDate).length > 0 ? (
                 <div className="space-y-4">
                   {getSessionsForDate(selectedDate).map(session => (
-                    <div key={session.id} className="border border-gray-200 rounded-lg p-4">
+                    <div key={session.id} className="border border-gray-200 -lg p-4">
                       <div className="flex items-center space-x-3 mb-3">
                         <img
                           src={session.mentor.avatar}
                           alt={session.mentor.name}
-                          className="w-10 h-10 rounded-full object-cover"
+                          className="w-10 h-10 -full object-cover"
                         />
                         <div>
                           <p className="font-medium text-gray-900">{session.mentor.name}</p>
@@ -262,7 +262,7 @@ const Calendar: React.FC = () => {
                       
                       {session.status === 'scheduled' && (
                         <div className="mt-3 flex space-x-2">
-                          <button className="flex-1 bg-[#0072CE] hover:bg-[#1A1F5E] text-white py-1 px-3 rounded text-sm font-medium transition-colors">
+                          <button className="flex-1 bg-[#0072CE] hover:bg-[#1A1F5E] text-white py-1 px-3  text-sm font-medium transition-colors">
                             Join Call
                           </button>
                           <button className="px-3 py-1 text-gray-600 hover:text-gray-800 text-sm transition-colors">
@@ -280,16 +280,16 @@ const Calendar: React.FC = () => {
           )}
 
           {/* Upcoming Sessions */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white -xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Sessions</h3>
             
             <div className="space-y-4">
               {sessions.filter(s => s.status === 'scheduled').slice(0, 3).map(session => (
-                <div key={session.id} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg">
+                <div key={session.id} className="flex items-center space-x-3 p-3 border border-gray-200 -lg">
                   <img
                     src={session.mentor.avatar}
                     alt={session.mentor.name}
-                    className="w-10 h-10 rounded-full object-cover"
+                    className="w-10 h-10 -full object-cover"
                   />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-900 text-sm">{session.mentor.name}</p>
@@ -308,13 +308,13 @@ const Calendar: React.FC = () => {
       {/* Booking Modal */}
       {showBookingModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
+          <div className="bg-white -xl max-w-md w-full p-6">
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Book a Session</h3>
             
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Select Mentor</label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]">
+                <select className="w-full px-3 py-2 border border-gray-300 -md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]">
                   <option>Choose a mentor...</option>
                   <option>Dr. Emily Rodriguez - Leadership</option>
                   <option>James Wilson - Technical Skills</option>
@@ -326,13 +326,13 @@ const Calendar: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
                 <input
                   type="date"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                  className="w-full px-3 py-2 border border-gray-300 -md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]">
+                <select className="w-full px-3 py-2 border border-gray-300 -md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]">
                   <option>9:00 AM</option>
                   <option>10:00 AM</option>
                   <option>11:00 AM</option>
@@ -344,7 +344,7 @@ const Calendar: React.FC = () => {
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Duration</label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]">
+                <select className="w-full px-3 py-2 border border-gray-300 -md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]">
                   <option>30 minutes</option>
                   <option>45 minutes</option>
                   <option>60 minutes</option>
@@ -355,13 +355,13 @@ const Calendar: React.FC = () => {
             <div className="flex space-x-3 mt-6">
               <button
                 onClick={() => setShowBookingModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 -lg hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={() => setShowBookingModal(false)}
-                className="flex-1 px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white rounded-lg transition-colors"
+                className="flex-1 px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white -lg transition-colors"
               >
                 Book Session
               </button>

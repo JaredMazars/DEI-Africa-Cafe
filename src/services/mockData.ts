@@ -460,7 +460,7 @@ export const mockCalendarEvents = [
     duration: 120,
     location: 'Virtual',
     attendees: ['Team Members'],
-    color: 'orange'
+    color: 'blue'
   },
   {
     id: 'event-5',

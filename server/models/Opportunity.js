@@ -15,6 +15,10 @@ class Opportunity {
         this.contact_person_id = data.contact_person_id;
         this.created_at = data.created_at;
         this.updated_at = data.updated_at;
+        // Joined fields from getAll / findById
+        this.contact_person_name = data.contact_person_name || null;
+        this.contact_person_avatar = data.contact_person_avatar || null;
+        this.applicant_count = data.applicant_count || 0;
     }
 
     static async create(opportunityData) {
@@ -43,10 +47,10 @@ class Opportunity {
             const query = `
                 SELECT o.*, 
                        up.name as contact_person_name,
-                       up.profile_image_url as contact_person_avatar,
+                       up.avatar_url as contact_person_avatar,
                        (SELECT COUNT(*) FROM OpportunityInterests oi WHERE oi.opportunity_id = o.opportunity_id) as applicant_count
                 FROM Opportunities o
-                LEFT JOIN users up ON o.contact_person_id = up.id
+                LEFT JOIN users up ON o.contact_person_id = CAST(up.id AS NVARCHAR(100))
                 ORDER BY o.created_at DESC
             `;
             
@@ -63,9 +67,9 @@ class Opportunity {
             const query = `
                 SELECT o.*, 
                        up.name as contact_person_name,
-                       up.profile_image_url as contact_person_avatar
+                       up.avatar_url as contact_person_avatar
                 FROM Opportunities o
-                LEFT JOIN users up ON o.contact_person_id = up.id
+                LEFT JOIN users up ON o.contact_person_id = CAST(up.id AS NVARCHAR(100))
                 WHERE o.opportunity_id = '${opportunityId}'
             `;
             

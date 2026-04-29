@@ -49,7 +49,7 @@ const AdminLayout: React.FC = () => {
       <div className="lg:hidden fixed top-0 left-0 right-0 bg-gradient-to-r from-[#1A1F5E] to-[#1A1F5E] text-white p-4 z-50 shadow-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-white/20 backdrop-blur-lg rounded-lg p-2">
+            <div className="bg-white/20 backdrop-blur-lg -lg p-2">
               <Shield className="w-5 h-5" />
             </div>
             <div>
@@ -59,7 +59,7 @@ const AdminLayout: React.FC = () => {
           </div>
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            className="p-2 hover:bg-white/10 -lg transition-colors"
             aria-label="Toggle menu"
           >
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -85,7 +85,7 @@ const AdminLayout: React.FC = () => {
         {/* Header */}
         <div className="p-6 border-b border-[#0072CE] lg:block hidden">
           <div className="flex items-center gap-3">
-            <div className="bg-white/20 backdrop-blur-lg rounded-lg p-2">
+            <div className="bg-white/20 backdrop-blur-lg -lg p-2">
               <Shield className="w-6 h-6" />
             </div>
             <div>
@@ -108,7 +108,7 @@ const AdminLayout: React.FC = () => {
                 to={item.path}
                 onClick={closeMobileMenu}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                  `flex items-center gap-3 px-4 py-3 -lg transition-all ${
                     isActive
                       ? 'bg-white text-[#1A1F5E] shadow-lg font-semibold'
                       : 'text-white/80 hover:bg-white/10 hover:text-white'
@@ -126,7 +126,7 @@ const AdminLayout: React.FC = () => {
         <div className="p-4 border-t border-[#0072CE]">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg w-full text-white/80 hover:bg-red-500 hover:text-white transition-all"
+            className="flex items-center gap-3 px-4 py-3 -lg w-full text-white/80 hover:bg-red-500 hover:text-white transition-all"
           >
             <LogOut className="w-5 h-5" />
             <span>Logout</span>

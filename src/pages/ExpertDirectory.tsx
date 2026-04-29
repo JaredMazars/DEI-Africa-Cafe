@@ -1,7 +1,7 @@
-﻿import React, { useState } from 'react';
-import { useEffect } from 'react';
-import { Search, MapPin, Users, Star, MessageCircle, Calendar, ChevronDown, Award, Globe, Clock, Send, X, Lock, Unlock, Mail, UserPlus, Bell, CheckCircle, XCircle, AlertCircle, Video } from 'lucide-react';
-import { expertsAPI, questionsAPI } from '../services/api';
+﻿import React, { useState, useEffect, useMemo } from 'react';
+import { Search, MapPin, Users, Star, MessageCircle, Calendar, ChevronDown, Award, Globe, Clock, Send, X, Lock, Unlock, Mail, UserPlus, Bell, CheckCircle, XCircle, AlertCircle, Video, Loader } from 'lucide-react';
+import { expertsAPI, questionsAPI, expertConnectionsAPI, expertWebinarsAPI, expertMeetingsAPI, usersAPI } from '../services/api';
+import { useSimpleAuth } from '../contexts/SimpleAuthContext';
 
 interface Expert {
   id: string;
@@ -114,15 +114,9 @@ interface ExpertApplication {
 }
 
 const ExpertDirectory: React.FC = () => {
-  // Check if user is an expert from localStorage
-  const [isExpert] = useState(() => {
-    const currentUser = localStorage.getItem('currentUser');
-    if (currentUser) {
-      const userData = JSON.parse(currentUser);
-      return userData.role === 'expert';
-    }
-    return false;
-  });
+  const { currentUser: authUser } = useSimpleAuth();
+  // Expert role: user has an expert/mentor role — experts can see extra tabs
+  const isExpert = ['expert', 'mentor', 'both'].includes(authUser?.role || '');
   const [showBecomeExpertModal, setShowBecomeExpertModal] = useState(false);
   const [expertApplication, setExpertApplication] = useState<ExpertApplication>({
     expertise: [],
@@ -138,9 +132,11 @@ const ExpertDirectory: React.FC = () => {
     location: '',
     availability: 'all'
   });
-  const [activeTab, setActiveTab] = useState<'directory' | 'myExperts' | 'forum' | 'webinars' | 'requests'>('directory');
+  const [activeTab, setActiveTab] = useState<'directory' | 'myExperts' | 'myMentees' | 'forum' | 'webinars' | 'requests'>('directory');
   const [connectedExperts, setConnectedExperts] = useState<Expert[]>([]);
-  const [expertConversations, setExpertConversations] = useState<{[key: string]: any[]}>({});
+  // IDs of experts the current user has a pending request to
+  const [pendingExpertIds, setPendingExpertIds] = useState<Set<string>>(new Set());
+  const [connectionsLoading, setConnectionsLoading] = useState(false);
   const [showAskModal, setShowAskModal] = useState(false);
   const [newQuestion, setNewQuestion] = useState({ title: '', content: '', tags: '', expertId: '', category: '', isPrivate: false });
   const [showExpertModal, setShowExpertModal] = useState(false);
@@ -153,12 +149,7 @@ const ExpertDirectory: React.FC = () => {
   const [selectedWebinar, setSelectedWebinar] = useState<Webinar | null>(null);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [registrationData, setRegistrationData] = useState({ name: '', email: '', phone: '', organization: '' });
-  const [registeredWebinars, setRegisteredWebinars] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem('registeredWebinarIds');
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
+  const [registeredWebinars, setRegisteredWebinars] = useState<string[]>([]);
   const [, setLoading] = useState(true);
   const [experts, setExperts] = useState<Expert[]>([]);
   const [, setQuestions] = useState<Question[]>([]);
@@ -187,83 +178,64 @@ const ExpertDirectory: React.FC = () => {
   const [connectionRequests, setConnectionRequests] = useState<ConnectionRequest[]>([]);
   const [requestSubTab, setRequestSubTab] = useState<'connections' | 'meetings'>('connections');
   
-  // Scheduled meetings state
-  const [scheduledMeetings, setScheduledMeetings] = useState<ScheduledMeeting[]>(() => {
-    const saved = localStorage.getItem('scheduledMeetings');
-    const meetings = saved ? JSON.parse(saved) : [];
-    
-    // Add test meeting with attendees if not already present
-    const hasTestMeeting = meetings.some((m: ScheduledMeeting) => m.title === 'Test Meeting with Attendees - AI Integration Demo');
-    
-    if (!hasTestMeeting) {
-      const testMeetingDate = new Date('2026-01-25T15:00:00');
-      const startTime = testMeetingDate.toISOString();
-      const endTime = new Date(testMeetingDate.getTime() + 60 * 60 * 1000).toISOString();
-      
-      const teamsParams = new URLSearchParams();
-      teamsParams.append('subject', 'Test Meeting with Attendees - AI Integration Demo');
-      teamsParams.append('content', 'This is a test meeting to demonstrate the attendee feature working correctly. Topics include AI integration in African financial services.');
-      teamsParams.append('startTime', startTime);
-      teamsParams.append('endTime', endTime);
-      teamsParams.append('attendees', 'testuser.demo@gmail.com,sarah.johnson@forvismazars.com,michael.chen@forvismazars.com');
-      
-      const testMeeting: ScheduledMeeting = {
-        id: `meeting-test-${Date.now()}`,
-        title: 'Test Meeting with Attendees - AI Integration Demo',
-        description: 'This is a test meeting to demonstrate the attendee feature working correctly. Topics include AI integration in African financial services, digital transformation, and cross-border payment systems.',
-        date: '2026-01-25',
-        time: '15:00',
-        startDateTime: startTime,
-        endDateTime: endTime,
-        topic: 'Digital Transformation',
-        region: 'Pan-African',
-        expert: 'Amara Okafor',
-        attendees: ['testuser.demo@gmail.com', 'sarah.johnson@forvismazars.com', 'michael.chen@forvismazars.com'],
-        lobbyBypass: 'organization',
-        teamsLink: `https://teams.microsoft.com/l/meeting/new?${teamsParams.toString()}`,
-        createdAt: new Date().toISOString(),
-        createdBy: 'System Test'
-      };
-      
-      meetings.push(testMeeting);
-      localStorage.setItem('scheduledMeetings', JSON.stringify(meetings));
-    }
-    
-    return meetings;
-  });
+  // Scheduled meetings state – loaded from DB
+  const [scheduledMeetings, setScheduledMeetings] = useState<ScheduledMeeting[]>([]);
+  const [meetingsLoading, setMeetingsLoading] = useState(false);
   const [showMeetingsList, setShowMeetingsList] = useState(false);
 
-  // Platform users for email invitations (dummy data)
-  const platformUsers: PlatformUser[] = [
-    { id: 'test-gmail', name: 'Test User Gmail', email: 'testuser.demo@gmail.com', avatar: 'https://i.pravatar.cc/150?img=99', role: 'Test User', organization: 'Gmail' },
-    { id: '1', name: 'Sarah Johnson', email: 'sarah.johnson@forvismazars.com', avatar: 'https://i.pravatar.cc/150?img=1', role: 'Senior Consultant', organization: 'Forvis Mazars' },
-    { id: '2', name: 'Michael Chen', email: 'michael.chen@forvismazars.com', avatar: 'https://i.pravatar.cc/150?img=2', role: 'Manager', organization: 'Forvis Mazars' },
-    { id: '3', name: 'Aisha Patel', email: 'aisha.patel@forvismazars.com', avatar: 'https://i.pravatar.cc/150?img=3', role: 'Director', organization: 'Forvis Mazars' },
-    { id: '4', name: 'David Okonkwo', email: 'david.okonkwo@firstbank.ng', avatar: 'https://i.pravatar.cc/150?img=4', role: 'CFO', organization: 'First Bank Nigeria' },
-    { id: '5', name: 'Lisa Wong', email: 'lisa.wong@standardbank.co.za', avatar: 'https://i.pravatar.cc/150?img=5', role: 'Head of Finance', organization: 'Standard Bank' },
-    { id: '6', name: 'Ahmed Hassan', email: 'ahmed.hassan@orascom.com', avatar: 'https://i.pravatar.cc/150?img=6', role: 'VP Operations', organization: 'Orascom' },
-    { id: '7', name: 'Grace Mutai', email: 'grace.mutai@safaricom.co.ke', avatar: 'https://i.pravatar.cc/150?img=7', role: 'Product Manager', organization: 'Safaricom' },
-    { id: '8', name: 'James Ndlovu', email: 'james.ndlovu@angloamerican.com', avatar: 'https://i.pravatar.cc/150?img=8', role: 'ESG Manager', organization: 'Anglo American' },
-    { id: '9', name: 'Fatima Ibrahim', email: 'fatima.ibrahim@dangote.com', avatar: 'https://i.pravatar.cc/150?img=9', role: 'Tax Specialist', organization: 'Dangote Group' },
-    { id: '10', name: 'Robert Kamau', email: 'robert.kamau@equitybank.co.ke', avatar: 'https://i.pravatar.cc/150?img=10', role: 'Risk Analyst', organization: 'Equity Bank' },
-    { id: '11', name: 'Maria Santos', email: 'maria.santos@mtn.com', avatar: 'https://i.pravatar.cc/150?img=11', role: 'Business Analyst', organization: 'MTN' },
-    { id: '12', name: 'Thomas Mbeki', email: 'thomas.mbeki@sasol.com', avatar: 'https://i.pravatar.cc/150?img=12', role: 'Sustainability Lead', organization: 'Sasol' }
-  ];
-
+  // Platform users for email invitations – searched live from DB
+  const [platformUsers] = useState<PlatformUser[]>([
+    // kept empty: real users come from DB search in handleEmailInputChange
+  ]);
   // Handle email input changes with predictive typing
-  const handleEmailInputChange = (value: string) => {
+  // Approved mentees always shown as suggestions
+  const approvedMenteeUsers = useMemo(() =>
+    connectionRequests
+      .filter(r => r.status === 'approved')
+      .map(r => ({
+        id: `mentee-${r.id}`,
+        name: r.userName,
+        email: r.userEmail,
+        avatar: r.userAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(r.userName)}&background=1A1F5E&color=fff`,
+        role: 'Mentee',
+        organization: r.userOrganization || ''
+      }))
+  , [connectionRequests]);
+
+  const handleEmailInputChange = async (value: string) => {
     setEmailInput(value);
-    
-    if (value.trim().length > 0) {
-      const filtered = platformUsers.filter(user => 
-        user.email.toLowerCase().includes(value.toLowerCase()) ||
-        user.name.toLowerCase().includes(value.toLowerCase()) ||
-        user.organization.toLowerCase().includes(value.toLowerCase())
-      ).slice(0, 5);
+    if (value.trim().length < 2) {
+      setShowSuggestions(approvedMenteeUsers.length > 0);
+      setEmailSuggestions(approvedMenteeUsers.slice(0, 8));
+      return;
+    }
+    try {
+      const res = await usersAPI.search(value);
+      const dbUsers: PlatformUser[] = (res.data?.users || []).map((u: any) => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        avatar: u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=1A1F5E&color=fff`,
+        role: u.role || '',
+        organization: u.organization || ''
+      }));
+      const merged = [...approvedMenteeUsers, ...dbUsers];
+      const seen = new Set<string>();
+      const unique = merged.filter(u => { if (seen.has(u.email)) return false; seen.add(u.email); return true; });
+      const q = value.toLowerCase();
+      const filtered = unique.filter(u =>
+        u.email.toLowerCase().includes(q) || u.name.toLowerCase().includes(q)
+      ).slice(0, 8);
       setEmailSuggestions(filtered);
-      setShowSuggestions(true);
-    } else {
-      setShowSuggestions(false);
+      setShowSuggestions(filtered.length > 0);
+    } catch {
+      // fallback: filter approved mentees only
+      const q = value.toLowerCase();
+      const filtered = approvedMenteeUsers.filter(u =>
+        u.email.toLowerCase().includes(q) || u.name.toLowerCase().includes(q)
+      );
+      setEmailSuggestions(filtered);
+      setShowSuggestions(filtered.length > 0);
     }
   };
 
@@ -288,10 +260,10 @@ const ExpertDirectory: React.FC = () => {
 
   // Add email to invited list
   const addInvitedEmail = (email: string) => {
-    console.log('🔵 addInvitedEmail called with:', email);
+    console.log('?? addInvitedEmail called with:', email);
     
     if (!email || email.trim() === '') {
-      console.warn('⚠️ Email is empty!');
+      console.warn('?? Email is empty!');
       return;
     }
 
@@ -300,12 +272,12 @@ const ExpertDirectory: React.FC = () => {
       console.log('Previous invitedEmails:', prevWebinar.invitedEmails);
       
       if (prevWebinar.invitedEmails.includes(email)) {
-        console.warn('⚠️ Email already exists in invitedEmails:', email);
+        console.warn('?? Email already exists in invitedEmails:', email);
         return prevWebinar;
       }
       
       const updatedEmails = [...prevWebinar.invitedEmails, email];
-      console.log('✅ Adding email. Updated emails:', updatedEmails);
+      console.log('? Adding email. Updated emails:', updatedEmails);
       
       return {
         ...prevWebinar,
@@ -319,7 +291,7 @@ const ExpertDirectory: React.FC = () => {
 
   // Remove email from invited list
   const removeInvitedEmail = (email: string) => {
-    console.log('🔴 removeInvitedEmail called for:', email);
+    console.log('?? removeInvitedEmail called for:', email);
     
     setNewWebinar((prevWebinar) => {
       console.log('Current invitedEmails before removal:', prevWebinar.invitedEmails);
@@ -371,33 +343,24 @@ const ExpertDirectory: React.FC = () => {
   };
 
   // Handle connection request approval/rejection
-  const handleConnectionRequest = (requestId: string, action: 'approve' | 'reject') => {
+  const handleConnectionRequest = async (requestId: string, action: 'approve' | 'reject') => {
     const request = connectionRequests.find(r => r.id === requestId);
-    
-    if (action === 'approve' && request) {
-      // Find the expert and add to connected experts
-      const expert = experts.find(e => e.id === request.expertId);
-      if (expert && !connectedExperts.find(e => e.id === expert.id)) {
-        setConnectedExperts([...connectedExperts, expert]);
-        // Initialize conversation for this expert
-        setExpertConversations({
-          ...expertConversations,
-          [expert.id]: []
-        });
+    if (!request) return;
+
+    const newStatus = action === 'approve' ? 'approved' : 'declined';
+    try {
+      await expertConnectionsAPI.updateStatus(requestId, newStatus);
+      setConnectionRequests(prev =>
+        prev.map(req => req.id === requestId ? { ...req, status: action === 'approve' ? 'approved' : 'rejected' } : req)
+      );
+      if (action === 'approve') {
+        alert(`Connection approved! ${request.userName} can now open a Teams chat with you.`);
+      } else {
+        alert(`Request from ${request.userName} has been declined.`);
       }
-      alert(`Connection request approved! ${request.userName} can now message you.`);
-    } else if (action === 'reject' && request) {
-      alert(`Connection request from ${request.userName} has been rejected.`);
+    } catch (err: any) {
+      alert(err?.message || 'Failed to update connection request');
     }
-    
-    // Update request status
-    setConnectionRequests(prev =>
-      prev.map(req =>
-        req.id === requestId
-          ? { ...req, status: action === 'approve' ? 'approved' : 'rejected' }
-          : req
-      )
-    );
   };
 
   // Handle expert application submission
@@ -418,409 +381,236 @@ const ExpertDirectory: React.FC = () => {
     });
   };
 
-  // Dummy experts data as fallback
-  const dummyExperts: Expert[] = [
-    {
-      id: '1',
-      name: 'Amara Okafor',
-      title: 'Tax & Regulatory Expert',
-      company: 'Forvis Mazars',
-      email: 'Walter.Blake@forvismazars.com',
-      avatar: 'https://images.pexels.com/photos/3778966/pexels-photo-3778966.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-      location: 'Lagos, Nigeria',
-      country: 'Nigeria',
-      expertise: ['Corporate Tax', 'Transfer Pricing', 'Tax Planning', 'Cross-Border Taxation'],
-      industries: ['Financial Services', 'Oil & Gas', 'Manufacturing'],
-      languages: ['English', 'Yoruba', 'Igbo'],
-      rating: 4.9,
-      reviewCount: 47,
-      isAvailable: true,
-      experience: '15+ years',
-      pastClients: ['First Bank Nigeria', 'Dangote Group', 'MTN Nigeria'],
-      bio: 'Leading tax expert specializing in West African tax harmonization and cross-border transactions. Extensive experience in transfer pricing and international tax structuring.'
-    },
-    {
-      id: '2',
-      name: 'Thabo Mthembu',
-      title: 'ESG & Sustainability Advisor',
-      company: 'Forvis Mazars',
-      email: 'thabo.mthembu@forvismzars.com',
-      avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-      location: 'Johannesburg, South Africa',
-      country: 'South Africa',
-      expertise: ['ESG Strategy', 'Sustainability Reporting', 'Climate Risk', 'Impact Assessment'],
-      industries: ['Mining', 'Energy', 'Manufacturing', 'Agriculture'],
-      languages: ['English', 'Zulu', 'Afrikaans'],
-      rating: 4.8,
-      reviewCount: 38,
-      isAvailable: true,
-      experience: '12+ years',
-      pastClients: ['Anglo American', 'Sasol', 'Standard Bank'],
-      bio: 'ESG transformation specialist with deep expertise in Southern African mining and energy sectors. Pioneer in implementing sustainable business practices across the continent.'
-    },
-    {
-      id: '3',
-      name: 'Kemi Adebayo',
-      title: 'Fintech & Digital Banking Specialist',
-      company: 'Forvis Mazars',
-      email: 'kemi.adebayo@forvismzars.com',
-      avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-      location: 'Nairobi, Kenya',
-      country: 'Kenya',
-      expertise: ['Digital Banking', 'Payment Systems', 'Mobile Money', 'Regulatory Compliance'],
-      industries: ['Banking', 'Fintech', 'Telecommunications'],
-      languages: ['English', 'Swahili'],
-      rating: 4.9,
-      reviewCount: 52,
-      isAvailable: true,
-      experience: '10+ years',
-      pastClients: ['Safaricom', 'Equity Bank', 'M-Pesa'],
-      bio: 'Fintech innovation leader driving digital transformation in East African financial services. Expert in mobile money ecosystems and regulatory frameworks.'
-    },
-    {
-      id: '4',
-      name: 'Fatima El-Sayed',
-      title: 'Audit & Assurance Partner',
-      company: 'Forvis Mazars',
-      email: 'fatima.elsayed@forvismzars.com',
-      avatar: 'https://images.pexels.com/photos/3776164/pexels-photo-3776164.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-      location: 'Cairo, Egypt',
-      country: 'Egypt',
-      expertise: ['Financial Audit', 'IFRS', 'Internal Controls', 'Risk Management'],
-      industries: ['Retail', 'Hospitality', 'Real Estate', 'Construction'],
-      languages: ['Arabic', 'English', 'French'],
-      rating: 4.7,
-      reviewCount: 41,
-      isAvailable: false,
-      experience: '18+ years',
-      pastClients: ['Orascom', 'Talaat Moustafa Group', 'Egyptian Banks'],
-      bio: 'Senior audit partner with extensive experience in North African markets. Specialized in complex financial reporting and regulatory compliance across multiple jurisdictions.'
-    },
-    {
-      id: '5',
-      name: 'Kwame Asante',
-      title: 'M&A Advisory Specialist',
-      company: 'Forvis Mazars',
-      email: 'kwame.asante@forvismzars.com',
-      avatar: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-      location: 'Accra, Ghana',
-      country: 'Ghana',
-      expertise: ['Mergers & Acquisitions', 'Due Diligence', 'Valuations', 'Deal Structuring'],
-      industries: ['Consumer Goods', 'Healthcare', 'Technology', 'Agriculture'],
-      languages: ['English', 'Twi', 'French'],
-      rating: 4.8,
-      reviewCount: 35,
-      isAvailable: true,
-      experience: '14+ years',
-      pastClients: ['Unilever Ghana', 'Kasapa Telecom', 'PZ Cussons'],
-      bio: 'M&A expert facilitating cross-border transactions across West Africa. Proven track record in complex deal structuring and post-merger integration.'
-    },
-    {
-      id: '6',
-      name: 'Nia Banda',
-      title: 'HR & Talent Development Consultant',
-      company: 'Forvis Mazars',
-      email: 'nia.banda@forvismzars.com',
-      avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-      location: 'Lusaka, Zambia',
-      country: 'Zambia',
-      expertise: ['Talent Strategy', 'Leadership Development', 'Diversity & Inclusion', 'Change Management'],
-      industries: ['Professional Services', 'Mining', 'Banking', 'Retail'],
-      languages: ['English', 'Bemba', 'Nyanja'],
-      rating: 4.9,
-      reviewCount: 29,
-      isAvailable: true,
-      experience: '11+ years',
-      pastClients: ['Zambia National Commercial Bank', 'First Quantum Minerals', 'Shoprite'],
-      bio: 'HR transformation leader specializing in building high-performance teams across Africa. Expert in cross-cultural leadership development and inclusive workplace strategies.'
-    }
-  ];
-
-  // Load experts and questions from API
+  // Load my expert connections from DB (approved → My Experts tab, pending → button state)
   useEffect(() => {
     const loadData = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        const [expertsResponse, questionsResponse] = await Promise.all([
+        const [expertsResult, questionsResult] = await Promise.allSettled([
           expertsAPI.getExperts(),
           questionsAPI.getQuestions()
         ]);
 
-        // Transform experts data
-        const transformedExperts = expertsResponse.data.experts.map((expert: any) => ({
-          id: expert.expert_id || expert.user_id,
-          name: expert.name,
-          title: expert.specializations?.split(',')[0] || 'Expert',
-          company: 'Forvis Mazars',
-          email: expert.email || `${expert.name.toLowerCase().replace(/\s+/g, '.')}@forvismzars.com`,
-          avatar: expert.profile_image_url || 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-          location: expert.location,
-          country: expert.location?.split(',')[1]?.trim() || expert.location,
-          expertise: expert.specializations ? expert.specializations.split(',').map((s: string) => s.trim()) : [],
-          industries: expert.industries ? expert.industries.split(',').map((i: string) => i.trim()) : [],
-          languages: ['English'], // Default
-          rating: expert.average_rating || 4.5,
-          reviewCount: expert.review_count || 10,
-          isAvailable: expert.is_available,
-          experience: expert.experience || '5+ years',
-          pastClients: expert.past_clients ? expert.past_clients.split(',').map((c: string) => c.trim()) : [],
-          bio: expert.bio || 'Experienced professional ready to help.'
-        }));
+        if (expertsResult.status === 'fulfilled') {
+          const expertsData = expertsResult.value?.data?.experts || expertsResult.value?.experts || [];
+          const transformedExperts = expertsData.map((expert: any) => ({
+            id: expert.expert_id || expert.user_id,
+            name: expert.name,
+            title: expert.title || expert.specializations?.split(',')[0] || 'Expert',
+            company: expert.company || 'Forvis Mazars',
+            email: expert.email || '',
+            avatar: expert.avatar_url || expert.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(expert.name||'E')}&background=1A1F5E&color=fff`,
+            location: expert.location || expert.country || '',
+            country: expert.country || expert.location?.split(',')[1]?.trim() || expert.location,
+            expertise: expert.specializations ? expert.specializations.split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+            industries: expert.industries ? expert.industries.split(',').map((i: string) => i.trim()) : [],
+            languages: ['English'],
+            rating: expert.average_rating || 4.5,
+            reviewCount: expert.review_count || 0,
+            isAvailable: expert.is_available,
+            experience: expert.experience ? `${expert.experience}+ years` : '5+ years',
+            pastClients: expert.past_clients ? expert.past_clients.split(',').map((c: string) => c.trim()) : [],
+            bio: expert.bio || 'Experienced professional ready to help.'
+          }));
+          setExperts(transformedExperts);
+        } else {
+          console.error('Error loading experts:', expertsResult.reason);
+          setExperts([]);
+        }
 
-        // Transform questions data
-        const transformedQuestions = questionsResponse.data.questions.map((question: any) => ({
-          id: question.question_id,
-          title: question.title,
-          content: question.content,
-          author: question.author_name,
-          authorAvatar: question.author_avatar || 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=50&h=50&fit=crop',
-          tags: question.tags ? question.tags.split(',').map((t: string) => t.trim()) : [],
-          timestamp: new Date(question.created_at).toLocaleDateString(),
-          responseCount: question.response_count || 0,
-          isAnswered: question.is_answered
-        }));
-
-        // Use dummy data if API returns empty
-        setExperts(transformedExperts.length > 0 ? transformedExperts : dummyExperts);
-        setQuestions(transformedQuestions);
+        if (questionsResult.status === 'fulfilled') {
+          const questionsData = questionsResult.value?.data?.questions || questionsResult.value?.questions || [];
+          const transformedQuestions = questionsData.map((question: any) => ({
+            id: question.question_id,
+            title: question.title,
+            content: question.content,
+            author: question.author_name,
+            authorAvatar: question.author_avatar || 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=50&h=50&fit=crop',
+            tags: question.tags ? question.tags.split(',').map((t: string) => t.trim()) : [],
+            timestamp: new Date(question.created_at).toLocaleDateString(),
+            responseCount: question.response_count || 0,
+            isAnswered: question.is_answered
+          }));
+          setQuestions(transformedQuestions);
+        } else {
+          console.warn('Could not load questions:', questionsResult.reason);
+        }
       } catch (error) {
         console.error('Error loading expert directory data:', error);
-        // Use dummy data on error
-        setExperts(dummyExperts);
+        setExperts([]);
       } finally {
         setLoading(false);
       }
     };
-
     loadData();
   }, []);
 
-  // Initialize with some dummy connected experts for demonstration
   useEffect(() => {
-    if (experts.length > 0 && connectedExperts.length === 0) {
-      // Add first 2 experts as connected by default
-      const initialConnected = experts.slice(0, 2);
-      setConnectedExperts(initialConnected);
-      
-      // Initialize sample connection requests
-      const sampleConnectionRequests: ConnectionRequest[] = [
-        {
-          id: 'conn_req_1',
-          expertId: experts[0]?.id || '1',
-          expertName: experts[0]?.name || 'Expert',
-          userName: 'Michael Chen',
-          userEmail: 'michael.chen@forvismazars.com',
-          userAvatar: 'https://i.pravatar.cc/150?img=33',
-          userOrganization: 'Forvis Mazars Nigeria',
-          message: 'I would like to connect with you to discuss transfer pricing strategies for our African expansion. I have reviewed your expertise and believe you can provide valuable insights.',
-          timestamp: '2 hours ago',
-          status: 'pending',
-          type: 'connection'
-        },
-        {
-          id: 'conn_req_2',
-          expertId: experts[1]?.id || '2',
-          expertName: experts[1]?.name || 'Expert',
-          userName: 'Aisha Patel',
-          userEmail: 'aisha.patel@standardbank.co.za',
-          userAvatar: 'https://i.pravatar.cc/150?img=47',
-          userOrganization: 'Standard Bank',
-          message: 'Hello! I am leading our ESG initiative and would love to connect with you to learn more about sustainable finance frameworks in Africa.',
-          timestamp: '5 hours ago',
-          status: 'pending',
-          type: 'connection'
-        }
-      ];
-      setConnectionRequests(sampleConnectionRequests);
-      
-      // Initialize conversations with sample messages
-      const initialConversations: {[key: string]: any[]} = {};
-      initialConnected.forEach((expert, index) => {
-        initialConversations[expert.id] = index === 0 ? [
-          {
-            sender: 'user',
-            content: 'Hi! I need some guidance on transfer pricing regulations in West Africa.',
-            time: '2 hours ago',
-            preview: 'Hi! I need some guidance on transfer pricing...'
-          },
-          {
-            sender: 'expert',
-            content: 'Hello! I\'d be happy to help. Transfer pricing in West Africa has specific considerations, especially with the ECOWAS framework. What specific aspect are you working on?',
-            time: '1 hour ago',
-            preview: 'Hello! I\'d be happy to help. Transfer pricing...'
-          },
-          {
-            sender: 'user',
-            content: 'I\'m looking at intercompany service agreements between Nigeria and Ghana operations.',
-            time: '45 minutes ago',
-            preview: 'I\'m looking at intercompany service agreements...'
-          }
-        ] : [
-          {
-            sender: 'user',
-            content: 'I\'d like to discuss ESG reporting frameworks for our mining operations.',
-            time: '3 hours ago',
-            preview: 'I\'d like to discuss ESG reporting frameworks...'
-          },
-          {
-            sender: 'expert',
-            content: 'Excellent topic! For mining operations in Southern Africa, you\'ll want to align with both GRI Standards and SASB frameworks. Are you also looking at TCFD climate disclosures?',
-            time: '2 hours ago',
-            preview: 'Excellent topic! For mining operations...'
-          }
-        ];
-      });
-      setExpertConversations(initialConversations);
-    }
-  }, [experts]);
+    const loadConnections = async () => {
+      setConnectionsLoading(true);
+      try {
+        const res = await expertConnectionsAPI.getMyConnections();
+        const conns: any[] = res.data?.connections || [];
+        const approved: Expert[] = [];
+        const pendingIds = new Set<string>();
+        conns.forEach((c: any) => {
+          const expertObj: Expert = {
+            id: c.expert_id,
+            name: c.expert_name || 'Expert',
+            title: c.expert_specializations?.split(',')[0]?.trim() || 'Expert',
+            company: 'Forvis Mazars',
+            email: c.expert_email || '',
+            avatar: c.expert_avatar || 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+            location: c.expert_location || '',
+            country: c.expert_location?.split(',')[1]?.trim() || '',
+            expertise: c.expert_specializations ? c.expert_specializations.split(',').map((s: string) => s.trim()) : [],
+            industries: c.expert_industries ? c.expert_industries.split(',').map((i: string) => i.trim()) : [],
+            languages: ['English'],
+            rating: c.expert_rating || 4.5,
+            reviewCount: c.expert_review_count || 0,
+            isAvailable: c.expert_is_available,
+            experience: '5+ years',
+            pastClients: [],
+            bio: c.expert_bio || '',
+          };
+          if (c.status === 'approved') approved.push(expertObj);
+          else if (c.status === 'pending') pendingIds.add(c.expert_id);
+        });
+        setConnectedExperts(approved);
+        setPendingExpertIds(pendingIds);
+      } catch (err) {
+        console.error('Failed to load expert connections:', err);
+      } finally {
+        setConnectionsLoading(false);
+      }
+    };
+    loadConnections();
+  }, []);
 
-  // Sample access requests for private webinars
-  const sampleAccessRequests: AccessRequest[] = [
-    {
-      id: 'req1',
-      name: 'David Okonkwo',
-      email: 'david.okonkwo@firstbank.ng',
-      organization: 'First Bank Nigeria',
-      message: 'I would like to attend this webinar to learn more about cross-border M&A strategies for our expansion plans.',
-      timestamp: '2 hours ago',
-      status: 'pending'
-    },
-    {
-      id: 'req2',
-      name: 'Lisa Wong',
-      email: 'lisa.wong@standardbank.co.za',
-      organization: 'Standard Bank',
-      message: 'Our ESG team is very interested in this topic. Would appreciate access to this webinar.',
-      timestamp: '5 hours ago',
-      status: 'pending'
-    },
-    {
-      id: 'req3',
-      name: 'Ahmed Hassan',
-      email: 'ahmed.hassan@orascom.com',
-      organization: 'Orascom',
-      message: 'I am leading our digital transformation initiative and this webinar aligns perfectly with our goals.',
-      timestamp: '1 day ago',
-      status: 'pending'
-    },
-    {
-      id: 'req4',
-      name: 'Grace Mutai',
-      email: 'grace.mutai@safaricom.co.ke',
-      organization: 'Safaricom',
-      message: 'Interested in the fintech innovation strategies discussed in this session.',
-      timestamp: '2 days ago',
-      status: 'approved'
-    },
-    {
-      id: 'req5',
-      name: 'Robert Kamau',
-      email: 'robert.kamau@equitybank.co.ke',
-      organization: 'Equity Bank',
-      message: 'Looking to understand climate finance opportunities for our institution.',
-      timestamp: '3 days ago',
-      status: 'approved'
-    },
-    {
-      id: 'req6',
-      name: 'Thomas Mbeki',
-      email: 'thomas.mbeki@external.com',
-      organization: 'External Consultant',
-      message: 'Just curious to learn more.',
-      timestamp: '4 days ago',
-      status: 'rejected'
-    }
-  ];
+  // If the logged-in user is an expert, load incoming connection requests
+  useEffect(() => {
+    if (!isExpert) return;
+    const loadIncoming = async () => {
+      try {
+        const res = await expertConnectionsAPI.getIncomingRequests();
+        const raw: any[] = res.data?.connections || [];
+        const mapped: ConnectionRequest[] = raw.map((c: any) => ({
+          id: c.id,
+          expertId: c.expert_id || '',
+          expertName: '',
+          userName: c.requester_name || 'Unknown',
+          userEmail: c.requester_email || '',
+          userAvatar: c.requester_avatar || 'https://i.pravatar.cc/150?img=20',
+          userOrganization: '',
+          message: c.message || '',
+          timestamp: new Date(c.created_at).toLocaleDateString(),
+          status: c.status as 'pending' | 'approved' | 'rejected',
+          type: 'connection',
+        }));
+        setConnectionRequests(mapped);
+      } catch (err) {
+        console.error('Failed to load incoming requests:', err);
+      }
+    };
+    loadIncoming();
+  }, [isExpert]);
 
-  const webinars: Webinar[] = [
-    {
-      id: '1',
-      title: 'West African Tax Harmonization: Opportunities and Challenges',
-      expert: 'Amara Okafor',
-      expertAvatar: 'https://images.pexels.com/photos/3778966/pexels-photo-3778966.jpeg?auto=compress&cs=tinysrgb&w=50&h=50&fit=crop',
-      date: '2024-02-15',
-      time: '14:00 WAT',
-      topic: 'Regional Tax Policy',
-      region: 'West Africa',
-      attendees: 23,
-      maxAttendees: 50,
-      teamsLink: 'https://teams.microsoft.com/l/meetup-join/19%3ameeting_tax_harmonization_west_africa',
-      description: 'Join us for an in-depth discussion on the evolving tax landscape across West Africa. We\'ll cover ECOWAS harmonization efforts, transfer pricing regulations, and practical strategies for multinational compliance. Perfect for tax professionals, CFOs, and business leaders operating in the region.',
-      registeredUsers: []
-    },
-    {
-      id: '2',
-      title: 'ESG in Southern African Mining: Best Practices',
-      expert: 'Thabo Mthembu',
-      expertAvatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=50&h=50&fit=crop',
-      date: '2024-02-20',
-      time: '15:00 SAST',
-      topic: 'ESG & Sustainability',
-      region: 'Southern Africa',
-      attendees: 31,
-      maxAttendees: 75,
-      teamsLink: 'https://teams.microsoft.com/l/meetup-join/19%3ameeting_esg_mining_southern_africa',
-      description: 'Explore cutting-edge ESG frameworks and sustainability practices in the mining sector. Learn from real-world case studies, regulatory updates, and stakeholder engagement strategies. Ideal for mining executives, ESG officers, and sustainability consultants.',
-      registeredUsers: []
-    },
-    {
-      id: '3',
-      title: 'Digital Banking Transformation in East Africa',
-      expert: 'Kemi Adebayo',
-      expertAvatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=50&h=50&fit=crop',
-      date: '2024-02-25',
-      time: '16:00 EAT',
-      topic: 'Fintech Innovation',
-      region: 'East Africa',
-      attendees: 18,
-      maxAttendees: 40,
-      teamsLink: 'https://teams.microsoft.com/l/meetup-join/19%3ameeting_digital_banking_east_africa',
-      description: 'Discover the latest trends in digital banking and fintech innovation across East Africa. Topics include mobile money integration, regulatory compliance, cybersecurity, and customer experience optimization. Essential for bank executives, fintech founders, and digital transformation leaders.',
-      registeredUsers: []
-    },
-    {
-      id: '4',
-      title: 'Cross-Border M&A: Legal & Tax Considerations',
-      expert: 'Kwame Asante',
-      expertAvatar: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=50&h=50&fit=crop',
-      date: '2024-03-05',
-      time: '13:00 GMT',
-      topic: 'Mergers & Acquisitions',
-      region: 'Pan-African',
-      attendees: 15,
-      maxAttendees: 60,
-      teamsLink: 'https://teams.microsoft.com/l/meetup-join/19%3ameeting_mna_cross_border_africa',
-      description: 'Navigate the complexities of cross-border M&A transactions across Africa. Expert insights on deal structuring, due diligence, valuation methodologies, and post-merger integration. Designed for M&A advisors, corporate development teams, and private equity professionals.',
-      registeredUsers: []
-    },
-    {
-      id: '5',
-      title: 'Climate Risk & Sustainable Finance in Africa',
-      expert: 'Sarah Mwangi',
-      expertAvatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=50&h=50&fit=crop',
-      date: '2024-03-10',
-      time: '14:30 EAT',
-      topic: 'Climate Finance',
-      region: 'East Africa',
-      attendees: 28,
-      maxAttendees: 80,
-      teamsLink: 'https://teams.microsoft.com/l/meetup-join/19%3ameeting_climate_risk_sustainable_finance',
-      description: 'Learn how to integrate climate risk assessment into financial decision-making and access sustainable finance opportunities. Topics include green bonds, carbon credits, climate disclosure requirements, and impact measurement. Perfect for financial institutions, project developers, and sustainability professionals.',
-      registeredUsers: []
-    }
-  ];
+  // Load webinars from DB
+  useEffect(() => {
+    const loadWebinars = async () => {
+      try {
+        const res = await expertWebinarsAPI.getWebinars();
+        const raw: any[] = res.data?.webinars || [];
+        const mapped: Webinar[] = raw.map((w: any) => ({
+          id: w.id,
+          title: w.title,
+          expert: w.expert_name,
+          expertAvatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(w.expert_name || 'E')}&background=1A1F5E&color=fff`,
+          date: w.date,
+          time: w.time,
+          topic: w.topic || '',
+          region: w.region || '',
+          attendees: w.attendee_count || 0,
+          maxAttendees: w.max_attendees || 50,
+          teamsLink: w.teams_link || '',
+          description: w.description || '',
+          isPrivate: !!w.is_private,
+          registeredUsers: []
+        }));
+        setWebinars(mapped);
+      } catch (err) {
+        console.warn('Could not load webinars from DB:', err);
+      }
+    };
+    loadWebinars();
+  }, []);
+
+  // Load my scheduled meetings from DB
+  useEffect(() => {
+    const loadMeetings = async () => {
+      setMeetingsLoading(true);
+      try {
+        const res = await expertMeetingsAPI.getMyMeetings();
+        const raw: any[] = res.data?.meetings || [];
+        const mapped: ScheduledMeeting[] = raw.map((m: any) => ({
+          id: m.id,
+          title: m.title,
+          description: m.description || '',
+          date: m.date,
+          time: m.time,
+          startDateTime: m.scheduled_at,
+          endDateTime: m.scheduled_at,
+          topic: m.topic || '',
+          region: m.region || '',
+          expert: m.expert_name,
+          attendees: m.attendee_emails ? m.attendee_emails.split(',').filter(Boolean) : [],
+          lobbyBypass: m.lobby_bypass || 'organization',
+          teamsLink: m.teams_link || '',
+          createdAt: m.created_at,
+          createdBy: m.expert_name
+        }));
+        setScheduledMeetings(mapped);
+      } catch (err) {
+        console.warn('Could not load meetings from DB:', err);
+      } finally {
+        setMeetingsLoading(false);
+      }
+    };
+    loadMeetings();
+  }, []);
+
+  // Sample access requests for private webinars (empty — DB-backed)
+  // Webinars loaded from DB
+  const [webinars, setWebinars] = useState<Webinar[]>([]);
+
+  // Static webinars removed — all data loaded from DB
+  const sampleAccessRequests: AccessRequest[] = []; // empty stub — access requests are DB-backed
+
+  // Derive unique filter options dynamically from loaded experts
+  const allExpertiseOptions = Array.from(new Set(experts.flatMap(e => e.expertise))).filter(Boolean).sort();
+  const allIndustryOptions = Array.from(new Set(experts.flatMap(e => e.industries))).filter(Boolean).sort();
+  const allCountryOptions = Array.from(new Set(experts.map(e => e.country).filter(Boolean))).sort();
+  const uniqueCountries = allCountryOptions.length || new Set(experts.map(e => e.country).filter(Boolean)).size;
 
   const filteredExperts = experts.filter(expert => {
-    const matchesSearch = expert.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      expert.expertise.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      expert.industries.some(industry => industry.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesExpertise = !selectedFilters.expertise || expert.expertise.includes(selectedFilters.expertise);
-    const matchesIndustry = !selectedFilters.industry || expert.industries.includes(selectedFilters.industry);
-    const matchesLocation = !selectedFilters.location || expert.country.includes(selectedFilters.location);
-    const matchesAvailability = selectedFilters.availability === 'all' || 
+    const search = searchTerm.toLowerCase();
+    const matchesSearch = !search ||
+      expert.name.toLowerCase().includes(search) ||
+      expert.expertise.some(skill => skill.toLowerCase().includes(search)) ||
+      expert.industries.some(industry => industry.toLowerCase().includes(search)) ||
+      (expert.company || '').toLowerCase().includes(search) ||
+      (expert.location || '').toLowerCase().includes(search);
+
+    const matchesExpertise = !selectedFilters.expertise ||
+      expert.expertise.some(e => e.toLowerCase() === selectedFilters.expertise.toLowerCase());
+    const matchesIndustry = !selectedFilters.industry ||
+      expert.industries.some(i => i.toLowerCase() === selectedFilters.industry.toLowerCase());
+    const matchesLocation = !selectedFilters.location ||
+      (expert.country || '').toLowerCase() === selectedFilters.location.toLowerCase() ||
+      (expert.location || '').toLowerCase().includes(selectedFilters.location.toLowerCase());
+    const matchesAvailability = selectedFilters.availability === 'all' ||
       (selectedFilters.availability === 'available' && expert.isAvailable);
-    
+
     return matchesSearch && matchesExpertise && matchesIndustry && matchesLocation && matchesAvailability;
   });
 
@@ -885,41 +675,27 @@ const ExpertDirectory: React.FC = () => {
     setShowWebinarModal(true);
   };
 
-  const handleSubmitRegistration = () => {
+  const handleSubmitRegistration = async () => {
     if (registrationData.name && registrationData.email && selectedWebinar) {
-      // Check if webinar is full
       const currentAttendees = webinarAttendees[selectedWebinar.id] || selectedWebinar.attendees;
       if (currentAttendees >= selectedWebinar.maxAttendees) {
-        alert(`Sorry, this webinar is full! \n\nMax Attendees: ${selectedWebinar.maxAttendees}\nCurrent Attendees: ${currentAttendees}\n\nPlease check other available webinars or contact the organizer to be added to the waitlist.`);
+        alert(`Sorry, this webinar is full!\n\nMax Attendees: ${selectedWebinar.maxAttendees}\nCurrent Attendees: ${currentAttendees}\n\nPlease check other available webinars.`);
         return;
       }
-      
-      // Add webinar to registered list
-      const updatedRegisteredIds = [...registeredWebinars, selectedWebinar.id];
-      setRegisteredWebinars(updatedRegisteredIds);
-      // Persist to localStorage so portal can access registered sessions
-      localStorage.setItem('registeredWebinarIds', JSON.stringify(updatedRegisteredIds));
-      const existingData: Webinar[] = JSON.parse(localStorage.getItem('registeredWebinarData') || '[]');
-      const updatedData = [...existingData.filter(w => w.id !== selectedWebinar.id), selectedWebinar];
-      localStorage.setItem('registeredWebinarData', JSON.stringify(updatedData));
-      
-      // Update attendee count
-      setWebinarAttendees({
-        ...webinarAttendees,
-        [selectedWebinar.id]: currentAttendees + 1
-      });
-      
-      // Show success message
+      try {
+        await expertWebinarsAPI.registerForWebinar(selectedWebinar.id);
+      } catch {
+        // proceed with local state update even if API call fails
+      }
+      setRegisteredWebinars([...registeredWebinars, selectedWebinar.id]);
+      setWebinarAttendees({ ...webinarAttendees, [selectedWebinar.id]: currentAttendees + 1 });
       const spotsLeft = selectedWebinar.maxAttendees - (currentAttendees + 1);
-      alert(`Success! You've been registered for "${selectedWebinar.title}". \n\nA confirmation email with the Teams link has been sent to ${registrationData.email}.\n\nYou can join the webinar using Microsoft Teams on ${selectedWebinar.date} at ${selectedWebinar.time}.\n\nSpots remaining: ${spotsLeft}/${selectedWebinar.maxAttendees}`);
-      
-      // Reset form
+      alert(`Success! You've been registered for "${selectedWebinar.title}".\n\nConfirmation sent to ${registrationData.email}.\n\nJoin via Teams on ${selectedWebinar.date} at ${selectedWebinar.time}.\n\nSpots remaining: ${spotsLeft}/${selectedWebinar.maxAttendees}`);
       setRegistrationData({ name: '', email: '', phone: '', organization: '' });
       setShowRegisterModal(false);
       setSelectedWebinar(null);
     }
   };
-
   const handleJoinWebinar = (teamsLink?: string) => {
     if (teamsLink) {
       // Open Teams link in new tab
@@ -933,7 +709,7 @@ const ExpertDirectory: React.FC = () => {
     return registeredWebinars.includes(webinarId);
   };
 
-  const handleScheduleWebinar = () => {
+  const handleScheduleWebinar = async () => {
     console.log('=== SCHEDULE WEBINAR INITIATED ===');
     console.log('Current newWebinar state:', newWebinar);
     console.log('Invited emails:', newWebinar.invitedEmails);
@@ -962,7 +738,7 @@ const ExpertDirectory: React.FC = () => {
         console.log('Adding attendees param with:', attendeesString);
         teamsParams.append('attendees', attendeesString);
       } else {
-        console.warn('⚠️ No invited emails found!');
+        console.warn('?? No invited emails found!');
       }
       
       // Use the Teams compose meeting URL format which better supports pre-filling attendees
@@ -984,13 +760,66 @@ const ExpertDirectory: React.FC = () => {
         lobbyBypass: newWebinar.lobbyBypass,
         teamsLink: teamsLink,
         createdAt: new Date().toISOString(),
-        createdBy: JSON.parse(localStorage.getItem('currentUser') || '{}').name || 'Unknown'
+        createdBy: authUser?.profile?.name || authUser?.email || 'Unknown'
       };
       
-      // Save to localStorage
+      // Save to DB and also add to expert_webinars for the webinars tab
+      try {
+        const meetingRes = await expertMeetingsAPI.createMeeting({
+          expert_name: newWebinar.expert,
+          title: newWebinar.title,
+          description: newWebinar.description,
+          date: newWebinar.date,
+          time: newWebinar.time,
+          topic: newWebinar.topic,
+          region: newWebinar.region,
+          meeting_type: 'webinar',
+          teams_link: teamsLink,
+          attendee_emails: newWebinar.invitedEmails,
+          lobby_bypass: newWebinar.lobbyBypass
+        });
+        const savedMeeting = meetingRes.data?.meeting;
+        if (savedMeeting) {
+          meetingRecord.id = savedMeeting.id;
+        }
+        // Also save to expert_webinars so it shows in the webinars tab
+        const webinarRes = await expertWebinarsAPI.createWebinar({
+          expert_name: newWebinar.expert,
+          title: newWebinar.title,
+          description: newWebinar.description,
+          date: newWebinar.date,
+          time: newWebinar.time,
+          topic: newWebinar.topic,
+          region: newWebinar.region,
+          max_attendees: newWebinar.maxAttendees,
+          teams_link: teamsLink,
+          invited_emails: newWebinar.invitedEmails,
+          is_private: newWebinar.isPrivate
+        });
+        if (webinarRes.data?.webinar) {
+          const w = webinarRes.data.webinar;
+          setWebinars(prev => [{
+            id: w.id,
+            title: w.title,
+            expert: w.expert_name,
+            expertAvatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(w.expert_name||'E')}&background=1A1F5E&color=fff`,
+            date: w.date,
+            time: w.time,
+            topic: w.topic || '',
+            region: w.region || '',
+            attendees: 0,
+            maxAttendees: w.max_attendees || 50,
+            teamsLink: w.teams_link || '',
+            description: w.description || '',
+            isPrivate: !!w.is_private,
+            registeredUsers: []
+          }, ...prev]);
+        }
+      } catch (err) {
+        console.error('Failed to save meeting to DB:', err);
+      }
       const updatedMeetings = [...scheduledMeetings, meetingRecord];
       setScheduledMeetings(updatedMeetings);
-      localStorage.setItem('scheduledMeetings', JSON.stringify(updatedMeetings));
       
       // Log for debugging - IMPORTANT: Check console for actual URL
       console.log('=== TEAMS MEETING DEBUG ===');
@@ -1001,14 +830,14 @@ const ExpertDirectory: React.FC = () => {
       console.log('Full params:', teamsParams.toString());
       console.log('Meeting Record:', meetingRecord);
       console.log('');
-      console.log('📋 COPY THIS URL TO TEST:');
+      console.log('?? COPY THIS URL TO TEST:');
       console.log(teamsLink);
       console.log('========================');
       
       // Open Teams in new tab to create the meeting
       window.open(teamsLink, '_blank');
       
-      alert(`Teams Meeting Created! 📅\n\n"${newWebinar.title}"\n\nDate: ${newWebinar.date} at ${newWebinar.time}\nExpert: ${newWebinar.expert}\nAttendees: ${newWebinar.invitedEmails.length} people\n\n✓ Teams opening with details\n${newWebinar.invitedEmails.length > 0 ? '✓ Attendees: ' + newWebinar.invitedEmails.join(', ') : '⚠️ No attendees added'}\n\n🔍 Check browser console to see the full URL!`);
+      alert(`Teams Meeting Created! ??\n\n"${newWebinar.title}"\n\nDate: ${newWebinar.date} at ${newWebinar.time}\nExpert: ${newWebinar.expert}\nAttendees: ${newWebinar.invitedEmails.length} people\n\n? Teams opening with details\n${newWebinar.invitedEmails.length > 0 ? '? Attendees: ' + newWebinar.invitedEmails.join(', ') : '?? No attendees added'}\n\n?? Check browser console to see the full URL!`);
       
       // Reset form
       setNewWebinar({
@@ -1033,24 +862,20 @@ const ExpertDirectory: React.FC = () => {
     }
   };
 
-  const handleSendConnect = () => {
-    // Create connection request instead of direct connection
-    if (selectedExpert) {
-      const newRequest: ConnectionRequest = {
-        id: `conn_${Date.now()}`,
-        expertId: selectedExpert.id,
-        expertName: selectedExpert.name,
-        userName: 'Current User', // Replace with actual user name
-        userEmail: 'user@example.com', // Replace with actual user email
-        userAvatar: 'https://i.pravatar.cc/150?img=20',
-        userOrganization: 'Forvis Mazars', // Replace with actual organization
-        message: connectMessage,
-        timestamp: 'Just now',
-        status: 'pending',
-        type: 'connection'
-      };
-      setConnectionRequests([newRequest, ...connectionRequests]);
-      alert('Connection request sent! The expert will review your request.');
+  const handleSendConnect = async () => {
+    if (!selectedExpert) return;
+    try {
+      await expertConnectionsAPI.requestConnection(selectedExpert.id, connectMessage);
+      // Mark as pending in UI immediately
+      setPendingExpertIds(prev => new Set(prev).add(selectedExpert.id));
+      alert(`Connection request sent to ${selectedExpert.name}. They will review it and you will be notified once approved.`);
+    } catch (err: any) {
+      const msg = err?.message || '';
+      if (msg.includes('already')) {
+        alert(msg);
+      } else {
+        alert('Failed to send connection request. Please try again.');
+      }
     }
     setShowConnectModal(false);
     setConnectMessage('');
@@ -1067,7 +892,7 @@ const ExpertDirectory: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Professional Header with Forvis Mazars Branding */}
-      <div className="bg-gradient-to-r from-[#1A1F5E] via-[#0072CE] to-[#1A1F5E] text-white">
+      <div className="bg-[#1A1F5E] text-white">
         <div className="max-w-[1920px] mx-auto px-12 sm:px-16 lg:px-20 py-12">
           <div className="text-center">
             <h1 className="text-4xl font-bold mb-3 text-white">Expert Directory & Knowledge Exchange</h1>
@@ -1079,7 +904,7 @@ const ExpertDirectory: React.FC = () => {
       </div>
 
       <div className="max-w-[1920px] mx-auto px-12 sm:px-16 lg:px-20 py-8">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white -xl shadow-sm border border-gray-100 overflow-hidden">
           
           {/* Tabs Header */}
           <div className="p-6 border-b border-gray-200">
@@ -1089,7 +914,7 @@ const ExpertDirectory: React.FC = () => {
               {!isExpert && (
                 <button
                   onClick={() => setShowBecomeExpertModal(true)}
-                  className="bg-[#1A1F5E] hover:bg-[#1A1F5E] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 ml-auto"
+                  className="bg-[#1A1F5E] hover:bg-[#1A1F5E] text-white px-4 py-2 -lg text-sm font-medium transition-colors flex items-center space-x-2 ml-auto"
                 >
                   <Award className="w-4 h-4" />
                   <span>Become an Expert</span>
@@ -1122,7 +947,7 @@ const ExpertDirectory: React.FC = () => {
                 <Users className="w-4 h-4" />
                 <span>My Experts</span>
                 {connectedExperts.length > 0 && (
-                  <span className="bg-[#F4F4F4]0 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                  <span className="bg-[#F4F4F4]0 text-white text-xs -full w-5 h-5 flex items-center justify-center font-bold">
                     {connectedExperts.length}
                   </span>
                 )}
@@ -1143,6 +968,24 @@ const ExpertDirectory: React.FC = () => {
             {isExpert && (
               <>
             <button
+              onClick={() => setActiveTab('myMentees')}
+              className={`pb-3 px-1 border-b-2 font-medium text-sm transition-colors relative ${
+                activeTab === 'myMentees'
+                  ? 'border-[#0072CE] text-[#0072CE]'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <span className="flex items-center space-x-2">
+                <Users className="w-4 h-4" />
+                <span>My Mentees</span>
+                {connectionRequests.filter(r => r.status === 'approved').length > 0 && (
+                  <span className="bg-[#0072CE] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                    {connectionRequests.filter(r => r.status === 'approved').length}
+                  </span>
+                )}
+              </span>
+            </button>
+            <button
               onClick={() => setActiveTab('webinars')}
               className={`pb-3 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'webinars'
@@ -1162,12 +1005,10 @@ const ExpertDirectory: React.FC = () => {
             >
               <span className="flex items-center space-x-2">
                 <Bell className="w-4 h-4" />
-                <span>Requests</span>
-                {(sampleAccessRequests.filter(r => r.status === 'pending').length + 
-                  connectionRequests.filter(r => r.status === 'pending').length) > 0 && (
+                <span>Connection Requests</span>
+                {connectionRequests.filter(r => r.status === 'pending').length > 0 && (
                   <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                    {sampleAccessRequests.filter(r => r.status === 'pending').length + 
-                     connectionRequests.filter(r => r.status === 'pending').length}
+                    {connectionRequests.filter(r => r.status === 'pending').length}
                   </span>
                 )}
               </span>
@@ -1192,7 +1033,7 @@ const ExpertDirectory: React.FC = () => {
                     placeholder="Search experts by name, skill, or industry..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] text-sm"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] text-sm"
                   />
                 </div>
 
@@ -1202,15 +1043,13 @@ const ExpertDirectory: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Expertise Area</label>
                     <select
                       value={selectedFilters.expertise}
-                      onChange={(e) => setSelectedFilters({...selectedFilters, expertise: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                      onChange={(e) => { setSelectedFilters({...selectedFilters, expertise: e.target.value}); setCurrentPage(1); }}
+                      className="w-full px-3 py-2 border border-gray-300 -md text-sm focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     >
                       <option value="">All Expertise</option>
-                      <option value="Tax Advisory">Tax Advisory</option>
-                      <option value="Risk Management">Risk Management</option>
-                      <option value="Fintech Strategy">Fintech Strategy</option>
-                      <option value="Project Finance">Project Finance</option>
-                      <option value="ESG Advisory">ESG Advisory</option>
+                      {allExpertiseOptions.map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -1218,15 +1057,21 @@ const ExpertDirectory: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Industry</label>
                     <select
                       value={selectedFilters.industry}
-                      onChange={(e) => setSelectedFilters({...selectedFilters, industry: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                      onChange={(e) => { setSelectedFilters({...selectedFilters, industry: e.target.value}); setCurrentPage(1); }}
+                      className="w-full px-3 py-2 border border-gray-300 -md text-sm focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     >
                       <option value="">All Industries</option>
-                      <option value="Financial Services">Financial Services</option>
-                      <option value="Energy">Energy</option>
-                      <option value="Technology">Technology</option>
-                      <option value="Mining">Mining</option>
-                      <option value="Banking">Banking</option>
+                      {allIndustryOptions.length > 0 ? allIndustryOptions.map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      )) : (
+                        <>
+                          <option value="Financial Services">Financial Services</option>
+                          <option value="Technology">Technology</option>
+                          <option value="Healthcare">Healthcare</option>
+                          <option value="Energy">Energy</option>
+                          <option value="Education">Education</option>
+                        </>
+                      )}
                     </select>
                   </div>
 
@@ -1234,15 +1079,13 @@ const ExpertDirectory: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Region</label>
                     <select
                       value={selectedFilters.location}
-                      onChange={(e) => setSelectedFilters({...selectedFilters, location: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                      onChange={(e) => { setSelectedFilters({...selectedFilters, location: e.target.value}); setCurrentPage(1); }}
+                      className="w-full px-3 py-2 border border-gray-300 -md text-sm focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     >
                       <option value="">All Regions</option>
-                      <option value="Nigeria">Nigeria</option>
-                      <option value="South Africa">South Africa</option>
-                      <option value="Kenya">Kenya</option>
-                      <option value="Egypt">Egypt</option>
-                      <option value="Ghana">Ghana</option>
+                      {allCountryOptions.map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -1250,8 +1093,8 @@ const ExpertDirectory: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Availability</label>
                     <select
                       value={selectedFilters.availability}
-                      onChange={(e) => setSelectedFilters({...selectedFilters, availability: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                      onChange={(e) => { setSelectedFilters({...selectedFilters, availability: e.target.value}); setCurrentPage(1); }}
+                      className="w-full px-3 py-2 border border-gray-300 -md text-sm focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     >
                       <option value="all">All Experts</option>
                       <option value="available">Available for Collaboration</option>
@@ -1259,7 +1102,7 @@ const ExpertDirectory: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mt-6 p-4 bg-[#F4F4F4] rounded-lg">
+                <div className="mt-6 p-4 bg-[#F4F4F4] -lg">
                   <h4 className="font-medium text-[#1A1F5E] mb-2">Quick Stats</h4>
                   <div className="space-y-2 text-sm text-[#1A1F5E]">
                     <div className="flex justify-between">
@@ -1272,7 +1115,7 @@ const ExpertDirectory: React.FC = () => {
                     </div>
                     <div className="flex justify-between">
                       <span>Countries:</span>
-                      <span className="font-medium">4</span>
+                      <span className="font-medium">{uniqueCountries}</span>
                     </div>
                   </div>
                 </div>
@@ -1283,12 +1126,12 @@ const ExpertDirectory: React.FC = () => {
             <div className="flex-1 p-6 overflow-y-auto">
               <div className="grid gap-6">
                 {filteredExperts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((expert) => (
-                  <div key={expert.id} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow">
+                  <div key={expert.id} className="bg-white border border-gray-200 -xl p-6 hover:shadow-md transition-shadow">
                     <div className="flex items-start space-x-4">
                       <img
                         src={expert.avatar}
                         alt={expert.name}
-                        className="w-16 h-16 rounded-full object-cover"
+                        className="w-16 h-16 -full object-cover"
                       />
                       <div className="flex-1">
                         <div className="flex items-start justify-between">
@@ -1299,9 +1142,9 @@ const ExpertDirectory: React.FC = () => {
                           </div>
                           <div className="flex items-center space-x-2">
                             {expert.isAvailable ? (
-                              <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] text-xs px-2 py-1 rounded-full">Available</span>
+                              <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] text-xs px-2 py-1 -full">Available</span>
                             ) : (
-                              <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">Busy</span>
+                              <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 -full">Busy</span>
                             )}
                           </div>
                         </div>
@@ -1326,7 +1169,7 @@ const ExpertDirectory: React.FC = () => {
                         {/* Expertise Tags */}
                         <div className="flex flex-wrap gap-2 mt-4">
                           {expert.expertise.map((skill) => (
-                            <span key={skill} className="bg-[#1A1F5E]/10 text-[#1A1F5E] text-xs px-2 py-1 rounded-full">
+                            <span key={skill} className="bg-[#1A1F5E]/10 text-[#1A1F5E] text-xs px-2 py-1 -full">
                               {skill}
                             </span>
                           ))}
@@ -1335,7 +1178,7 @@ const ExpertDirectory: React.FC = () => {
                         {/* Industries */}
                         <div className="flex flex-wrap gap-2 mt-2">
                           {expert.industries.map((industry) => (
-                            <span key={industry} className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
+                            <span key={industry} className="bg-gray-100 text-gray-700 text-xs px-2 py-1 -full">
                               {industry}
                             </span>
                           ))}
@@ -1349,15 +1192,33 @@ const ExpertDirectory: React.FC = () => {
 
                         {/* Action Buttons */}
                         <div className="flex space-x-3 mt-4">
+                          {connectedExperts.find(e => e.id === expert.id) ? (
+                            <button
+                              className="bg-[#1A1F5E] text-white px-4 py-2 -lg text-sm font-medium flex items-center space-x-2 hover:opacity-90 transition-opacity"
+                              onClick={() => openTeamsChat(expert)}
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              <span>Chat on Teams</span>
+                            </button>
+                          ) : pendingExpertIds.has(expert.id) ? (
+                            <button
+                              disabled
+                              className="bg-gray-100 text-gray-500 px-4 py-2 -lg text-sm font-medium flex items-center space-x-2 cursor-not-allowed"
+                            >
+                              <Clock className="w-4 h-4" />
+                              <span>Request Pending</span>
+                            </button>
+                          ) : (
+                            <button
+                              className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-4 py-2 -lg text-sm font-medium transition-colors flex items-center space-x-2"
+                              onClick={() => handleConnect(expert.id)}
+                            >
+                              <UserPlus className="w-4 h-4" />
+                              <span>Request Connection</span>
+                            </button>
+                          )}
                           <button 
-                            className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
-                            onClick={() => handleConnect(expert.id)}
-                          >
-                            <UserPlus className="w-4 h-4" />
-                            <span>Request Connection</span>
-                          </button>
-                          <button 
-                            className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                            className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 -lg text-sm font-medium transition-colors"
                             onClick={() => handleViewProfile(expert)}
                           >
                             View Profile
@@ -1375,7 +1236,7 @@ const ExpertDirectory: React.FC = () => {
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-4 py-2 border border-gray-300 -lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     Previous
                   </button>
@@ -1383,7 +1244,7 @@ const ExpertDirectory: React.FC = () => {
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`px-4 py-2 rounded-lg transition-colors ${
+                      className={`px-4 py-2 -lg transition-colors ${
                         currentPage === page
                           ? 'bg-[#0072CE] text-white'
                           : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
@@ -1395,7 +1256,7 @@ const ExpertDirectory: React.FC = () => {
                   <button
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredExperts.length / itemsPerPage)))}
                     disabled={currentPage === Math.ceil(filteredExperts.length / itemsPerPage)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="px-4 py-2 border border-gray-300 -lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     Next
                   </button>
@@ -1415,14 +1276,20 @@ const ExpertDirectory: React.FC = () => {
               </div>
             </div>
 
-            {connectedExperts.length === 0 ? (
-              <div className="bg-white border-2 border-dashed border-gray-300 rounded-xl p-12 text-center">
+            {connectionsLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader className="w-8 h-8 text-[#0072CE] animate-spin" />
+                <span className="ml-3 text-gray-600">Loading your expert connections...</span>
+              </div>
+            ) : connectedExperts.length === 0 ? (
+              <div className="bg-white border-2 border-dashed border-gray-300 -xl p-12 text-center">
                 <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Connected Experts Yet</h3>
-                <p className="text-gray-600 mb-6">Start connecting with experts to get personalized guidance and support</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Approved Connections Yet</h3>
+                <p className="text-gray-600 mb-2">Send a connection request to an expert and wait for their approval.</p>
+                <p className="text-sm text-gray-500 mb-6">Once approved, the expert will appear here with a direct Teams chat button.</p>
                 <button
                   onClick={() => setActiveTab('directory')}
-                  className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                  className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-6 py-3 -lg font-medium transition-colors"
                 >
                   Browse Expert Directory
                 </button>
@@ -1432,7 +1299,7 @@ const ExpertDirectory: React.FC = () => {
                 {connectedExperts.map((expert) => (
                   <div
                     key={expert.id}
-                    className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all"
+                    className="bg-white border border-gray-200 -xl overflow-hidden hover:shadow-lg transition-all"
                   >
                     {/* Expert Card Header */}
                     <div className="relative h-32">
@@ -1448,7 +1315,7 @@ const ExpertDirectory: React.FC = () => {
                         <img
                           src={expert.avatar}
                           alt={expert.name}
-                          className="w-24 h-32 rounded-lg object-cover object-top border-4 border-white shadow-lg"
+                          className="w-24 h-32 -lg object-cover object-top border-4 border-white shadow-lg"
                           style={{ aspectRatio: '3/4' }}
                         />
                         <div className="mt-4 text-center flex-1">
@@ -1471,13 +1338,13 @@ const ExpertDirectory: React.FC = () => {
                           {expert.expertise.slice(0, 2).map((skill, index) => (
                             <span
                               key={index}
-                              className="px-2 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] text-xs font-medium rounded-full"
+                              className="px-2 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] text-xs font-medium -full"
                             >
                               {skill}
                             </span>
                           ))}
                           {expert.expertise.length > 2 && (
-                            <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">
+                            <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium -full">
                               +{expert.expertise.length - 2} more
                             </span>
                           )}
@@ -1487,7 +1354,7 @@ const ExpertDirectory: React.FC = () => {
                       {/* Microsoft Teams Chat Button */}
                       <button
                         onClick={() => openTeamsChat(expert)}
-                        className="w-full bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                        className="w-full bg-[#1A1F5E] hover:opacity-90 text-white py-3 -lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
                       >
                         <MessageCircle className="w-5 h-5" />
                         <span>Chat on Teams</span>
@@ -1508,19 +1375,89 @@ const ExpertDirectory: React.FC = () => {
         {/* Ask the Expert Forum Tab */}
         
 
-        {/* Access Requests Tab */}
+        {/* My Mentees Tab — approved short-term advice seekers */}
+        {activeTab === 'myMentees' && (
+          <div className="p-8">
+            <div className="mb-8">
+              <div className="h-1 w-12 bg-[#E83E2D] rounded-full mb-4" />
+              <h2 className="text-2xl font-bold text-[#1A1F5E] mb-2">My Mentees</h2>
+              <p className="text-[#8C8C8C]">People you are providing short-term advice to. Message them directly on Teams.</p>
+            </div>
+
+            {connectionRequests.filter(r => r.status === 'approved').length === 0 ? (
+              <div className="text-center py-20 bg-[#F4F4F4] rounded-3xl border-2 border-dashed border-[#E5E7EB]">
+                <Users className="w-16 h-16 text-[#8C8C8C] mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-[#1A1F5E] mb-2">No approved mentees yet</h3>
+                <p className="text-[#8C8C8C]">Once you approve connection requests, your mentees will appear here.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {connectionRequests.filter(r => r.status === 'approved').map((mentee) => (
+                  <div key={mentee.id} className="bg-white rounded-3xl shadow-xl border border-[#E5E7EB] border-t-4 border-t-[#0072CE] p-6 flex flex-col hover:shadow-2xl transition-shadow duration-300">
+                    <div className="flex items-center space-x-4 mb-4">
+                      <img
+                        src={mentee.userAvatar}
+                        alt={mentee.userName}
+                        className="w-14 h-14 rounded-full object-cover ring-2 ring-[#0072CE]/20"
+                        onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(mentee.userName)}&background=1A1F5E&color=fff`; }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-[#333333] text-base truncate">{mentee.userName}</h3>
+                        <p className="text-sm text-[#8C8C8C] truncate">{mentee.userEmail}</p>
+                        {mentee.userOrganization && (
+                          <p className="text-xs text-[#8C8C8C] truncate">{mentee.userOrganization}</p>
+                        )}
+                      </div>
+                      <span className="px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 shrink-0">Active</span>
+                    </div>
+
+                    {mentee.message && (
+                      <div className="bg-[#F4F4F4] rounded-xl p-3 mb-4 border border-[#E5E7EB]">
+                        <p className="text-sm text-[#333333] italic line-clamp-3">"{mentee.message}"</p>
+                      </div>
+                    )}
+
+                    <div className="text-xs text-[#8C8C8C] mb-4">
+                      Connected {mentee.timestamp}
+                    </div>
+
+                    <div className="mt-auto flex space-x-2">
+                      <button
+                        onClick={() => openTeamsChat({ email: mentee.userEmail, name: mentee.userName })}
+                        className="flex-1 bg-[#1A1F5E] text-white font-semibold px-4 py-2.5 rounded-xl transition-all duration-200 hover:opacity-90 hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center space-x-2 text-sm"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        <span>Message on Teams</span>
+                      </button>
+                      <button
+                        onClick={() => openTeamsChat({ email: mentee.userEmail, name: mentee.userName })}
+                        className="p-2.5 rounded-xl border-2 border-[#1A1F5E] text-[#1A1F5E] hover:bg-[#1A1F5E]/10 transition-colors duration-200"
+                        title="Video call on Teams"
+                      >
+                        <Video className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Connection Requests Tab */}
         {activeTab === 'requests' && (
           <div className="p-8">
             <div className="mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Requests Management</h2>
-              <p className="text-gray-600">Review and manage connection requests and meeting access requests</p>
+              <div className="h-1 w-12 bg-[#E83E2D] rounded-full mb-4" />
+              <h2 className="text-2xl font-bold text-[#1A1F5E] mb-2">Connection Requests</h2>
+              <p className="text-[#8C8C8C]">Review and respond to people who want to connect with you for short-term advice</p>
             </div>
 
             {/* Sub-tabs for Connections and Meetings */}
-            <div className="flex space-x-2 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
+            <div className="flex space-x-2 mb-6 bg-gray-100 p-1 -lg w-fit">
               <button
                 onClick={() => setRequestSubTab('connections')}
-                className={`px-6 py-2.5 rounded-md font-medium text-sm transition-colors ${
+                className={`px-6 py-2.5 -md font-medium text-sm transition-colors ${
                   requestSubTab === 'connections'
                     ? 'bg-white text-[#0072CE] shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
@@ -1531,19 +1468,7 @@ const ExpertDirectory: React.FC = () => {
                   <span>Connection Requests ({connectionRequests.filter(r => r.status === 'pending').length})</span>
                 </div>
               </button>
-              <button
-                onClick={() => setRequestSubTab('meetings')}
-                className={`px-6 py-2.5 rounded-md font-medium text-sm transition-colors ${
-                  requestSubTab === 'meetings'
-                    ? 'bg-white text-[#0072CE] shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  <Calendar className="w-4 h-4" />
-                  <span>Meeting Access ({sampleAccessRequests.filter(r => r.status === 'pending').length})</span>
-                </div>
-              </button>
+
             </div>
 
             {/* Connection Requests Content */}
@@ -1551,7 +1476,7 @@ const ExpertDirectory: React.FC = () => {
               <div>
                 {/* Connection Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                  <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-xl p-6">
+                  <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 -xl p-6">
                     <div className="flex items-center justify-between mb-2">
                       <AlertCircle className="w-8 h-8 text-yellow-600" />
                       <span className="text-3xl font-bold text-yellow-900">
@@ -1562,7 +1487,7 @@ const ExpertDirectory: React.FC = () => {
                     <div className="text-xs text-yellow-700 mt-1">Awaiting your response</div>
                   </div>
 
-                  <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-6">
+                  <div className="bg-[#F4F4F4] border border-[#E5E7EB] -xl p-6">
                     <div className="flex items-center justify-between mb-2">
                       <CheckCircle className="w-8 h-8 text-green-600" />
                       <span className="text-3xl font-bold text-green-900">
@@ -1573,7 +1498,7 @@ const ExpertDirectory: React.FC = () => {
                     <div className="text-xs text-green-700 mt-1">Total approved connections</div>
                   </div>
 
-                  <div className="bg-gradient-to-br from-red-50 to-red-100 border border-red-200 rounded-xl p-6">
+                  <div className="bg-gradient-to-br from-red-50 to-red-100 border border-red-200 -xl p-6">
                     <div className="flex items-center justify-between mb-2">
                       <XCircle className="w-8 h-8 text-red-600" />
                       <span className="text-3xl font-bold text-red-900">
@@ -1594,13 +1519,13 @@ const ExpertDirectory: React.FC = () => {
                     </h3>
                     <div className="space-y-4">
                       {connectionRequests.filter(r => r.status === 'pending').map((request) => (
-                        <div key={request.id} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow">
+                        <div key={request.id} className="bg-white border border-gray-200 -xl p-6 hover:shadow-md transition-shadow">
                           <div className="flex items-start justify-between">
                             <div className="flex items-start space-x-4 flex-1">
                               <img
                                 src={request.userAvatar}
                                 alt={request.userName}
-                                className="w-12 h-14 rounded-lg object-cover object-top ring-2 ring-gray-200"
+                                className="w-12 h-14 -lg object-cover object-top ring-2 ring-gray-200"
                                 style={{ aspectRatio: '4/5' }}
                               />
                               <div className="flex-1">
@@ -1612,16 +1537,16 @@ const ExpertDirectory: React.FC = () => {
                                         <Mail className="w-4 h-4" />
                                         <span>{request.userEmail}</span>
                                       </span>
-                                      <span>•</span>
+                                      <span>ï¿½</span>
                                       <span>{request.userOrganization}</span>
                                     </div>
                                   </div>
-                                  <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                                  <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 -full">
                                     {request.timestamp}
                                   </span>
                                 </div>
                                 
-                                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 mb-4">
+                                <div className="bg-gray-50 -lg p-4 border border-gray-200 mb-4">
                                   <div className="text-sm font-semibold text-gray-700 mb-1">Connection Request Message:</div>
                                   <p className="text-gray-700 italic text-sm">"{request.message}"</p>
                                 </div>
@@ -1629,14 +1554,14 @@ const ExpertDirectory: React.FC = () => {
                                 <div className="flex space-x-3">
                                   <button
                                     onClick={() => handleConnectionRequest(request.id, 'approve')}
-                                    className="flex-1 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2 shadow-md hover:shadow-lg"
+                                    className="flex-1 bg-[#1A1F5E] hover:opacity-90 text-white px-6 py-3 -lg font-semibold transition-colors flex items-center justify-center space-x-2 shadow-md hover:shadow-lg"
                                   >
                                     <CheckCircle className="w-5 h-5" />
                                     <span>Approve Connection</span>
                                   </button>
                                   <button
                                     onClick={() => handleConnectionRequest(request.id, 'reject')}
-                                    className="flex-1 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2 shadow-md hover:shadow-lg"
+                                    className="flex-1 bg-red-600 hover:bg-red-700 text-white px-6 py-3 -lg font-semibold transition-colors flex items-center justify-center space-x-2 shadow-md hover:shadow-lg"
                                   >
                                     <XCircle className="w-5 h-5" />
                                     <span>Reject Request</span>
@@ -1650,7 +1575,7 @@ const ExpertDirectory: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                  <div className="text-center py-16 bg-gray-50 -xl border-2 border-dashed border-gray-300">
                     <UserPlus className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-xl font-bold text-gray-900 mb-2">No Pending Connection Requests</h3>
                     <p className="text-gray-600">When users request to connect with you, they will appear here</p>
@@ -1659,12 +1584,12 @@ const ExpertDirectory: React.FC = () => {
               </div>
             )}
 
-            {/* Meeting Access Requests Content */}
-            {requestSubTab === 'meetings' && (
+            {/* Meeting Access Requests Content — removed (no DB table) */}
+            {false && (
               <div>
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-xl p-6">
+              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 -xl p-6">
                 <div className="flex items-center justify-between mb-2">
                   <AlertCircle className="w-8 h-8 text-yellow-600" />
                   <span className="text-3xl font-bold text-yellow-900">
@@ -1675,7 +1600,7 @@ const ExpertDirectory: React.FC = () => {
                 <div className="text-xs text-yellow-700 mt-1">Awaiting your review</div>
               </div>
 
-              <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-6">
+              <div className="bg-[#F4F4F4] border border-[#E5E7EB] -xl p-6">
                 <div className="flex items-center justify-between mb-2">
                   <CheckCircle className="w-8 h-8 text-green-600" />
                   <span className="text-3xl font-bold text-green-900">
@@ -1686,7 +1611,7 @@ const ExpertDirectory: React.FC = () => {
                 <div className="text-xs text-green-700 mt-1">Total approved access</div>
               </div>
 
-              <div className="bg-gradient-to-br from-red-50 to-red-100 border border-red-200 rounded-xl p-6">
+              <div className="bg-gradient-to-br from-red-50 to-red-100 border border-red-200 -xl p-6">
                 <div className="flex items-center justify-between mb-2">
                   <XCircle className="w-8 h-8 text-red-600" />
                   <span className="text-3xl font-bold text-red-900">
@@ -1699,17 +1624,17 @@ const ExpertDirectory: React.FC = () => {
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex space-x-2 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
-              <button className="px-4 py-2 bg-white text-gray-900 rounded-md shadow-sm font-medium text-sm">
+            <div className="flex space-x-2 mb-6 bg-gray-100 p-1 -lg w-fit">
+              <button className="px-4 py-2 bg-white text-gray-900 -md shadow-sm font-medium text-sm">
                 All Requests ({sampleAccessRequests.length})
               </button>
-              <button className="px-4 py-2 text-gray-600 hover:text-gray-900 rounded-md font-medium text-sm">
+              <button className="px-4 py-2 text-gray-600 hover:text-gray-900 -md font-medium text-sm">
                 Pending ({sampleAccessRequests.filter(r => r.status === 'pending').length})
               </button>
-              <button className="px-4 py-2 text-gray-600 hover:text-gray-900 rounded-md font-medium text-sm">
+              <button className="px-4 py-2 text-gray-600 hover:text-gray-900 -md font-medium text-sm">
                 Approved ({sampleAccessRequests.filter(r => r.status === 'approved').length})
               </button>
-              <button className="px-4 py-2 text-gray-600 hover:text-gray-900 rounded-md font-medium text-sm">
+              <button className="px-4 py-2 text-gray-600 hover:text-gray-900 -md font-medium text-sm">
                 Rejected ({sampleAccessRequests.filter(r => r.status === 'rejected').length})
               </button>
             </div>
@@ -1723,10 +1648,10 @@ const ExpertDirectory: React.FC = () => {
                 </h3>
                 <div className="space-y-4">
                   {sampleAccessRequests.filter(r => r.status === 'pending').map((request) => (
-                    <div key={request.id} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow">
+                    <div key={request.id} className="bg-white border border-gray-200 -xl p-6 hover:shadow-md transition-shadow">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-start space-x-4 flex-1">
-                          <div className="w-12 h-12 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] rounded-full flex items-center justify-center text-white font-bold text-lg">
+                          <div className="w-12 h-12 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -full flex items-center justify-center text-white font-bold text-lg">
                             {request.name.split(' ').map(n => n[0]).join('')}
                           </div>
                           <div className="flex-1">
@@ -1738,21 +1663,21 @@ const ExpertDirectory: React.FC = () => {
                                     <Mail className="w-4 h-4" />
                                     <span>{request.email}</span>
                                   </span>
-                                  <span>•</span>
+                                  <span>ï¿½</span>
                                   <span>{request.organization}</span>
                                 </div>
                               </div>
-                              <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                              <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 -full">
                                 {request.timestamp}
                               </span>
                             </div>
                             
-                            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 mb-4">
+                            <div className="bg-gray-50 -lg p-4 border border-gray-200 mb-4">
                               <div className="text-sm font-semibold text-gray-700 mb-1">Request Message:</div>
                               <p className="text-gray-700 italic text-sm">"{request.message}"</p>
                             </div>
 
-                            <div className="bg-[#F4F4F4] border border-[#0072CE]/30 rounded-lg p-3 mb-4">
+                            <div className="bg-[#F4F4F4] border border-[#0072CE]/30 -lg p-3 mb-4">
                               <div className="text-xs font-semibold text-[#1A1F5E] mb-1">Webinar Details:</div>
                               <div className="text-sm text-[#1A1F5E]">
                                 "Cross-Border M&A Strategies" - Dec 18, 2025 @ 3:00 PM CAT
@@ -1762,14 +1687,14 @@ const ExpertDirectory: React.FC = () => {
                             <div className="flex space-x-3">
                               <button
                                 onClick={() => handleAccessRequest(request.id, 'approve', '4')}
-                                className="flex-1 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2 shadow-md hover:shadow-lg"
+                                className="flex-1 bg-[#1A1F5E] hover:opacity-90 text-white px-6 py-3 -lg font-semibold transition-colors flex items-center justify-center space-x-2 shadow-md hover:shadow-lg"
                               >
                                 <CheckCircle className="w-5 h-5" />
                                 <span>Approve Request</span>
                               </button>
                               <button
                                 onClick={() => handleAccessRequest(request.id, 'reject')}
-                                className="flex-1 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2 shadow-md hover:shadow-lg"
+                                className="flex-1 bg-red-600 hover:bg-red-700 text-white px-6 py-3 -lg font-semibold transition-colors flex items-center justify-center space-x-2 shadow-md hover:shadow-lg"
                               >
                                 <XCircle className="w-5 h-5" />
                                 <span>Reject Request</span>
@@ -1793,19 +1718,19 @@ const ExpertDirectory: React.FC = () => {
                 </h3>
                 <div className="space-y-3">
                   {sampleAccessRequests.filter(r => r.status === 'approved').map((request) => (
-                    <div key={request.id} className="bg-green-50 border border-green-200 rounded-xl p-5 flex items-center justify-between">
+                    <div key={request.id} className="bg-green-50 border border-green-200 -xl p-5 flex items-center justify-between">
                       <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center text-white font-bold">
+                        <div className="w-10 h-10 bg-[#1A1F5E] -full flex items-center justify-center text-white font-bold">
                           {request.name.split(' ').map(n => n[0]).join('')}
                         </div>
                         <div>
                           <div className="font-bold text-gray-900">{request.name}</div>
-                          <div className="text-sm text-gray-600">{request.email} • {request.organization}</div>
+                          <div className="text-sm text-gray-600">{request.email} ï¿½ {request.organization}</div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-4">
                         <span className="text-xs text-gray-500">{request.timestamp}</span>
-                        <span className="bg-green-600 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center space-x-1">
+                        <span className="bg-green-100 text-green-700 px-3 py-1 -full text-xs font-semibold flex items-center space-x-1">
                           <CheckCircle className="w-3 h-3" />
                           <span>Approved</span>
                         </span>
@@ -1825,19 +1750,19 @@ const ExpertDirectory: React.FC = () => {
                 </h3>
                 <div className="space-y-3">
                   {sampleAccessRequests.filter(r => r.status === 'rejected').map((request) => (
-                    <div key={request.id} className="bg-red-50 border border-red-200 rounded-xl p-5 flex items-center justify-between">
+                    <div key={request.id} className="bg-red-50 border border-red-200 -xl p-5 flex items-center justify-between">
                       <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center text-white font-bold">
+                        <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 -full flex items-center justify-center text-white font-bold">
                           {request.name.split(' ').map(n => n[0]).join('')}
                         </div>
                         <div>
                           <div className="font-bold text-gray-900">{request.name}</div>
-                          <div className="text-sm text-gray-600">{request.email} • {request.organization}</div>
+                          <div className="text-sm text-gray-600">{request.email} ï¿½ {request.organization}</div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-4">
                         <span className="text-xs text-gray-500">{request.timestamp}</span>
-                        <span className="bg-red-600 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center space-x-1">
+                        <span className="bg-red-600 text-white px-3 py-1 -full text-xs font-semibold flex items-center space-x-1">
                           <XCircle className="w-3 h-3" />
                           <span>Rejected</span>
                         </span>
@@ -1872,14 +1797,22 @@ const ExpertDirectory: React.FC = () => {
               <div className="flex space-x-3">
                 <button
                   onClick={() => setShowMeetingsList(!showMeetingsList)}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
+                  className="bg-[#1A1F5E] hover:opacity-90 text-white px-4 py-2 -lg text-sm font-medium transition-colors flex items-center space-x-2"
                 >
                   <Video className="w-4 h-4" />
                   <span>My Meetings ({scheduledMeetings.length})</span>
                 </button>
                 <button 
-                  onClick={() => setShowScheduleModal(true)}
-                  className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
+                  onClick={() => {
+                    setShowScheduleModal(true);
+                    // Auto-fill expert name from logged-in expert's profile
+                    if (isExpert) {
+                      const myExpert = experts.find(e => e.email === authUser?.email);
+                      const myName = myExpert?.name || authUser?.profile?.name || authUser?.name || '';
+                      if (myName) setNewWebinar(prev => ({ ...prev, expert: myName }));
+                    }
+                  }}
+                  className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-4 py-2 -lg text-sm font-medium transition-colors flex items-center space-x-2"
                 >
                   <Calendar className="w-4 h-4" />
                   <span>Schedule Webinar</span>
@@ -1889,7 +1822,7 @@ const ExpertDirectory: React.FC = () => {
 
             {/* Scheduled Meetings List */}
             {showMeetingsList && scheduledMeetings.length > 0 && (
-              <div className="mb-6 bg-gradient-to-r from-green-50 to-[#F4F4F4] border-2 border-green-200 rounded-xl p-6">
+              <div className="mb-6 bg-[#F4F4F4] border-2 border-[#E5E7EB] -xl p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-bold text-gray-900 flex items-center space-x-2">
                     <Video className="w-5 h-5 text-green-600" />
@@ -1906,7 +1839,7 @@ const ExpertDirectory: React.FC = () => {
                   {scheduledMeetings.map((meeting) => (
                     <div
                       key={meeting.id}
-                      className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                      className="bg-white border border-gray-200 -lg p-4 hover:shadow-md transition-shadow"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -1926,7 +1859,7 @@ const ExpertDirectory: React.FC = () => {
                               <span>Expert: {meeting.expert}</span>
                             </div>
                             <div className="flex items-center space-x-2 text-gray-700">
-                              <Globe className="w-4 h-4 text-orange-600" />
+                              <Globe className="w-4 h-4 text-blue-600" />
                               <span>{meeting.region}</span>
                             </div>
                           </div>
@@ -1937,7 +1870,7 @@ const ExpertDirectory: React.FC = () => {
                                 {meeting.attendees.map((email, idx) => (
                                   <span
                                     key={idx}
-                                    className="text-xs bg-[#1A1F5E]/10 text-[#1A1F5E] px-2 py-1 rounded-full"
+                                    className="text-xs bg-[#1A1F5E]/10 text-[#1A1F5E] px-2 py-1 -full"
                                   >
                                     {email}
                                   </span>
@@ -1949,14 +1882,14 @@ const ExpertDirectory: React.FC = () => {
                         <div className="ml-4 flex flex-col space-y-2">
                           {/* <button
                             onClick={() => window.open(meeting.teamsLink, '_blank')}
-                            className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center space-x-2 whitespace-nowrap"
+                            className="bg-[#0072CE] hover:bg-[#1A1F5E] text-white px-4 py-2 -lg text-sm font-semibold transition-colors flex items-center space-x-2 whitespace-nowrap"
                           >
                             <Video className="w-4 h-4" />
                             <span>Join Meeting</span>
                           </button>
                           <button
                             onClick={() => window.open(meeting.teamsLink, '_blank')}
-                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center space-x-2 whitespace-nowrap"
+                            className="bg-[#1A1F5E] hover:opacity-90 text-white px-4 py-2 -lg text-sm font-semibold transition-colors flex items-center space-x-2 whitespace-nowrap"
                           >
                             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                               <path d="M20.625 8.25h-5.25a.375.375 0 0 0-.375.375v7.5c0 .207.168.375.375.375h5.25c.207 0 .375-.168.375-.375v-7.5a.375.375 0 0 0-.375-.375zM19.5 15h-3v-5.25h3V15zM9.75 8.25c-1.654 0-3 1.346-3 3v4.5H3v-4.5c0-3.722 3.028-6.75 6.75-6.75V8.25zM13.5 11.25v4.5h-3.75v-4.5c0-1.654 1.346-3 3-3v3.75c0 .207-.168.375-.375.375h-.375z"/>
@@ -1964,14 +1897,17 @@ const ExpertDirectory: React.FC = () => {
                             <span>Edit in Teams</span>
                           </button> */}
                           <button
-                            onClick={() => {
+                            onClick={async () => {
                               if (confirm(`Delete meeting "${meeting.title}"?`)) {
-                                const updated = scheduledMeetings.filter(m => m.id !== meeting.id);
-                                setScheduledMeetings(updated);
-                                localStorage.setItem('scheduledMeetings', JSON.stringify(updated));
+                                try {
+                                  await expertMeetingsAPI.deleteMeeting(meeting.id);
+                                } catch (err) {
+                                  console.error('Failed to delete from DB:', err);
+                                }
+                                setScheduledMeetings(prev => prev.filter(m => m.id !== meeting.id));
                               }
                             }}
-                            className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
+                            className="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 -lg text-sm font-semibold transition-colors"
                           >
                             Delete
                           </button>
@@ -1990,14 +1926,14 @@ const ExpertDirectory: React.FC = () => {
                 const isFull = currentAttendees >= webinar.maxAttendees;
                 
                 return (
-                  <div key={webinar.id} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all">
+                  <div key={webinar.id} className="bg-white border border-gray-200 -xl p-6 hover:shadow-lg transition-all">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-3">
                           <h3 className="text-lg font-semibold text-gray-900">{webinar.title}</h3>
                           {isRegistered && (
-                            <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">
-                              ✓ Registered
+                            <span className="bg-green-100 text-green-800 px-3 py-1 -full text-xs font-medium">
+                              ? Registered
                             </span>
                           )}
                         </div>
@@ -2009,7 +1945,7 @@ const ExpertDirectory: React.FC = () => {
                             <img
                               src={webinar.expertAvatar}
                               alt={webinar.expert}
-                              className="w-8 h-10 rounded-md object-cover object-top"
+                              className="w-8 h-10 -md object-cover object-top"
                               style={{ aspectRatio: '4/5' }}
                             />
                             <span className="text-sm font-medium text-gray-700">{webinar.expert}</span>
@@ -2035,10 +1971,10 @@ const ExpertDirectory: React.FC = () => {
                               {webinarAttendees[webinar.id] || webinar.attendees}/{webinar.maxAttendees} registered
                             </span>
                             {isFull && (
-                              <span className="ml-2 bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs font-semibold">FULL</span>
+                              <span className="ml-2 bg-red-100 text-red-700 px-2 py-0.5 -full text-xs font-semibold">FULL</span>
                             )}
                           </div>
-                          <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-3 py-1 rounded-full text-xs font-medium">
+                          <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-3 py-1 -full text-xs font-medium">
                             {webinar.topic}
                           </span>
                         </div>
@@ -2049,7 +1985,7 @@ const ExpertDirectory: React.FC = () => {
                           <>
                             <button 
                               onClick={() => handleJoinWebinar(webinar.teamsLink)}
-                              className="bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg flex items-center space-x-2"
+                              className="bg-[#1A1F5E] hover:opacity-90 text-white px-5 py-2.5 -lg text-sm font-semibold transition-all shadow-md hover:shadow-lg flex items-center space-x-2"
                             >
                               <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
                                 <path d="M9.5 1.5v3h3v-3h-3zm-4 0v3h3v-3h-3zm-4 3v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm-8 3v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm-4 3v3h3v-3h-3z"/>
@@ -2058,7 +1994,7 @@ const ExpertDirectory: React.FC = () => {
                             </button>
                             <button 
                               onClick={() => handleViewWebinar(webinar)}
-                              className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                              className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-5 py-2.5 -lg text-sm font-medium transition-colors"
                             >
                               View Details
                             </button>
@@ -2072,13 +2008,13 @@ const ExpertDirectory: React.FC = () => {
                                 isFull 
                                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                                   : 'bg-[#0072CE] hover:bg-[#1A1F5E] text-white shadow-md hover:shadow-lg'
-                              } px-5 py-2.5 rounded-lg text-sm font-semibold transition-all`}
+                              } px-5 py-2.5 -lg text-sm font-semibold transition-all`}
                             >
                               {isFull ? 'Full' : 'Register Now'}
                             </button>
                             <button 
                               onClick={() => handleViewWebinar(webinar)}
-                              className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                              className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-5 py-2.5 -lg text-sm font-medium transition-colors"
                             >
                               Learn More
                             </button>
@@ -2097,7 +2033,7 @@ const ExpertDirectory: React.FC = () => {
       {/* Ask Question Modal */}
       {showAskModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white -2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -2125,14 +2061,14 @@ const ExpertDirectory: React.FC = () => {
                 <div className="grid grid-cols-2 gap-3 max-h-60 overflow-y-auto">
                   <button
                     onClick={() => setNewQuestion({...newQuestion, expertId: ''})}
-                    className={`p-4 border-2 rounded-xl text-left transition-all ${
+                    className={`p-4 border-2 -xl text-left transition-all ${
                       !newQuestion.expertId
                         ? 'border-[#0072CE] bg-[#F4F4F4]'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] rounded-full flex items-center justify-center text-white font-bold">
+                      <div className="w-10 h-10 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -full flex items-center justify-center text-white font-bold">
                         <Users className="w-5 h-5" />
                       </div>
                       <div>
@@ -2145,7 +2081,7 @@ const ExpertDirectory: React.FC = () => {
                     <button
                       key={expert.id}
                       onClick={() => setNewQuestion({...newQuestion, expertId: expert.id})}
-                      className={`p-4 border-2 rounded-xl text-left transition-all ${
+                      className={`p-4 border-2 -xl text-left transition-all ${
                         newQuestion.expertId === expert.id
                           ? 'border-[#0072CE] bg-[#F4F4F4]'
                           : 'border-gray-200 hover:border-gray-300'
@@ -2155,7 +2091,7 @@ const ExpertDirectory: React.FC = () => {
                         <img
                           src={expert.avatar}
                           alt={expert.name}
-                          className="w-10 h-12 rounded-md object-cover object-top"
+                          className="w-10 h-12 -md object-cover object-top"
                           style={{ aspectRatio: '4/5' }}
                         />
                         <div className="flex-1 min-w-0">
@@ -2176,7 +2112,7 @@ const ExpertDirectory: React.FC = () => {
                 <select
                   value={newQuestion.category}
                   onChange={(e) => setNewQuestion({...newQuestion, category: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                  className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                 >
                   <option value="">Select a category</option>
                   <option value="Tax & Regulatory">Tax & Regulatory</option>
@@ -2201,7 +2137,7 @@ const ExpertDirectory: React.FC = () => {
                   type="text"
                   value={newQuestion.title}
                   onChange={(e) => setNewQuestion({...newQuestion, title: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                  className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   placeholder="What would you like to ask?"
                 />
               </div>
@@ -2215,7 +2151,7 @@ const ExpertDirectory: React.FC = () => {
                   rows={6}
                   value={newQuestion.content}
                   onChange={(e) => setNewQuestion({...newQuestion, content: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                  className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   placeholder="Provide detailed context about your question or business scenario...\n\nFor example:\n- What specific challenge are you facing?\n- What have you tried so far?\n- What is your timeline or urgency?"
                 />
               </div>
@@ -2229,19 +2165,19 @@ const ExpertDirectory: React.FC = () => {
                   type="text"
                   value={newQuestion.tags}
                   onChange={(e) => setNewQuestion({...newQuestion, tags: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                  className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   placeholder="e.g., tax, Nigeria, cross-border (comma separated)"
                 />
               </div>
 
               {/* Privacy Option */}
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div className="bg-gray-50 border border-gray-200 -lg p-4">
                 <label className="flex items-start space-x-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={newQuestion.isPrivate}
                     onChange={(e) => setNewQuestion({...newQuestion, isPrivate: e.target.checked})}
-                    className="mt-1 w-4 h-4 text-[#0072CE] border-gray-300 rounded focus:ring-[#1A1F5E]/20"
+                    className="mt-1 w-4 h-4 text-[#0072CE] border-gray-300  focus:ring-[#1A1F5E]/20"
                   />
                   <div>
                     <div className="font-semibold text-gray-900">Private Question</div>
@@ -2253,7 +2189,7 @@ const ExpertDirectory: React.FC = () => {
               </div>
 
               {/* Expected Response Time Info */}
-              <div className="bg-[#F4F4F4] border border-[#0072CE]/30 rounded-lg p-4 flex items-start space-x-3">
+              <div className="bg-[#F4F4F4] border border-[#0072CE]/30 -lg p-4 flex items-start space-x-3">
                 <Clock className="w-5 h-5 text-[#0072CE] flex-shrink-0 mt-0.5" />
                 <div className="text-sm text-[#1A1F5E]">
                   <span className="font-semibold">Expected Response Time:</span> Our experts typically respond within 24-48 hours. Urgent questions may be prioritized.
@@ -2267,13 +2203,13 @@ const ExpertDirectory: React.FC = () => {
                   setShowAskModal(false);
                   setNewQuestion({ title: '', content: '', tags: '', expertId: '', category: '', isPrivate: false });
                 }}
-                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold transition-colors"
+                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 -lg hover:bg-gray-50 font-semibold transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAskQuestion}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
+                className="flex-1 px-6 py-3 bg-[#1A1F5E] hover:opacity-90 text-white -lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
               >
                 <Send className="w-5 h-5" />
                 <span>Submit Question</span>
@@ -2286,14 +2222,14 @@ const ExpertDirectory: React.FC = () => {
       {/* Expert Profile Modal */}
       {showExpertModal && selectedExpert && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white -xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-8">
               <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center space-x-6">
                   <img
                     src={selectedExpert.avatar}
                     alt={selectedExpert.name}
-                    className="w-24 h-24 rounded-full object-cover"
+                    className="w-24 h-24 -full object-cover"
                   />
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">{selectedExpert.name}</h2>
@@ -2315,11 +2251,11 @@ const ExpertDirectory: React.FC = () => {
                   onClick={() => setShowExpertModal(false)}
                   className="text-gray-400 hover:text-gray-600 p-2"
                 >
-                  ×
+                  ï¿½
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+              <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 -lg">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-gray-900">{selectedExpert.rating}</div>
                   <div className="text-sm text-gray-600">Rating ({selectedExpert.reviewCount} reviews)</div>
@@ -2341,7 +2277,7 @@ const ExpertDirectory: React.FC = () => {
                   {selectedExpert.expertise.map((skill, index) => (
                     <span
                       key={index}
-                      className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] text-sm font-medium rounded-full"
+                      className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] text-sm font-medium -full"
                     >
                       {skill}
                     </span>
@@ -2355,7 +2291,7 @@ const ExpertDirectory: React.FC = () => {
                   {selectedExpert.industries.map((industry, index) => (
                     <span
                       key={index}
-                      className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] text-sm font-medium rounded-full"
+                      className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] text-sm font-medium -full"
                     >
                       {industry}
                     </span>
@@ -2373,14 +2309,14 @@ const ExpertDirectory: React.FC = () => {
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Past Clients</h3>
                 <div className="text-gray-700">
-                  {selectedExpert.pastClients.join(' • ')}
+                  {selectedExpert.pastClients.join(' ï¿½ ')}
                 </div>
               </div>
 
               <div className="flex space-x-4">
                 <button
                   onClick={() => setShowExpertModal(false)}
-                  className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-3 px-4 rounded-lg text-sm font-medium transition-colors"
+                  className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-3 px-4 -lg text-sm font-medium transition-colors"
                 >
                   Close
                 </button>
@@ -2389,7 +2325,7 @@ const ExpertDirectory: React.FC = () => {
                     setShowExpertModal(false);
                     handleConnect(selectedExpert.id);
                   }}
-                  className="flex-1 bg-[#0072CE] hover:bg-[#1A1F5E] text-white py-3 px-4 rounded-lg text-sm font-medium transition-colors"
+                  className="flex-1 bg-[#0072CE] hover:bg-[#1A1F5E] text-white py-3 px-4 -lg text-sm font-medium transition-colors"
                 >
                   Connect
                 </button>
@@ -2402,7 +2338,7 @@ const ExpertDirectory: React.FC = () => {
       {/* Connect Modal */}
       {showConnectModal && selectedExpert && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full">
+          <div className="bg-white -xl max-w-md w-full">
             <div className="p-6">
               <h3 className="text-xl font-semibold text-gray-900 mb-4">
                 Connect with {selectedExpert.name}
@@ -2416,7 +2352,7 @@ const ExpertDirectory: React.FC = () => {
                   rows={4}
                   value={connectMessage}
                   onChange={(e) => setConnectMessage(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                  className="w-full px-3 py-2 border border-gray-300 -md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   placeholder="Introduce yourself and explain why you'd like to connect..."
                 />
               </div>
@@ -2428,13 +2364,13 @@ const ExpertDirectory: React.FC = () => {
                     setConnectMessage('');
                     setSelectedExpert(null);
                   }}
-                  className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 px-4 rounded-lg text-sm font-medium transition-colors"
+                  className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 px-4 -lg text-sm font-medium transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSendConnect}
-                  className="flex-1 bg-[#0072CE] hover:bg-[#1A1F5E] text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors"
+                  className="flex-1 bg-[#0072CE] hover:bg-[#1A1F5E] text-white py-2 px-4 -lg text-sm font-medium transition-colors"
                 >
                   Send Request
                 </button>
@@ -2447,7 +2383,7 @@ const ExpertDirectory: React.FC = () => {
       {/* Message Modal */}
       {showMessageModal && selectedExpert && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full">
+          <div className="bg-white -xl max-w-md w-full">
             <div className="p-6">
               <h3 className="text-xl font-semibold text-gray-900 mb-4">
                 Message {selectedExpert.name}
@@ -2461,7 +2397,7 @@ const ExpertDirectory: React.FC = () => {
                   rows={4}
                   value={messageContent}
                   onChange={(e) => setMessageContent(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                  className="w-full px-3 py-2 border border-gray-300 -md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   placeholder="Type your message here..."
                 />
               </div>
@@ -2473,13 +2409,13 @@ const ExpertDirectory: React.FC = () => {
                     setMessageContent('');
                     setSelectedExpert(null);
                   }}
-                  className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 px-4 rounded-lg text-sm font-medium transition-colors"
+                  className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 px-4 -lg text-sm font-medium transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSendDirectMessage}
-                  className="flex-1 bg-[#0072CE] hover:bg-[#1A1F5E] text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors"
+                  className="flex-1 bg-[#0072CE] hover:bg-[#1A1F5E] text-white py-2 px-4 -lg text-sm font-medium transition-colors"
                 >
                   Send Message
                 </button>
@@ -2492,7 +2428,7 @@ const ExpertDirectory: React.FC = () => {
       {/* Webinar Registration Modal */}
       {showRegisterModal && selectedWebinar && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full">
+          <div className="bg-white -xl max-w-md w-full">
             <div className="p-6">
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 Register for Webinar
@@ -2508,7 +2444,7 @@ const ExpertDirectory: React.FC = () => {
                     type="text"
                     value={registrationData.name}
                     onChange={(e) => setRegistrationData({...registrationData, name: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                    className="w-full px-3 py-2 border border-gray-300 -md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     placeholder="Enter your full name"
                   />
                 </div>
@@ -2521,7 +2457,7 @@ const ExpertDirectory: React.FC = () => {
                     type="email"
                     value={registrationData.email}
                     onChange={(e) => setRegistrationData({...registrationData, email: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                    className="w-full px-3 py-2 border border-gray-300 -md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     placeholder="your.email@company.com"
                   />
                 </div>
@@ -2534,7 +2470,7 @@ const ExpertDirectory: React.FC = () => {
                     type="tel"
                     value={registrationData.phone}
                     onChange={(e) => setRegistrationData({...registrationData, phone: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                    className="w-full px-3 py-2 border border-gray-300 -md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     placeholder="+234 xxx xxx xxxx"
                   />
                 </div>
@@ -2547,13 +2483,13 @@ const ExpertDirectory: React.FC = () => {
                     type="text"
                     value={registrationData.organization}
                     onChange={(e) => setRegistrationData({...registrationData, organization: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                    className="w-full px-3 py-2 border border-gray-300 -md focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     placeholder="Your company name"
                   />
                 </div>
               </div>
 
-              <div className="bg-[#F4F4F4] border border-[#0072CE]/30 rounded-lg p-4 mb-6">
+              <div className="bg-[#F4F4F4] border border-[#0072CE]/30 -lg p-4 mb-6">
                 <div className="flex items-start space-x-2">
                   <svg className="w-5 h-5 text-[#0072CE] mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -2576,14 +2512,14 @@ const ExpertDirectory: React.FC = () => {
                     setRegistrationData({ name: '', email: '', phone: '', organization: '' });
                     setSelectedWebinar(null);
                   }}
-                  className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 px-4 rounded-lg text-sm font-medium transition-colors"
+                  className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-2 px-4 -lg text-sm font-medium transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSubmitRegistration}
                   disabled={!registrationData.name || !registrationData.email}
-                  className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
+                  className={`flex-1 py-2 px-4 -lg text-sm font-medium transition-colors ${
                     registrationData.name && registrationData.email
                       ? 'bg-[#0072CE] hover:bg-[#1A1F5E] text-white'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -2600,14 +2536,14 @@ const ExpertDirectory: React.FC = () => {
       {/* Webinar Details Modal */}
       {showWebinarModal && selectedWebinar && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white -xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">
                     {selectedWebinar.title}
                   </h3>
-                  <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-3 py-1 rounded-full text-sm font-medium">
+                  <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-3 py-1 -full text-sm font-medium">
                     {selectedWebinar.topic}
                   </span>
                 </div>
@@ -2628,7 +2564,7 @@ const ExpertDirectory: React.FC = () => {
                 <img
                   src={selectedWebinar.expertAvatar}
                   alt={selectedWebinar.expert}
-                  className="w-16 h-16 rounded-full object-cover"
+                  className="w-16 h-16 -full object-cover"
                 />
                 <div>
                   <p className="text-sm text-gray-600">Expert Speaker</p>
@@ -2637,28 +2573,28 @@ const ExpertDirectory: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-gray-50 -lg p-4">
                   <div className="flex items-center space-x-2 text-gray-600 mb-1">
                     <Calendar className="w-4 h-4" />
                     <span className="text-sm font-medium">Date</span>
                   </div>
                   <p className="text-gray-900 font-semibold">{selectedWebinar.date}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-gray-50 -lg p-4">
                   <div className="flex items-center space-x-2 text-gray-600 mb-1">
                     <Clock className="w-4 h-4" />
                     <span className="text-sm font-medium">Time</span>
                   </div>
                   <p className="text-gray-900 font-semibold">{selectedWebinar.time}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-gray-50 -lg p-4">
                   <div className="flex items-center space-x-2 text-gray-600 mb-1">
                     <MapPin className="w-4 h-4" />
                     <span className="text-sm font-medium">Region</span>
                   </div>
                   <p className="text-gray-900 font-semibold">{selectedWebinar.region}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-gray-50 -lg p-4">
                   <div className="flex items-center space-x-2 text-gray-600 mb-1">
                     <Users className="w-4 h-4" />
                     <span className="text-sm font-medium">Attendees</span>
@@ -2678,26 +2614,26 @@ const ExpertDirectory: React.FC = () => {
                 <h4 className="text-lg font-semibold text-gray-900 mb-3">What You'll Learn</h4>
                 <ul className="space-y-2 text-gray-700">
                   <li className="flex items-start">
-                    <span className="text-[#0072CE] mr-2">✓</span>
+                    <span className="text-[#0072CE] mr-2">?</span>
                     <span>Latest regulatory developments and compliance requirements</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-[#0072CE] mr-2">✓</span>
+                    <span className="text-[#0072CE] mr-2">?</span>
                     <span>Practical strategies and real-world case studies</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-[#0072CE] mr-2">✓</span>
+                    <span className="text-[#0072CE] mr-2">?</span>
                     <span>Q&A session with industry expert</span>
                   </li>
                   <li className="flex items-start">
-                    <span className="text-[#0072CE] mr-2">✓</span>
+                    <span className="text-[#0072CE] mr-2">?</span>
                     <span>Networking opportunities with peers across Africa</span>
                   </li>
                 </ul>
               </div>
 
               {selectedWebinar.teamsLink && (
-                <div className="bg-[#F4F4F4] border border-[#0072CE]/30 rounded-lg p-4 mb-6">
+                <div className="bg-[#F4F4F4] border border-[#0072CE]/30 -lg p-4 mb-6">
                   <div className="flex items-start space-x-3">
                     <svg className="w-6 h-6 text-[#0072CE] flex-shrink-0" viewBox="0 0 16 16" fill="currentColor">
                       <path d="M9.5 1.5v3h3v-3h-3zm-4 0v3h3v-3h-3zm-4 3v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm-8 3v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm-4 3v3h3v-3h-3z"/>
@@ -2726,14 +2662,14 @@ const ExpertDirectory: React.FC = () => {
                     setShowWebinarModal(false);
                     setSelectedWebinar(null);
                   }}
-                  className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-3 px-4 rounded-lg text-sm font-medium transition-colors"
+                  className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-3 px-4 -lg text-sm font-medium transition-colors"
                 >
                   Close
                 </button>
                 {isWebinarRegistered(selectedWebinar.id) ? (
                   <button
                     onClick={() => handleJoinWebinar(selectedWebinar.teamsLink)}
-                    className="flex-1 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white py-3 px-4 rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
+                    className="flex-1 bg-[#1A1F5E] hover:opacity-90 text-white py-3 px-4 -lg text-sm font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
                   >
                     <svg className="w-5 h-5" viewBox="0 0 16 16" fill="currentColor">
                       <path d="M9.5 1.5v3h3v-3h-3zm-4 0v3h3v-3h-3zm-4 3v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm-8 3v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm-4 3v3h3v-3h-3z"/>
@@ -2747,7 +2683,7 @@ const ExpertDirectory: React.FC = () => {
                       handleRegisterWebinar(selectedWebinar);
                     }}
                     disabled={selectedWebinar.attendees >= selectedWebinar.maxAttendees}
-                    className={`flex-1 py-3 px-4 rounded-lg text-sm font-semibold transition-all ${
+                    className={`flex-1 py-3 px-4 -lg text-sm font-semibold transition-all ${
                       selectedWebinar.attendees >= selectedWebinar.maxAttendees
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : 'bg-[#0072CE] hover:bg-[#1A1F5E] text-white shadow-md hover:shadow-lg'
@@ -2765,7 +2701,7 @@ const ExpertDirectory: React.FC = () => {
       {/* Schedule Webinar Modal */}
       {showScheduleModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white -xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
@@ -2807,7 +2743,7 @@ const ExpertDirectory: React.FC = () => {
                     type="text"
                     value={newWebinar.title}
                     onChange={(e) => setNewWebinar({...newWebinar, title: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                    className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     placeholder="e.g., Cross-Border M&A Strategies for West Africa"
                   />
                 </div>
@@ -2820,7 +2756,7 @@ const ExpertDirectory: React.FC = () => {
                     rows={4}
                     value={newWebinar.description}
                     onChange={(e) => setNewWebinar({...newWebinar, description: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                    className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     placeholder="Provide a detailed description of what participants will learn..."
                   />
                 </div>
@@ -2834,7 +2770,7 @@ const ExpertDirectory: React.FC = () => {
                       type="date"
                       value={newWebinar.date}
                       onChange={(e) => setNewWebinar({...newWebinar, date: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                      className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     />
                   </div>
 
@@ -2846,7 +2782,7 @@ const ExpertDirectory: React.FC = () => {
                       type="time"
                       value={newWebinar.time}
                       onChange={(e) => setNewWebinar({...newWebinar, time: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                      className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     />
                   </div>
                 </div>
@@ -2859,7 +2795,7 @@ const ExpertDirectory: React.FC = () => {
                     <select
                       value={newWebinar.topic}
                       onChange={(e) => setNewWebinar({...newWebinar, topic: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                      className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     >
                       <option value="">Select topic</option>
                       <option value="Tax & Regulatory">Tax & Regulatory</option>
@@ -2882,7 +2818,7 @@ const ExpertDirectory: React.FC = () => {
                     <select
                       value={newWebinar.region}
                       onChange={(e) => setNewWebinar({...newWebinar, region: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                      className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     >
                       <option value="">Select region</option>
                       <option value="West Africa">West Africa</option>
@@ -2903,7 +2839,7 @@ const ExpertDirectory: React.FC = () => {
                     <select
                       value={newWebinar.expert}
                       onChange={(e) => setNewWebinar({...newWebinar, expert: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                      className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     >
                       <option value="">Select expert</option>
                       {experts.map((expert) => (
@@ -2921,7 +2857,7 @@ const ExpertDirectory: React.FC = () => {
                     <select
                       value={newWebinar.maxAttendees}
                       onChange={(e) => setNewWebinar({...newWebinar, maxAttendees: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                      className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                     >
                       <option value="25">25</option>
                       <option value="50">50</option>
@@ -2942,7 +2878,7 @@ const ExpertDirectory: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setNewWebinar({...newWebinar, isPrivate: false, invitedEmails: []})}
-                      className={`p-4 border-2 rounded-lg transition-all ${
+                      className={`p-4 border-2 -lg transition-all ${
                         !newWebinar.isPrivate
                           ? 'border-green-500 bg-green-50'
                           : 'border-gray-200 hover:border-gray-300'
@@ -2959,7 +2895,7 @@ const ExpertDirectory: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setNewWebinar({...newWebinar, isPrivate: true})}
-                      className={`p-4 border-2 rounded-lg transition-all ${
+                      className={`p-4 border-2 -lg transition-all ${
                         newWebinar.isPrivate
                           ? 'border-[#0072CE] bg-[#F4F4F4]'
                           : 'border-gray-200 hover:border-gray-300'
@@ -2977,7 +2913,7 @@ const ExpertDirectory: React.FC = () => {
                 </div>
 
                 {/* Email Invitations (for all webinars) */}
-                <div className="bg-[#F4F4F4] border border-[#0072CE]/30 rounded-lg p-5">
+                <div className="bg-[#F4F4F4] border border-[#0072CE]/30 -lg p-5">
                   <div className="flex items-center space-x-2 mb-4">
                     <Mail className="w-5 h-5 text-[#0072CE]" />
                     <label className="text-sm font-semibold text-[#1A1F5E]">
@@ -3002,13 +2938,13 @@ const ExpertDirectory: React.FC = () => {
                                 addInvitedEmail(emailInput);
                               }
                             }}
-                            className="w-full px-4 py-2 border border-[#0072CE]/40 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] text-sm"
+                            className="w-full px-4 py-2 border border-[#0072CE]/40 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] text-sm"
                             placeholder="Type name or email to search..."
                           />
                           
                           {/* Predictive Suggestions Dropdown */}
                           {showSuggestions && emailSuggestions.length > 0 && (
-                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 -lg shadow-lg max-h-60 overflow-y-auto">
                               {emailSuggestions.map((user) => (
                                 <button
                                   key={user.id}
@@ -3019,7 +2955,7 @@ const ExpertDirectory: React.FC = () => {
                                   <img
                                     src={user.avatar}
                                     alt={user.name}
-                                    className="w-10 h-10 rounded-full object-cover"
+                                    className="w-10 h-10 -full object-cover"
                                   />
                                   <div className="flex-1 min-w-0">
                                     <div className="font-semibold text-gray-900 text-sm truncate">
@@ -3029,7 +2965,7 @@ const ExpertDirectory: React.FC = () => {
                                       {user.email}
                                     </div>
                                     <div className="text-xs text-gray-500 truncate">
-                                      {user.role} • {user.organization}
+                                      {user.role} ï¿½ {user.organization}
                                     </div>
                                   </div>
                                   <UserPlus className="w-4 h-4 text-[#0072CE] flex-shrink-0" />
@@ -3041,20 +2977,20 @@ const ExpertDirectory: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => {
-                            console.log('📧 Add button clicked. emailInput:', emailInput);
+                            console.log('?? Add button clicked. emailInput:', emailInput);
                             if (emailInput && emailInput.trim().length > 0) {
                               if (emailInput.includes('@')) {
                                 addInvitedEmail(emailInput);
                               } else {
-                                console.warn('⚠️ Email does not contain @ symbol');
+                                console.warn('?? Email does not contain @ symbol');
                                 alert('Please enter a valid email address');
                               }
                             } else {
-                              console.warn('⚠️ Email input is empty');
+                              console.warn('?? Email input is empty');
                               alert('Please enter an email address');
                             }
                           }}
-                          className="px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white rounded-lg text-sm font-semibold transition-colors"
+                          className="px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white -lg text-sm font-semibold transition-colors"
                         >
                           Add
                         </button>
@@ -3071,7 +3007,7 @@ const ExpertDirectory: React.FC = () => {
                           {newWebinar.invitedEmails.map((email, index) => (
                             <div
                               key={index}
-                              className="bg-white border border-[#0072CE]/40 rounded-full px-3 py-1 flex items-center space-x-2 text-sm"
+                              className="bg-white border border-[#0072CE]/40 -full px-3 py-1 flex items-center space-x-2 text-sm"
                             >
                               <span className="text-gray-700">{email}</span>
                               <button
@@ -3101,7 +3037,7 @@ const ExpertDirectory: React.FC = () => {
                           ...newWebinar, 
                           lobbyBypass: e.target.value as 'everyone' | 'organization' | 'organizationAndFederated' | 'invited'
                         })}
-                        className="w-full px-4 py-2 border border-[#0072CE]/40 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] text-sm bg-white"
+                        className="w-full px-4 py-2 border border-[#0072CE]/40 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] text-sm bg-white"
                       >
                         <option value="invited">Invited People Only</option>
                         <option value="organization">My Organization</option>
@@ -3109,10 +3045,10 @@ const ExpertDirectory: React.FC = () => {
                         <option value="everyone">Everyone (No Lobby)</option>
                       </select>
                       <p className="text-xs text-[#0072CE] mt-2">
-                        {newWebinar.lobbyBypass === 'invited' && '🔒 Most secure - Only invited participants bypass lobby'}
-                        {newWebinar.lobbyBypass === 'organization' && '🏢 Organization members bypass lobby'}
-                        {newWebinar.lobbyBypass === 'organizationAndFederated' && '🤝 Your org and trusted partners bypass lobby'}
-                        {newWebinar.lobbyBypass === 'everyone' && '🌐 No lobby - Anyone with link joins directly'}
+                        {newWebinar.lobbyBypass === 'invited' && '?? Most secure - Only invited participants bypass lobby'}
+                        {newWebinar.lobbyBypass === 'organization' && '?? Organization members bypass lobby'}
+                        {newWebinar.lobbyBypass === 'organizationAndFederated' && '?? Your org and trusted partners bypass lobby'}
+                        {newWebinar.lobbyBypass === 'everyone' && '?? No lobby - Anyone with link joins directly'}
                       </p>
                     </div>
 
@@ -3121,7 +3057,7 @@ const ExpertDirectory: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setShowRequestsPanel(!showRequestsPanel)}
-                        className="mt-4 w-full px-4 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-900 rounded-lg text-sm font-semibold transition-colors flex items-center justify-between"
+                        className="mt-4 w-full px-4 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-900 -lg text-sm font-semibold transition-colors flex items-center justify-between"
                       >
                         <span>Access Requests ({accessRequests.filter(r => r.status === 'pending').length} pending)</span>
                         <ChevronDown className={`w-4 h-4 transition-transform ${
@@ -3136,7 +3072,7 @@ const ExpertDirectory: React.FC = () => {
                         {accessRequests.map((request) => (
                           <div
                             key={request.id}
-                            className={`p-3 rounded-lg border ${
+                            className={`p-3 -lg border ${
                               request.status === 'pending'
                                 ? 'bg-white border-gray-200'
                                 : request.status === 'approved'
@@ -3150,7 +3086,7 @@ const ExpertDirectory: React.FC = () => {
                                   {request.name}
                                 </div>
                                 <div className="text-xs text-gray-600">
-                                  {request.email} • {request.organization}
+                                  {request.email} ï¿½ {request.organization}
                                 </div>
                               </div>
                               {request.status === 'pending' && (
@@ -3158,14 +3094,14 @@ const ExpertDirectory: React.FC = () => {
                                   <button
                                     type="button"
                                     onClick={() => handleAccessRequest(request.id, 'approve')}
-                                    className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-semibold"
+                                    className="px-2 py-1 bg-[#1A1F5E] hover:opacity-90 text-white  text-xs font-semibold"
                                   >
                                     Approve
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => handleAccessRequest(request.id, 'reject')}
-                                    className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold"
+                                    className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white  text-xs font-semibold"
                                   >
                                     Reject
                                   </button>
@@ -3181,7 +3117,7 @@ const ExpertDirectory: React.FC = () => {
                               <div className={`text-xs font-semibold mt-2 ${
                                 request.status === 'approved' ? 'text-green-700' : 'text-red-700'
                               }`}>
-                                {request.status === 'approved' ? '✓ Approved' : '✗ Rejected'}
+                                {request.status === 'approved' ? '? Approved' : '? Rejected'}
                               </div>
                             )}
                           </div>
@@ -3190,7 +3126,7 @@ const ExpertDirectory: React.FC = () => {
                     )}
                   </div>
 
-                <div className="bg-[#F4F4F4] border border-[#0072CE]/30 rounded-lg p-4">
+                <div className="bg-[#F4F4F4] border border-[#0072CE]/30 -lg p-4">
                   <div className="flex items-start space-x-3">
                     <svg className="w-6 h-6 text-[#0072CE] flex-shrink-0 mt-0.5" viewBox="0 0 16 16" fill="currentColor">
                       <path d="M9.5 1.5v3h3v-3h-3zm-4 0v3h3v-3h-3zm-4 3v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm-8 3v3h3v-3h-3zm4 0v3h3v-3h-3zm4 0v3h3v-3h-3zm-4 3v3h3v-3h-3z"/>
@@ -3229,13 +3165,13 @@ const ExpertDirectory: React.FC = () => {
                     setShowSuggestions(false);
                     setShowRequestsPanel(false);
                   }}
-                  className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-3 px-4 rounded-lg text-sm font-semibold transition-colors"
+                  className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-3 px-4 -lg text-sm font-semibold transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleScheduleWebinar}
-                  className="flex-1 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white py-3 px-4 rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
+                  className="flex-1 bg-[#1A1F5E] hover:opacity-90 text-white py-3 px-4 -lg text-sm font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
                 >
                   <Calendar className="w-5 h-5" />
                   <span>Schedule Webinar</span>
@@ -3249,11 +3185,11 @@ const ExpertDirectory: React.FC = () => {
       {/* Become an Expert Modal */}
       {showBecomeExpertModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white -2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-8">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] rounded-xl flex items-center justify-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -xl flex items-center justify-center">
                     <Award className="w-6 h-6 text-white" />
                   </div>
                   <div>
@@ -3278,7 +3214,7 @@ const ExpertDirectory: React.FC = () => {
                   <select
                     value={expertApplication.experience}
                     onChange={(e) => setExpertApplication({...expertApplication, experience: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                    className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   >
                     <option value="">Select experience level</option>
                     <option value="5-10 years">5-10 years</option>
@@ -3299,7 +3235,7 @@ const ExpertDirectory: React.FC = () => {
                       ...expertApplication,
                       expertise: e.target.value ? [e.target.value, ...expertApplication.expertise.slice(1)] : expertApplication.expertise.slice(1)
                     })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] mb-3"
+                    className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] mb-3"
                   >
                     <option value="">Select primary expertise</option>
                     <option value="Transfer Pricing">Transfer Pricing</option>
@@ -3328,7 +3264,7 @@ const ExpertDirectory: React.FC = () => {
                     })}
                     placeholder="BEPS Compliance, IFRS, Climate Finance"
                     rows={2}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                    className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   />
                 </div>
 
@@ -3343,7 +3279,7 @@ const ExpertDirectory: React.FC = () => {
                       ...expertApplication,
                       industries: e.target.value ? [e.target.value, ...expertApplication.industries.slice(1)] : expertApplication.industries.slice(1)
                     })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] mb-3"
+                    className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] mb-3"
                   >
                     <option value="">Select primary industry</option>
                     <option value="Financial Services">Financial Services</option>
@@ -3372,7 +3308,7 @@ const ExpertDirectory: React.FC = () => {
                     })}
                     placeholder="Insurance, Private Equity"
                     rows={2}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                    className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   />
                 </div>
 
@@ -3386,7 +3322,7 @@ const ExpertDirectory: React.FC = () => {
                     onChange={(e) => setExpertApplication({...expertApplication, motivation: e.target.value})}
                     placeholder="I am passionate about sharing my knowledge and helping others navigate complex tax regulations in Africa. I believe..."
                     rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                    className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   />
                 </div>
 
@@ -3401,20 +3337,20 @@ const ExpertDirectory: React.FC = () => {
                     onChange={(e) => setExpertApplication({...expertApplication, achievements: e.target.value})}
                     placeholder="CPA, ACCA certified. Published articles on African tax frameworks. Led transfer pricing projects for Fortune 500 companies..."
                     rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+                    className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
                   />
                 </div>
 
                 {/* Info Box */}
-                <div className="bg-[#F4F4F4] border border-[#0072CE]/30 rounded-lg p-4">
+                <div className="bg-[#F4F4F4] border border-[#0072CE]/30 -lg p-4">
                   <div className="flex items-start space-x-3">
                     <CheckCircle className="w-5 h-5 text-[#0072CE] mt-0.5" />
                     <div className="text-sm text-[#1A1F5E]">
                       <p className="font-semibold mb-1">What happens next?</p>
                       <ul className="space-y-1 text-[#1A1F5E]">
-                        <li>• Our team will review your application within 2-3 business days</li>
-                        <li>• We may contact you for additional information or an interview</li>
-                        <li>• Once approved, you'll get access to expert features and be listed in the directory</li>
+                        <li>ï¿½ Our team will review your application within 2-3 business days</li>
+                        <li>ï¿½ We may contact you for additional information or an interview</li>
+                        <li>ï¿½ Once approved, you'll get access to expert features and be listed in the directory</li>
                       </ul>
                     </div>
                   </div>
@@ -3425,13 +3361,13 @@ const ExpertDirectory: React.FC = () => {
               <div className="flex space-x-4 mt-8">
                 <button
                   onClick={() => setShowBecomeExpertModal(false)}
-                  className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-3 px-4 rounded-lg font-semibold transition-colors"
+                  className="flex-1 border border-gray-300 text-gray-700 hover:bg-gray-50 py-3 px-4 -lg font-semibold transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSubmitExpertApplication}
-                  className="flex-1 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] hover:opacity-90 text-white py-3 px-4 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
+                  className="flex-1 bg-[#1A1F5E] hover:opacity-90 text-white py-3 px-4 -lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
                 >
                   <Award className="w-5 h-5" />
                   <span>Submit Application</span>
@@ -3447,3 +3383,4 @@ const ExpertDirectory: React.FC = () => {
 };
 
 export default ExpertDirectory;
+

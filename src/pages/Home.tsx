@@ -1,6 +1,6 @@
 ﻿import React, { useState } from 'react';
 import { useEffect } from 'react';
-import { dashboardAPI, connectionsAPI, sessionsAPI, messagesAPI } from '../services/api';
+import { dashboardAPI, connectionsAPI, sessionsAPI, expertWebinarsAPI } from '../services/api';
 import { 
   Users, 
   MessageSquare, 
@@ -112,10 +112,23 @@ const Home: React.FC = () => {
   const [selectedSessionId, setSelectedSessionId] = useState<string>('');
   const [selectedSession, setSelectedSession] = useState<RegisteredWebinar | null>(null);
 
-  const loadRegisteredSessions = (keepId?: string) => {
+  const loadRegisteredSessions = async (keepId?: string) => {
     try {
-      const data = localStorage.getItem('registeredWebinarData');
-      const sessions: RegisteredWebinar[] = data ? JSON.parse(data) : [];
+      const res = await expertWebinarsAPI.getRegisteredWebinars();
+      const sessions: RegisteredWebinar[] = (res.data?.registeredWebinars || []).map((w: any) => ({
+        id: w.id,
+        title: w.title,
+        expert: w.expert,
+        expertAvatar: w.expertAvatar || undefined,
+        date: w.date,
+        time: w.time,
+        topic: w.topic,
+        region: w.region,
+        attendees: w.attendees || 0,
+        maxAttendees: w.maxAttendees || 50,
+        teamsLink: w.teamsLink || undefined,
+        description: w.description || undefined
+      }));
       setRegisteredSessions(sessions);
       if (sessions.length > 0) {
         const activeId = keepId || sessions[0].id;
@@ -132,259 +145,87 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     loadRegisteredSessions();
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'registeredWebinarData') loadRegisteredSessions();
-    };
-    // Re-load when user returns to this tab (e.g. after registering in Expert Directory)
+  }, []);
+
+  useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') loadRegisteredSessions();
     };
-    window.addEventListener('storage', handleStorage);
     document.addEventListener('visibilitychange', handleVisibility);
     return () => {
-      window.removeEventListener('storage', handleStorage);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, []);
 
-  // Dummy connections data
-  const dummyConnections: Connection[] = [
-    {
-      id: '1',
-      name: 'Amara Okafor',
-      title: 'Senior Tax Partner',
-      company: 'Forvis Mazars Nigeria',
-      avatar: 'https://images.pexels.com/photos/3778966/pexels-photo-3778966.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-      role: 'mentor',
-      status: 'active',
-      expertise: ['Corporate Tax', 'Transfer Pricing', 'International Tax'],
-      location: 'Lagos, Nigeria',
-      rating: 4.9,
-      totalSessions: 12,
-      upcomingSessions: 2,
-      lastActivity: '2 hours ago',
-      connectionDate: 'Jan 15, 2024',
-      matchScore: 95
-    },
-    {
-      id: '2',
-      name: 'Thabo Mthembu',
-      title: 'ESG & Sustainability Advisor',
-      company: 'Forvis Mazars South Africa',
-      avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-      role: 'mentor',
-      status: 'active',
-      expertise: ['ESG Strategy', 'Climate Risk', 'Sustainability Reporting'],
-      location: 'Johannesburg, South Africa',
-      rating: 4.8,
-      totalSessions: 8,
-      upcomingSessions: 1,
-      lastActivity: '1 day ago',
-      connectionDate: 'Feb 20, 2024',
-      matchScore: 92
-    },
-    {
-      id: '3',
-      name: 'Sarah Mwangi',
-      title: 'Junior Financial Analyst',
-      company: 'Equity Bank Kenya',
-      avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-      role: 'mentee',
-      status: 'active',
-      expertise: ['Financial Analysis', 'Climate Finance', 'ESG Reporting'],
-      location: 'Nairobi, Kenya',
-      rating: 4.7,
-      totalSessions: 6,
-      upcomingSessions: 1,
-      lastActivity: '3 hours ago',
-      connectionDate: 'Mar 10, 2024',
-      matchScore: 88
-    },
-    {
-      id: '4',
-      name: 'David Okonkwo',
-      title: 'Tax Manager',
-      company: 'First Bank Nigeria',
-      avatar: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-      role: 'mentee',
-      status: 'active',
-      expertise: ['Corporate Tax', 'Tax Compliance', 'VAT'],
-      location: 'Lagos, Nigeria',
-      rating: 4.6,
-      totalSessions: 5,
-      upcomingSessions: 1,
-      lastActivity: '5 hours ago',
-      connectionDate: 'Apr 5, 2024',
-      matchScore: 90
-    },
-    {
-      id: '5',
-      name: 'Fatima El-Sayed',
-      title: 'Audit Partner',
-      company: 'Forvis Mazars Egypt',
-      avatar: 'https://images.pexels.com/photos/3776164/pexels-photo-3776164.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-      role: 'mentor',
-      status: 'active',
-      expertise: ['Financial Audit', 'IFRS', 'Internal Controls'],
-      location: 'Cairo, Egypt',
-      rating: 4.9,
-      totalSessions: 15,
-      upcomingSessions: 2,
-      lastActivity: '1 hour ago',
-      connectionDate: 'Jan 28, 2024',
-      matchScore: 93
-    },
-    {
-      id: '6',
-      name: 'Michael Banda',
-      title: 'Accounting Graduate',
-      company: 'University of Zambia',
-      avatar: 'https://images.pexels.com/photos/2380794/pexels-photo-2380794.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-      role: 'mentee',
-      status: 'pending',
-      expertise: ['Financial Accounting', 'Audit Basics', 'IFRS'],
-      location: 'Lusaka, Zambia',
-      rating: 4.5,
-      totalSessions: 2,
-      upcomingSessions: 0,
-      lastActivity: '2 days ago',
-      connectionDate: 'Nov 15, 2024',
-      matchScore: 85
-    }
-  ];
-
-  // Dummy sessions data
-  const dummySessions: Session[] = [
-    {
-      id: '1',
-      mentorName: 'Amara Okafor',
-      menteeName: 'You',
-      title: 'Transfer Pricing Strategy Review',
-      date: 'Dec 15, 2025',
-      time: '14:00',
-      duration: '60 min',
-      status: 'upcoming',
-      type: 'video'
-    },
-    {
-      id: '2',
-      mentorName: 'You',
-      menteeName: 'Sarah Mwangi',
-      title: 'Climate Finance Career Guidance',
-      date: 'Dec 16, 2025',
-      time: '10:00',
-      duration: '45 min',
-      status: 'upcoming',
-      type: 'video'
-    },
-    {
-      id: '3',
-      mentorName: 'Fatima El-Sayed',
-      menteeName: 'You',
-      title: 'IFRS Implementation Discussion',
-      date: 'Dec 18, 2025',
-      time: '15:30',
-      duration: '90 min',
-      status: 'upcoming',
-      type: 'video'
-    }
-  ];
-
-  // Dummy expert connections data
-  const dummyExpertConnections = [
-    {
-      id: 'e1',
-      name: 'Dr. Kwame Mensah',
-      title: 'Tax Policy Expert',
-      company: 'Ghana Revenue Authority',
-      avatar: 'https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-      role: 'expert',
-      status: 'active',
-      expertise: ['Corporate Tax', 'Tax Policy', 'International Taxation'],
-      location: 'Accra, Ghana',
-      rating: 4.9,
-      totalSessions: 0,
-      upcomingSessions: 0,
-      lastActivity: '1 hour ago',
-      connectionDate: 'Dec 1, 2024',
-      matchScore: 96
-    },
-    {
-      id: 'e2',
-      name: 'Zainab Hassan',
-      title: 'ESG Specialist',
-      company: 'African Development Bank',
-      avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
-      role: 'expert',
-      status: 'active',
-      expertise: ['Sustainability Reporting', 'Climate Finance', 'Green Bonds'],
-      location: 'Abidjan, Côte d\'Ivoire',
-      rating: 4.8,
-      totalSessions: 0,
-      upcomingSessions: 0,
-      lastActivity: '3 hours ago',
-      connectionDate: 'Nov 28, 2024',
-      matchScore: 94
-    }
-  ];
-
-  // Dummy activity data
-  const dummyActivity: Activity[] = [
-    {
-      id: '1',
-      type: 'message',
-      title: 'New message from Amara Okafor',
-      description: 'Shared resources on West African tax regulations',
-      time: '2 hours ago',
-      user: 'Amara Okafor',
-      avatar: 'https://images.pexels.com/photos/3778966/pexels-photo-3778966.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop'
-    },
-    {
-      id: '2',
-      type: 'session',
-      title: 'Session completed',
-      description: 'Mentoring session with David Okonkwo',
-      time: '5 hours ago',
-      user: 'David Okonkwo',
-      avatar: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop'
-    },
-    {
-      id: '3',
-      type: 'review',
-      title: 'New review received',
-      description: 'Sarah Mwangi left a 5-star review',
-      time: '1 day ago',
-      user: 'Sarah Mwangi',
-      avatar: 'https://images.pexels.com/photos/3785079/pexels-photo-3785079.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop'
-    },
-    {
-      id: '4',
-      type: 'connection',
-      title: 'New connection request',
-      description: 'Michael Banda wants to connect',
-      time: '2 days ago',
-      user: 'Michael Banda',
-      avatar: 'https://images.pexels.com/photos/2380794/pexels-photo-2380794.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop'
-    }
-  ];
-
   // Load data from API
-  // Load dummy data on mount
   useEffect(() => {
-    // Always use dummy data - no authentication needed
-    setConnections(dummyConnections);
-    setExpertConnections(dummyExpertConnections);
-    setUpcomingSessions(dummySessions);
-    setRecentActivity(dummyActivity);
-    setStats({
-      totalConnections: dummyConnections.length,
-      activeConnections: dummyConnections.filter(c => c.status === 'active').length,
-      totalSessions: dummyConnections.reduce((sum, c) => sum + c.totalSessions, 0),
-      upcomingSessions: dummySessions.length,
-      averageRating: 4.8,
-      responseRate: 95
-    });
-    setLoading(false);
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const [connRes, sessRes, actRes] = await Promise.allSettled([
+          connectionsAPI.getConnections(),
+          sessionsAPI.getUpcomingSessions(),
+          dashboardAPI.getActivity(5)
+        ]);
+        const rawConns: any[] = connRes.status === 'fulfilled' ? (connRes.value.data?.connections || []) : [];
+        const rawSess: any[] = sessRes.status === 'fulfilled' ? (sessRes.value.data?.sessions || []) : [];
+        const rawAct: any[] = actRes.status === 'fulfilled' ? (actRes.value.data?.activities || []) : [];
+        const mappedConns: Connection[] = rawConns.map((c: any) => ({
+          id: c.id,
+          name: c.mentor_name || c.mentee_name || c.name || 'Unknown',
+          title: c.mentor_title || c.mentee_title || c.title || '',
+          company: c.mentor_company || c.mentee_company || '',
+          avatar: c.mentor_avatar || c.mentee_avatar || c.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.name || 'U')}&background=1A1F5E&color=fff`,
+          role: c.role || (c.mentor_user_id ? 'mentor' : 'mentee'),
+          status: c.status || 'active',
+          expertise: c.expertise ? c.expertise.split(',') : [],
+          location: c.location || '',
+          rating: c.rating || 0,
+          totalSessions: c.total_sessions || 0,
+          upcomingSessions: c.upcoming_sessions || 0,
+          lastActivity: c.last_activity || '',
+          connectionDate: c.created_at ? new Date(c.created_at).toLocaleDateString() : '',
+          matchScore: c.match_score || 0
+        }));
+        const mappedSess: Session[] = rawSess.map((s: any) => ({
+          id: s.session_id || s.id,
+          mentorName: s.mentor_name || '',
+          menteeName: s.mentee_name || '',
+          title: s.title || s.session_type || 'Session',
+          date: s.scheduled_at ? new Date(s.scheduled_at).toLocaleDateString() : '',
+          time: s.scheduled_at ? new Date(s.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+          duration: s.duration ? `${s.duration} min` : '60 min',
+          status: s.status || 'upcoming',
+          type: s.meeting_type || 'video'
+        }));
+        const mappedAct: Activity[] = rawAct.map((a: any) => ({
+          id: a.id,
+          type: a.type || 'message',
+          title: a.title || '',
+          description: a.description || '',
+          time: a.created_at ? new Date(a.created_at).toLocaleDateString() : '',
+          user: a.user_name || '',
+          avatar: a.user_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(a.user_name || 'U')}&background=1A1F5E&color=fff`
+        }));
+        setConnections(mappedConns);
+        setUpcomingSessions(mappedSess);
+        setRecentActivity(mappedAct);
+        const active = mappedConns.filter(c => c.status === 'active');
+        setStats({
+          totalConnections: mappedConns.length,
+          activeConnections: active.length,
+          totalSessions: mappedConns.reduce((s, c) => s + c.totalSessions, 0),
+          upcomingSessions: mappedSess.length,
+          averageRating: 0,
+          responseRate: 0
+        });
+      } catch (err) {
+        console.error('Home data load error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
   }, []);
 
   const filteredConnections = connections.filter(connection => {
@@ -426,7 +267,7 @@ const Home: React.FC = () => {
       )}
       
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-[#1A1F5E] to-[#0072CE] rounded-xl p-8 text-white">
+      <div className="bg-[#1A1F5E] -xl p-8 text-white">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl text-white font-bold mb-2">
@@ -437,7 +278,7 @@ const Home: React.FC = () => {
             </p>
           </div>
           <div className="hidden md:block">
-            <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center">
+            <div className="w-24 h-24 bg-white/20 -full flex items-center justify-center">
               <User className="w-12 h-12 text-white" />
             </div>
           </div>
@@ -446,7 +287,7 @@ const Home: React.FC = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
+        <div className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Connections</p>
@@ -456,13 +297,13 @@ const Home: React.FC = () => {
                 +2 this month
               </p>
             </div>
-            <div className="w-12 h-12 bg-[#1A1F5E]/10 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-[#1A1F5E]/10 -xl flex items-center justify-center">
               <Users className="w-6 h-6 text-[#0072CE]" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
+        <div className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Upcoming Sessions</p>
@@ -472,13 +313,13 @@ const Home: React.FC = () => {
                 Next 7 days
               </p>
             </div>
-            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-              <Video className="w-6 h-6 text-green-600" />
+            <div className="w-12 h-12 bg-[#1A1F5E]/10 -xl flex items-center justify-center">
+              <Video className="w-6 h-6 text-[#1A1F5E]" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
+        <div className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Peer Rating</p>
@@ -488,13 +329,13 @@ const Home: React.FC = () => {
                 Highly rated
               </p>
             </div>
-            <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-              <Award className="w-6 h-6 text-yellow-600" />
+            <div className="w-12 h-12 bg-[#1A1F5E]/10 -xl flex items-center justify-center">
+              <Award className="w-6 h-6 text-[#1A1F5E]" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
+        <div className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB]">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Active Connections</p>
@@ -504,7 +345,7 @@ const Home: React.FC = () => {
                 Engaged network
               </p>
             </div>
-            <div className="w-12 h-12 bg-[#1A1F5E]/10 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-[#1A1F5E]/10 -xl flex items-center justify-center">
               <Users className="w-6 h-6 text-[#0072CE]" />
             </div>
           </div>
@@ -512,7 +353,7 @@ const Home: React.FC = () => {
       </div>
 
       {/* ---- Your Meeting ---- */}
-      <div className="bg-white rounded-2xl shadow-lg border border-[#E5E7EB] overflow-hidden">
+      <div className="bg-white -2xl shadow-lg border border-[#E5E7EB] overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-[#1A1F5E] to-[#1A1F5E]">
           <div className="flex items-center space-x-3">
             <Video className="w-5 h-5 text-white" />
@@ -529,7 +370,7 @@ const Home: React.FC = () => {
 
         {registeredSessions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
-            <div className="w-14 h-14 bg-[#F4F4F4] rounded-full flex items-center justify-center mb-4">
+            <div className="w-14 h-14 bg-[#F4F4F4] -full flex items-center justify-center mb-4">
               <Calendar className="w-7 h-7 text-[#0072CE]" />
             </div>
             <p className="text-gray-700 font-medium mb-1">No sessions registered yet</p>
@@ -550,7 +391,7 @@ const Home: React.FC = () => {
                     setSelectedSessionId(id);
                     setSelectedSession(registeredSessions.find(s => s.id === id) ?? null);
                   }}
-                  className="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] cursor-pointer"
+                  className="w-full appearance-none bg-gray-50 border border-gray-200 text-gray-900 text-sm -lg px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E] cursor-pointer"
                 >
                   {registeredSessions.map(session => (
                     <option key={session.id} value={session.id}>
@@ -564,17 +405,17 @@ const Home: React.FC = () => {
 
             {/* Selected Session Details */}
             {selectedSession && (
-              <div className="rounded-xl border border-gray-100 bg-gray-50 p-5 space-y-4">
+              <div className="-xl border border-gray-100 bg-gray-50 p-5 space-y-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <h4 className="font-semibold text-gray-900 text-base leading-snug">{selectedSession.title}</h4>
-                    <span className="inline-block mt-1 px-2.5 py-0.5 bg-[#1A1F5E]/10 text-[#1A1F5E] text-xs font-medium rounded-full">{selectedSession.topic}</span>
+                    <span className="inline-block mt-1 px-2.5 py-0.5 bg-[#1A1F5E]/10 text-[#1A1F5E] text-xs font-medium -full">{selectedSession.topic}</span>
                   </div>
                   {selectedSession.expertAvatar && (
                     <img
                       src={selectedSession.expertAvatar}
                       alt={selectedSession.expert}
-                      className="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2 border-white shadow"
+                      className="w-12 h-12 -full object-cover flex-shrink-0 border-2 border-white shadow"
                     />
                   )}
                 </div>
@@ -614,7 +455,7 @@ const Home: React.FC = () => {
                       alert('Teams link will be available 15 minutes before the session starts.');
                     }
                   }}
-                  className="w-full flex items-center justify-center space-x-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white font-semibold py-3 px-6 rounded-xl transition-colors"
+                  className="w-full flex items-center justify-center space-x-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white font-semibold py-3 px-6 -xl transition-colors"
                 >
                   <Video className="w-5 h-5" />
                   <span>Join Meeting</span>
@@ -628,9 +469,9 @@ const Home: React.FC = () => {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <button className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB] hover:shadow-xl transition-shadow text-left group">
+        <button className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB] hover:shadow-xl transition-shadow text-left group">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-[#1A1F5E]/10 rounded-xl flex items-center justify-center group-hover:bg-[#0072CE]/20 transition-colors">
+            <div className="w-12 h-12 bg-[#1A1F5E]/10 -xl flex items-center justify-center group-hover:bg-[#0072CE]/20 transition-colors">
               <Plus className="w-6 h-6 text-[#0072CE]" />
             </div>
             <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-[#0072CE] transition-colors" />
@@ -639,10 +480,10 @@ const Home: React.FC = () => {
           <p className="text-gray-600 text-sm">Discover experienced professionals in your field</p>
         </button>
 
-        <button className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB] hover:shadow-xl transition-shadow text-left group">
+        <button className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB] hover:shadow-xl transition-shadow text-left group">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center group-hover:bg-green-200 transition-colors">
-              <Calendar className="w-6 h-6 text-green-600" />
+            <div className="w-12 h-12 bg-[#1A1F5E]/10 -xl flex items-center justify-center group-hover:bg-[#1A1F5E]/20 transition-colors">
+              <Calendar className="w-6 h-6 text-[#1A1F5E]" />
             </div>
             <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-green-600 transition-colors" />
           </div>
@@ -650,9 +491,9 @@ const Home: React.FC = () => {
           <p className="text-gray-600 text-sm">Book a mentoring session with your connections</p>
         </button>
 
-        <button className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB] hover:shadow-xl transition-shadow text-left group">
+        <button className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB] hover:shadow-xl transition-shadow text-left group">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-[#1A1F5E]/10 rounded-lg flex items-center justify-center group-hover:bg-[#0072CE]/20 transition-colors">
+            <div className="w-12 h-12 bg-[#1A1F5E]/10 -lg flex items-center justify-center group-hover:bg-[#0072CE]/20 transition-colors">
               <BookOpen className="w-6 h-6 text-[#1A1F5E]" />
             </div>
             <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-[#1A1F5E] transition-colors" />
@@ -665,7 +506,7 @@ const Home: React.FC = () => {
       {/* Upcoming Sessions & Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Upcoming Sessions */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
+        <div className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB]">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-semibold text-gray-900 flex items-center">
               <Calendar className="w-5 h-5 mr-2 text-[#0072CE]" />
@@ -675,9 +516,9 @@ const Home: React.FC = () => {
           </div>
           <div className="space-y-4">
             {upcomingSessions.slice(0, 3).map((session) => (
-              <div key={session.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+              <div key={session.id} className="flex items-center justify-between p-4 bg-gray-50 -xl hover:bg-gray-100 transition-colors">
                 <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-[#1A1F5E]/10 rounded-full flex items-center justify-center">
+                  <div className="w-10 h-10 bg-[#1A1F5E]/10 -full flex items-center justify-center">
                     {session.type === 'video' && <Video className="w-5 h-5 text-[#0072CE]" />}
                     {session.type === 'in-person' && <Users className="w-5 h-5 text-[#0072CE]" />}
                     {session.type === 'phone' && <Coffee className="w-5 h-5 text-[#0072CE]" />}
@@ -700,7 +541,7 @@ const Home: React.FC = () => {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB]">
+        <div className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB]">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-semibold text-gray-900 flex items-center">
               <Activity className="w-5 h-5 mr-2 text-[#0072CE]" />
@@ -712,11 +553,11 @@ const Home: React.FC = () => {
             {recentActivity.map((activity) => {
               const Icon = getActivityIcon(activity.type);
               return (
-                <div key={activity.id} className="flex items-start space-x-4 p-3 hover:bg-gray-50 rounded-xl transition-colors">
+                <div key={activity.id} className="flex items-start space-x-4 p-3 hover:bg-gray-50 -xl transition-colors">
                   <img
                     src={activity.avatar}
                     alt={activity.user}
-                    className="w-10 h-12 rounded-md object-cover object-top"
+                    className="w-10 h-12 -md object-cover object-top"
                     style={{ aspectRatio: '4/5' }}
                   />
                   <div className="flex-1">
@@ -750,10 +591,10 @@ const Home: React.FC = () => {
     return (
       <div className="space-y-6">
         {/* Connection Type Tabs */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-1 inline-flex">
+        <div className="bg-white -xl shadow-sm border border-gray-200 p-1 inline-flex">
           <button
             onClick={() => setConnectionTab('all')}
-            className={`px-6 py-2.5 rounded-lg font-medium text-sm transition-all ${
+            className={`px-6 py-2.5 -lg font-medium text-sm transition-all ${
               connectionTab === 'all'
                 ? 'bg-[#0072CE] text-white shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
@@ -763,7 +604,7 @@ const Home: React.FC = () => {
           </button>
           <button
             onClick={() => setConnectionTab('mentors')}
-            className={`px-6 py-2.5 rounded-lg font-medium text-sm transition-all ${
+            className={`px-6 py-2.5 -lg font-medium text-sm transition-all ${
               connectionTab === 'mentors'
                 ? 'bg-[#0072CE] text-white shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
@@ -773,7 +614,7 @@ const Home: React.FC = () => {
           </button>
           <button
             onClick={() => setConnectionTab('mentees')}
-            className={`px-6 py-2.5 rounded-lg font-medium text-sm transition-all ${
+            className={`px-6 py-2.5 -lg font-medium text-sm transition-all ${
               connectionTab === 'mentees'
                 ? 'bg-[#0072CE] text-white shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
@@ -783,7 +624,7 @@ const Home: React.FC = () => {
           </button>
           <button
             onClick={() => setConnectionTab('experts')}
-            className={`px-6 py-2.5 rounded-lg font-medium text-sm transition-all ${
+            className={`px-6 py-2.5 -lg font-medium text-sm transition-all ${
               connectionTab === 'experts'
                 ? 'bg-[#0072CE] text-white shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
@@ -802,13 +643,13 @@ const Home: React.FC = () => {
               placeholder={`Search ${connectionTab === 'all' ? 'connections' : connectionTab}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20 focus:border-[#1A1F5E]"
             />
           </div>
           <select 
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+            className="px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
@@ -825,14 +666,14 @@ const Home: React.FC = () => {
             const matchesStatus = filterStatus === 'all' || connection.status === filterStatus;
             return matchesSearch && matchesStatus;
           }).map((connection) => (
-          <div key={connection.id} className="bg-white rounded-2xl shadow-lg p-6 border border-[#E5E7EB] hover:shadow-xl transition-shadow">
+          <div key={connection.id} className="bg-white -2xl shadow-lg p-6 border border-[#E5E7EB] hover:shadow-xl transition-shadow">
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center space-x-4">
                 <img
                   src={connection.avatar}
                   alt={connection.name}
-                  className="w-20 h-24 rounded-lg object-cover object-top"
+                  className="w-20 h-24 -lg object-cover object-top"
                   style={{ aspectRatio: '4/5' }}
                 />
                 <div>
@@ -841,14 +682,14 @@ const Home: React.FC = () => {
                   <p className="text-gray-600 text-xs">{connection.company}</p>
                 </div>
               </div>
-              <span className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(connection.status)}`}>
+              <span className={`px-3 py-1 text-xs font-medium -full ${getStatusColor(connection.status)}`}>
                 {connection.status}
               </span>
             </div>
 
             {/* Role Badge */}
             <div className="flex items-center justify-between mb-4">
-              <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+              <span className={`px-3 py-1 text-xs font-medium -full ${
                 connection.role === 'mentor' ? 'bg-[#1A1F5E]/10 text-[#1A1F5E]' : 'bg-teal-100 text-teal-800'
               }`}>
                 {connection.role === 'mentor' ? '👨‍🏫 Mentor' : '🎓 Mentee'}
@@ -860,7 +701,7 @@ const Home: React.FC = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 gap-4 mb-4 p-3 bg-gray-50 rounded-xl">
+            <div className="grid grid-cols-2 gap-4 mb-4 p-3 bg-gray-50 -xl">
               <div className="text-center">
                 <div className="text-lg font-bold text-gray-900">{connection.totalSessions}</div>
                 <div className="text-xs text-gray-600">Sessions</div>
@@ -880,13 +721,13 @@ const Home: React.FC = () => {
                 {connection.expertise.slice(0, 2).map((skill, index) => (
                   <span
                     key={index}
-                    className="px-2 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] text-xs font-medium rounded-full"
+                    className="px-2 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] text-xs font-medium -full"
                   >
                     {skill}
                   </span>
                 ))}
                 {connection.expertise.length > 2 && (
-                  <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                  <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs -full">
                     +{connection.expertise.length - 2}
                   </span>
                 )}
@@ -895,11 +736,11 @@ const Home: React.FC = () => {
 
             {/* Actions */}
             <div className="grid grid-cols-2 gap-3">
-              <button className="flex items-center justify-center space-x-1 py-2 px-3 bg-[#0072CE] text-white rounded-lg hover:bg-[#1A1F5E] transition-colors text-sm">
+              <button className="flex items-center justify-center space-x-1 py-2 px-3 bg-[#0072CE] text-white -lg hover:bg-[#1A1F5E] transition-colors text-sm">
                 <MessageSquare className="w-4 h-4" />
                 <span>Message</span>
               </button>
-              <button className="flex items-center justify-center space-x-1 py-2 px-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm">
+              <button className="flex items-center justify-center space-x-1 py-2 px-3 border border-gray-300 text-gray-700 -lg hover:bg-gray-50 transition-colors text-sm">
                 <Calendar className="w-4 h-4" />
                 <span>Schedule</span>
               </button>
@@ -920,7 +761,7 @@ const Home: React.FC = () => {
         return matchesSearch && matchesStatus;
       }).length === 0 && (
         <div className="text-center py-12">
-          <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+          <div className="w-16 h-16 bg-gray-100 -full mx-auto mb-4 flex items-center justify-center">
             <Users className="w-8 h-8 text-gray-400" />
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">No {connectionTab === 'all' ? 'connections' : connectionTab} found</h3>

@@ -37,17 +37,22 @@ class Expert {
     static async getAllWithProfiles() {
         try {
             const query = `
-                SELECT e.*, up.name, up.location, up.bio, up.profile_image_url, up.experience,
-                       (SELECT AVG(CAST(rating as FLOAT)) FROM Reviews r WHERE r.reviewee_id = e.user_id) as average_rating,
-                       (SELECT COUNT(*) FROM Reviews r WHERE r.reviewee_id = e.user_id) as review_count
-                FROM Experts e
-                INNER JOIN users up ON e.user_id = up.id
-                WHERE e.is_verified = 1
+                SELECT e.id AS expert_id, e.user_id, e.name, e.title, e.company, e.bio,
+                       e.avatar_url AS profile_image_url, e.location, e.country,
+                       e.experience_years AS experience, e.rating AS average_rating,
+                       e.review_count, e.is_available, e.is_verified,
+                       e.created_at, e.updated_at,
+                       u.email,
+                       (SELECT STRING_AGG(ee.expertise, ',') FROM expert_expertise ee
+                              WHERE ee.expert_id = e.id) AS specializations
+                FROM experts e
+                INNER JOIN users u ON e.user_id = u.id
+                WHERE e.is_verified = 1 AND (e.is_rejected IS NULL OR e.is_rejected = 0)
                 ORDER BY e.created_at DESC
             `;
             
             const result = await executeQuery(query);
-            return result.recordset.map(expert => new Expert(expert));
+            return result.recordset;
         } catch (error) {
             console.error('Error getting all experts with profiles:', error);
             throw error;
@@ -57,14 +62,20 @@ class Expert {
     static async findById(expertId) {
         try {
             const query = `
-                SELECT e.*, up.name, up.location, up.bio, up.profile_image_url, up.experience
-                FROM Experts e
-                INNER JOIN users up ON e.user_id = up.id
-                WHERE e.expert_id = '${expertId}'
+                SELECT e.id AS expert_id, e.user_id, e.name, e.title, e.company, e.bio,
+                       e.avatar_url AS profile_image_url, e.location, e.country,
+                       e.experience_years AS experience, e.rating AS average_rating,
+                       e.review_count, e.is_available, e.is_verified, e.created_at, e.updated_at,
+                       u.email,
+                       (SELECT STRING_AGG(ee.expertise, ',') FROM expert_expertise ee
+                              WHERE ee.expert_id = e.id) AS specializations
+                FROM experts e
+                INNER JOIN users u ON e.user_id = u.id
+                WHERE e.id = '${expertId}'
             `;
             
             const result = await executeQuery(query);
-            return result.recordset.length > 0 ? new Expert(result.recordset[0]) : null;
+            return result.recordset.length > 0 ? result.recordset[0] : null;
         } catch (error) {
             console.error('Error finding expert by ID:', error);
             throw error;

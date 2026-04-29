@@ -1,152 +1,103 @@
-﻿import React, { useState, useEffect } from 'react';
-import { ClipboardList, Search, Download, Filter, Calendar } from 'lucide-react';
-import { getData, STORAGE_KEYS } from '../../services/dataStore';
-import { AuditEntry } from '../../services/auditLogger';
+import React, { useState, useEffect, useCallback } from 'react';
+import { ClipboardList, Search, RefreshCw, Download, Filter } from 'lucide-react';
+import { adminAPI } from '../../services/api';
+
+const ACTIONS = ['all','CREATE','UPDATE','DELETE','ACTIVATE','DEACTIVATE','PUBLISH','APPROVE','REJECT','LOGIN'];
 
 const AdminAudit: React.FC = () => {
-  const [audits, setAudits] = useState<AuditEntry[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterAction, setFilterAction] = useState<string>('all');
+  const [audits, setAudits]       = useState<any[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [search, setSearch]       = useState('');
+  const [actionFilter, setAction] = useState('all');
+  const [toast, setToast]         = useState<string|null>(null);
 
-  useEffect(() => {
-    loadAudits();
-  }, []);
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await adminAPI.getAuditLog({ action: actionFilter !== 'all' ? actionFilter : undefined, search: search || undefined, limit: 500 });
+      if (res?.success) setAudits(res.data.audits || []);
+    } catch { setToast('Failed to load audit log'); setTimeout(()=>setToast(null),4000); }
+    finally { setLoading(false); }
+  }, [actionFilter, search]);
 
-  const loadAudits = () => {
-    const stored = getData(STORAGE_KEYS.AUDIT_LOG, []) as AuditEntry[];
-    setAudits(stored.reverse()); // Most recent first
-  };
+  useEffect(() => { load(); }, [load]);
 
-  const exportAudits = () => {
-    const csv = [
-      ['Timestamp', 'Admin', 'Action', 'Entity', 'Details'].join(','),
-      ...filteredAudits.map(a =>
-        [
-          new Date(a.timestamp).toLocaleString(),
-          a.admin,
-          a.action,
-          a.entity,
-          a.details
-        ].map(val => `"${val}"`).join(',')
-      )
-    ].join('\n');
-
+  const exportCSV = () => {
+    const header = 'Timestamp,Admin,Action,Entity Type,Entity Name,Details';
+    const rows = audits.map(a => [`"${a.created_at}"`, `"${a.admin_email}"`, `"${a.action}"`, `"${a.entity_type}"`, `"${a.entity_name}"`, `"${(a.details||'').replace(/"/g,'""')}"`].join(','));
+    const csv = [header, ...rows].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `audit-log-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `audit-log-${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    URL.revokeObjectURL(url);
   };
 
-  const filteredAudits = audits.filter(audit => {
-    const matchesSearch =
-      audit.admin.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      audit.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      audit.entity.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      audit.details.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterAction === 'all' || audit.action === filterAction;
-    return matchesSearch && matchesFilter;
-  });
-
-  const actions = [...new Set(audits.map(a => a.action))];
+  const badge: Record<string,string> = {
+    CREATE:'text-green-700 bg-green-100',CREATED:'text-green-700 bg-green-100',
+    UPDATE:'text-[#0072CE] bg-blue-100', UPDATED:'text-[#0072CE] bg-blue-100',
+    DELETE:'text-[#E83E2D] bg-red-100',  DELETED:'text-[#E83E2D] bg-red-100',
+    APPROVE:'text-green-700 bg-green-100',REJECT:'text-[#E83E2D] bg-red-100',
+    PUBLISH:'text-[#0072CE] bg-blue-100',ACTIVATE:'text-green-700 bg-green-100',
+    DEACTIVATE:'text-[#8C8C8C] bg-[#F4F4F4]',LOGIN:'text-[#1A1F5E] bg-[#1A1F5E]/10',
+  };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+      {toast && <div className="fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-4 rounded-2xl shadow-xl text-sm font-semibold bg-[#E83E2D]/10 border border-[#E83E2D]/30 text-[#E83E2D]">{toast}</div>}
+
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Audit Log</h1>
-          <p className="text-gray-600 mt-1">Complete history of admin actions</p>
+          <div className="h-1 w-10 bg-[#E83E2D] rounded-full mb-3" />
+          <h1 className="text-3xl font-bold text-[#1A1F5E]">Audit Log</h1>
+          <p className="text-[#8C8C8C] mt-1">{audits.length} entries</p>
         </div>
-        <button
-          onClick={exportAudits}
-          className="flex items-center gap-2 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
-        >
-          <Download className="w-5 h-5" />
-          Export CSV
-        </button>
+        <div className="flex gap-3">
+          <button onClick={load} className="flex items-center gap-2 px-4 py-2.5 border-2 border-[#1A1F5E] text-[#1A1F5E] font-semibold rounded-xl hover:bg-[#1A1F5E] hover:text-white transition-all duration-200"><RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin':''}`} />Refresh</button>
+          <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2.5 border-2 border-[#E5E7EB] text-[#333333] font-semibold rounded-xl hover:bg-[#F4F4F4] transition-all"><Download className="w-4 h-4" />Export CSV</button>
+        </div>
       </div>
 
-      <div className="bg-white rounded-xl p-6 shadow-sm border">
-        <div className="inline-flex p-3 rounded-lg bg-[#1A1F5E]/10 mb-3">
-          <ClipboardList className="w-6 h-6 text-[#0072CE]" />
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3">
+        <div className="relative flex-1 min-w-48">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8C8C8C]" />
+          <input value={search} onChange={e=>setSearch(e.target.value)} onKeyDown={e=>e.key==='Enter'&&load()} placeholder="Search by name, admin, detail…" className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-[#E5E7EB] text-sm focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all" />
         </div>
-        <p className="text-gray-600 text-sm">Total Actions Logged</p>
-        <p className="text-3xl font-bold text-gray-900 mt-1">{audits.length}</p>
+        <select value={actionFilter} onChange={e=>setAction(e.target.value)} className="px-4 py-2.5 rounded-xl border-2 border-[#E5E7EB] text-sm focus:outline-none focus:border-[#1A1F5E] bg-white">
+          {ACTIONS.map(a=><option key={a} value={a}>{a==='all' ? 'All actions' : a}</option>)}
+        </select>
+        <button onClick={load} className="flex items-center gap-2 px-4 py-2.5 bg-[#1A1F5E] text-white font-semibold rounded-xl hover:opacity-90 transition-all"><Filter className="w-4 h-4" />Apply</button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search audit log..."
-              className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
-            />
+      <div className="bg-white rounded-3xl shadow-xl border border-[#E5E7EB] overflow-hidden">
+        {loading ? <div className="p-12 text-center text-[#8C8C8C]"><RefreshCw className="w-8 h-8 mx-auto mb-2 animate-spin text-[#1A1F5E]" />Loading audit log…</div> :
+        audits.length === 0 ? <div className="p-12 text-center text-[#8C8C8C]"><ClipboardList className="w-12 h-12 mx-auto mb-3 text-[#E5E7EB]" /><p>No audit entries found.</p></div> : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-[#F4F4F4] border-b border-[#E5E7EB]">
+                <tr>{['Timestamp','Admin','Action','Entity','Name/Details'].map(h=><th key={h} className="px-5 py-3.5 text-left text-xs font-semibold text-[#8C8C8C] uppercase tracking-wide">{h}</th>)}</tr>
+              </thead>
+              <tbody className="divide-y divide-[#E5E7EB]">
+                {audits.map(a => {
+                  const cls = badge[a.action?.toUpperCase()] || 'text-[#8C8C8C] bg-[#F4F4F4]';
+                  return (
+                    <tr key={a.id} className="hover:bg-[#F4F4F4]/50 transition-colors">
+                      <td className="px-5 py-3.5 text-[#8C8C8C] whitespace-nowrap">{new Date(a.created_at).toLocaleString()}</td>
+                      <td className="px-5 py-3.5 text-[#333333] font-medium">{a.admin_email}</td>
+                      <td className="px-5 py-3.5"><span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${cls}`}>{a.action}</span></td>
+                      <td className="px-5 py-3.5 text-[#8C8C8C]">{a.entity_type}</td>
+                      <td className="px-5 py-3.5 text-[#333333] max-w-xs truncate">{a.entity_name}{a.details ? ` — ${a.details}` : ''}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <select
-              value={filterAction}
-              onChange={(e) => setFilterAction(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20 appearance-none"
-            >
-              <option value="all">All Actions</option>
-              {actions.map(action => (
-                <option key={action} value={action}>{action}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm border">
-        <div className="divide-y divide-gray-200">
-          {filteredAudits.length === 0 ? (
-            <div className="p-12 text-center text-gray-500">
-              <ClipboardList className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p>No audit entries found</p>
-            </div>
-          ) : (
-            filteredAudits.map((audit) => (
-              <div key={audit.id} className="p-4 hover:bg-gray-50 transition-colors">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 mt-1">
-                    <Calendar className="w-5 h-5 text-gray-400" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-1">
-                      <span className="font-semibold text-gray-900">{audit.admin}</span>
-                      <span className="text-gray-500">•</span>
-                      <span className="text-sm text-gray-600">
-                        {new Date(audit.timestamp).toLocaleString()}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-700">
-                      <span className={`inline-block px-2 py-1 rounded text-xs font-bold mr-2 ${
-                        audit.action === 'CREATED' ? 'bg-green-100 text-green-700' :
-                        audit.action === 'UPDATED' ? 'bg-[#1A1F5E]/10 text-[#1A1F5E]' :
-                        audit.action === 'DELETED' ? 'bg-red-100 text-red-700' :
-                        'bg-gray-100 text-gray-700'
-                      }`}>
-                        {audit.action}
-                      </span>
-                      <span className="text-gray-500">{audit.entity}</span> - {audit.details}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+        )}
       </div>
     </div>
   );
 };
 
 export default AdminAudit;
-

@@ -1,261 +1,168 @@
-﻿import React, { useState, useEffect } from 'react';
-import { Briefcase, Plus, Edit, Trash2, Save, X, Search } from 'lucide-react';
-import { getData, setData, STORAGE_KEYS } from '../../services/dataStore';
-import { logAuditAction } from '../../services/auditLogger';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Briefcase, Plus, Edit, Trash2, Save, X, Search, RefreshCw, Calendar } from 'lucide-react';
+import { adminAPI } from '../../services/api';
 
-interface Opportunity {
-  id: string;
-  title: string;
-  company: string;
-  location: string;
-  type: 'Job' | 'Fellowship' | 'Event';
-  description: string;
-  requirements: string;
-  deadline: string;
-  postedDate: string;
-  status: 'active' | 'closed';
-}
+const EMPTY = { title:'', description:'', industry:'', client_sector:'', regions_needed:'', budget_range:'', deadline:'', priority:'medium', status:'open' };
+const PRIORITIES = ['high','medium','low'];
+const STATUSES   = ['open','in-progress','closed'];
 
 const AdminOpportunities: React.FC = () => {
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    title: '',
-    company: '',
-    location: '',
-    type: 'Job' as 'Job' | 'Fellowship' | 'Event',
-    description: '',
-    requirements: '',
-    deadline: '',
-    status: 'active' as 'active' | 'closed'
-  });
+  const [opps, setOpps]         = useState<any[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [saving, setSaving]     = useState(false);
+  const [search, setSearch]     = useState('');
+  const [statusFilter, setStatusF] = useState('all');
+  const [showModal, setModal]   = useState(false);
+  const [editId, setEditId]     = useState<string|null>(null);
+  const [form, setForm]         = useState({ ...EMPTY });
+  const [toast, setToast]       = useState<{msg:string;ok:boolean}|null>(null);
 
-  useEffect(() => {
-    loadOpportunities();
+  const showT = (msg: string, ok = true) => { setToast({msg,ok}); setTimeout(()=>setToast(null),4000); };
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await adminAPI.getOpportunities();
+      if (res?.success) setOpps(res.data.opportunities || []);
+    } catch { showT('Failed to load opportunities', false); }
+    finally { setLoading(false); }
   }, []);
 
-  const loadOpportunities = () => {
-    const stored = getData(STORAGE_KEYS.OPPORTUNITIES, [
-      {
-        id: '1',
-        title: 'Senior Software Engineer',
-        company: 'Forvis Mazars',
-        location: 'Lagos, Nigeria',
-        type: 'Job' as 'Job',
-        description: 'We are seeking a talented software engineer...',
-        requirements: 'Bachelor degree in Computer Science, 5+ years experience',
-        deadline: '2024-04-30',
-        postedDate: '2024-01-15',
-        status: 'active' as 'active'
-      }
-    ]) as Opportunity[];
-    setOpportunities(stored);
+  useEffect(() => { load(); }, [load]);
+
+  const openCreate = () => { setEditId(null); setForm({...EMPTY}); setModal(true); };
+  const openEdit   = (o: any) => {
+    setEditId(o.opportunity_id||o.id);
+    setForm({ title:o.title||'', description:o.description||'', industry:o.industry||'', client_sector:o.client_sector||'', regions_needed:o.regions_needed||'', budget_range:o.budget_range||'', deadline:o.deadline ? o.deadline.split('T')[0] : '', priority:o.priority||'medium', status:o.status||'open' });
+    setModal(true);
   };
 
-  const handleSubmit = () => {
-    if (!formData.title || !formData.company) {
-      alert('Please fill in title and company');
-      return;
-    }
-
-    if (editingId) {
-      const updated = opportunities.map(o =>
-        o.id === editingId ? { ...o, ...formData } : o
-      );
-      setOpportunities(updated);
-      setData(STORAGE_KEYS.OPPORTUNITIES, updated);
-      logAuditAction('UPDATED', 'Opportunity', formData.title);
-    } else {
-      const newOpp: Opportunity = {
-        id: Date.now().toString(),
-        ...formData,
-        postedDate: new Date().toISOString().split('T')[0]
-      };
-      const updated = [...opportunities, newOpp];
-      setOpportunities(updated);
-      setData(STORAGE_KEYS.OPPORTUNITIES, updated);
-      logAuditAction('CREATED', 'Opportunity', formData.title);
-    }
-    resetModal();
+  const handleSave = async () => {
+    if (!form.title || !form.description) { showT('Title and description required', false); return; }
+    setSaving(true);
+    try {
+      const id = editId;
+      if (id) { await adminAPI.updateOpportunity(id, form); await adminAPI.logAudit('UPDATE', 'Opportunity', form.title); showT('Opportunity updated'); }
+      else    { await adminAPI.createOpportunity(form); await adminAPI.logAudit('CREATE', 'Opportunity', form.title); showT('Opportunity created'); }
+      setModal(false); load();
+    } catch { showT('Save failed', false); }
+    finally { setSaving(false); }
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this opportunity?')) {
-      const opp = opportunities.find(o => o.id === id);
-      const updated = opportunities.filter(o => o.id !== id);
-      setOpportunities(updated);
-      setData(STORAGE_KEYS.OPPORTUNITIES, updated);
-      logAuditAction('DELETED', 'Opportunity', opp?.title || id);
-    }
+  const handleDelete = async (o: any) => {
+    if (!confirm(`Close "${o.title}"?`)) return;
+    try {
+      await adminAPI.deleteOpportunity(o.opportunity_id||o.id);
+      await adminAPI.logAudit('DELETE', 'Opportunity', o.title);
+      setOpps(prev => prev.filter(x => (x.opportunity_id||x.id) !== (o.opportunity_id||o.id)));
+      showT('Opportunity closed');
+    } catch { showT('Failed', false); }
   };
 
-  const toggleStatus = (id: string) => {
-    const updated = opportunities.map(o =>
-      o.id === id ? { ...o, status: o.status === 'active' ? 'closed' as const : 'active' as const } : o
-    );
-    setOpportunities(updated);
-    setData(STORAGE_KEYS.OPPORTUNITIES, updated);
-    const opp = opportunities.find(o => o.id === id);
-    logAuditAction('STATUS_CHANGED', 'Opportunity', `${opp?.title} - ${updated.find(o => o.id === id)?.status}`);
-  };
+  const filtered = opps.filter(o => {
+    const q = search.toLowerCase();
+    const mQ = !q || (o.title||'').toLowerCase().includes(q) || (o.industry||'').toLowerCase().includes(q);
+    const mS = statusFilter === 'all' || o.status === statusFilter;
+    return mQ && mS;
+  });
 
-  const resetModal = () => {
-    setShowModal(false);
-    setEditingId(null);
-    setFormData({ title: '', company: '', location: '', type: 'Job', description: '', requirements: '', deadline: '', status: 'active' });
-  };
-
-  const filtered = opportunities.filter(o =>
-    o.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    o.company.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const priorityCls = (p: string) => ({ high:'bg-[#E83E2D]/10 text-[#E83E2D]', medium:'bg-yellow-100 text-yellow-700', low:'bg-green-100 text-green-700' })[p] || 'bg-[#F4F4F4] text-[#8C8C8C]';
+  const statusCls   = (s: string) => ({ open:'bg-green-100 text-green-700', 'in-progress':'bg-[#0072CE]/10 text-[#0072CE]', closed:'bg-[#8C8C8C]/10 text-[#8C8C8C]' })[s] || 'bg-[#F4F4F4] text-[#8C8C8C]';
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+      {toast && <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-5 py-4 rounded-2xl shadow-xl text-sm font-semibold ${toast.ok ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-[#E83E2D]/10 border border-[#E83E2D]/30 text-[#E83E2D]'}`}>{toast.msg}</div>}
+
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Opportunities</h1>
-          <p className="text-gray-600 mt-1">Manage jobs, fellowships, and events</p>
+          <div className="h-1 w-10 bg-[#E83E2D] rounded-full mb-3" />
+          <h1 className="text-3xl font-bold text-[#1A1F5E]">Opportunities</h1>
+          <p className="text-[#8C8C8C] mt-1">{opps.length} total opportunities</p>
         </div>
-        <button
-          onClick={() => { resetModal(); setShowModal(true); }}
-          className="flex items-center gap-2 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
-        >
-          <Plus className="w-5 h-5" />
-          Add Opportunity
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {['Job', 'Fellowship', 'Event'].map(type => (
-          <div key={type} className="bg-white rounded-xl p-6 shadow-sm border">
-            <div className="inline-flex p-3 rounded-lg bg-orange-100 mb-3">
-              <Briefcase className="w-6 h-6 text-orange-600" />
-            </div>
-            <p className="text-gray-600 text-sm">{type}s</p>
-            <p className="text-3xl font-bold text-gray-900 mt-1">
-              {opportunities.filter(o => o.type === type).length}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm border p-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search opportunities..."
-            className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
-          />
+        <div className="flex gap-3">
+          <button onClick={load} className="flex items-center gap-2 px-4 py-2.5 border-2 border-[#1A1F5E] text-[#1A1F5E] font-semibold rounded-xl hover:bg-[#1A1F5E] hover:text-white transition-all duration-200"><RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin':''}`} />Refresh</button>
+          <button onClick={openCreate} className="flex items-center gap-2 px-5 py-2.5 bg-[#1A1F5E] text-white font-semibold rounded-xl hover:opacity-90 hover:scale-105 active:scale-95 transition-all shadow-lg"><Plus className="w-4 h-4" />Add</button>
         </div>
       </div>
 
-      <div className="space-y-4">
-        {filtered.map(opp => (
-          <div key={opp.id} className="bg-white rounded-xl shadow-sm border p-6">
-            <div className="flex justify-between mb-4">
-              <div className="flex-1">
-                <div className="flex items-start gap-3 mb-2">
-                  <h3 className="font-bold text-gray-900 text-lg">{opp.title}</h3>
-                  <span className={`px-2 py-1 rounded text-xs font-bold ${opp.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-                    {opp.status.toUpperCase()}
-                  </span>
+      <div className="flex flex-wrap gap-3">
+        <div className="relative flex-1 min-w-48">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8C8C8C]" />
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search opportunities…" className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-[#E5E7EB] text-sm focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all" />
+        </div>
+        <select value={statusFilter} onChange={e=>setStatusF(e.target.value)} className="px-4 py-2.5 rounded-xl border-2 border-[#E5E7EB] text-sm focus:outline-none focus:border-[#1A1F5E] bg-white">
+          <option value="all">All statuses</option>
+          {STATUSES.map(s=><option key={s} value={s}>{s.charAt(0).toUpperCase()+s.slice(1)}</option>)}
+        </select>
+      </div>
+
+      <div className="bg-white rounded-3xl shadow-xl border border-[#E5E7EB] overflow-hidden">
+        {loading ? <div className="p-12 text-center text-[#8C8C8C]"><RefreshCw className="w-8 h-8 mx-auto mb-2 animate-spin text-[#1A1F5E]" />Loading…</div> :
+        filtered.length === 0 ? <div className="p-12 text-center text-[#8C8C8C]"><Briefcase className="w-12 h-12 mx-auto mb-3 text-[#E5E7EB]" /><p>No opportunities found.</p></div> :
+        <div className="divide-y divide-[#E5E7EB]">
+          {filtered.map(o => (
+            <div key={o.opportunity_id||o.id} className="p-5 hover:bg-[#F4F4F4]/50 transition-colors flex gap-4 items-start">
+              <div className="inline-flex p-2.5 rounded-xl bg-[#1A1F5E]/10 shrink-0"><Briefcase className="w-4 h-4 text-[#1A1F5E]" /></div>
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                  <h3 className="font-semibold text-[#333333]">{o.title}</h3>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${priorityCls(o.priority)}`}>{o.priority}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${statusCls(o.status)}`}>{o.status}</span>
                 </div>
-                <p className="text-sm text-gray-600 mb-1">{opp.company} • {opp.location}</p>
-                <p className="text-sm text-gray-700 mb-3">{opp.description}</p>
-                <div className="flex items-center gap-4 text-xs text-gray-500">
-                  <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-2 py-1 rounded">{opp.type}</span>
-                  <span>Deadline: {opp.deadline}</span>
-                </div>
+                {o.industry && <p className="text-xs text-[#8C8C8C] mb-1">{o.industry} · {o.regions_needed}</p>}
+                <p className="text-sm text-[#333333] line-clamp-2">{o.description}</p>
+                {o.deadline && <p className="text-xs text-[#8C8C8C] flex items-center gap-1 mt-1"><Calendar className="w-3 h-3" />Deadline: {new Date(o.deadline).toLocaleDateString()}</p>}
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => toggleStatus(opp.id)}
-                  className="p-2 text-green-600 hover:bg-green-50 rounded-lg"
-                  title="Toggle status"
-                >
-                  {opp.status === 'active' ? '✓' : '○'}
-                </button>
-                <button
-                  onClick={() => {
-                    setEditingId(opp.id);
-                    setFormData(opp);
-                    setShowModal(true);
-                  }}
-                  className="p-2 text-[#0072CE] hover:bg-[#1A1F5E]/5 rounded-lg"
-                >
-                  <Edit className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => handleDelete(opp.id)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
+              <div className="flex gap-2 shrink-0">
+                <button onClick={()=>openEdit(o)} className="p-2 rounded-xl text-[#0072CE] hover:bg-[#0072CE]/10 transition-colors"><Edit className="w-4 h-4" /></button>
+                <button onClick={()=>handleDelete(o)} className="p-2 rounded-xl text-[#E83E2D] hover:bg-[#E83E2D]/10 transition-colors"><Trash2 className="w-4 h-4" /></button>
               </div>
             </div>
-          </div>
-        ))}
-        {filtered.length === 0 && (
-          <div className="text-center py-16 bg-white rounded-xl border-2 border-dashed">
-            <Briefcase className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">No opportunities found</p>
-          </div>
-        )}
+          ))}
+        </div>}
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold">{editingId ? 'Edit' : 'Add'} Opportunity</h3>
-              <button onClick={resetModal}><X className="w-6 h-6" /></button>
+              <h3 className="text-2xl font-bold text-[#1A1F5E]">{editId ? 'Edit' : 'Add'} Opportunity</h3>
+              <button onClick={()=>setModal(false)} className="p-2 rounded-xl hover:bg-[#F4F4F4]"><X className="w-5 h-5" /></button>
             </div>
             <div className="space-y-4">
+              {[{label:'Title *',key:'title'},{label:'Industry',key:'industry'},{label:'Client Sector',key:'client_sector'},{label:'Regions Needed',key:'regions_needed'},{label:'Budget Range',key:'budget_range'}].map(f => (
+                <div key={f.key}>
+                  <label className="block text-sm font-semibold text-[#333333] mb-1.5">{f.label}</label>
+                  <input value={(form as any)[f.key]} onChange={e=>setForm(p=>({...p,[f.key]:e.target.value}))} className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all" />
+                </div>
+              ))}
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Title *</label>
-                <input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" />
+                <label className="block text-sm font-semibold text-[#333333] mb-1.5">Description *</label>
+                <textarea rows={3} value={form.description} onChange={e=>setForm(p=>({...p,description:e.target.value}))} className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] focus:outline-none focus:border-[#1A1F5E] transition-all resize-none" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Company *</label>
-                  <input type="text" value={formData.company} onChange={(e) => setFormData({ ...formData, company: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" />
+                  <label className="block text-sm font-semibold text-[#333333] mb-1.5">Deadline</label>
+                  <input type="date" value={form.deadline} onChange={e=>setForm(p=>({...p,deadline:e.target.value}))} className="w-full px-3 py-2.5 rounded-2xl border-2 border-[#E5E7EB] text-sm focus:outline-none focus:border-[#1A1F5E] bg-white" />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
-                  <input type="text" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Type</label>
-                  <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value as any })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20">
-                    <option value="Job">Job</option>
-                    <option value="Fellowship">Fellowship</option>
-                    <option value="Event">Event</option>
+                  <label className="block text-sm font-semibold text-[#333333] mb-1.5">Priority</label>
+                  <select value={form.priority} onChange={e=>setForm(p=>({...p,priority:e.target.value}))} className="w-full px-3 py-2.5 rounded-2xl border-2 border-[#E5E7EB] text-sm focus:outline-none focus:border-[#1A1F5E] bg-white">
+                    {PRIORITIES.map(p=><option key={p} value={p}>{p}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Deadline</label>
-                  <input type="date" value={formData.deadline} onChange={(e) => setFormData({ ...formData, deadline: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" />
+                  <label className="block text-sm font-semibold text-[#333333] mb-1.5">Status</label>
+                  <select value={form.status} onChange={e=>setForm(p=>({...p,status:e.target.value}))} className="w-full px-3 py-2.5 rounded-2xl border-2 border-[#E5E7EB] text-sm focus:outline-none focus:border-[#1A1F5E] bg-white">
+                    {STATUSES.map(s=><option key={s} value={s}>{s}</option>)}
+                  </select>
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
-                <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" rows={3} />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Requirements</label>
-                <textarea value={formData.requirements} onChange={(e) => setFormData({ ...formData, requirements: e.target.value })} className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20" rows={3} />
-              </div>
-              <div className="flex gap-4 mt-6">
-                <button onClick={resetModal} className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-bold">Cancel</button>
-                <button onClick={handleSubmit} className="flex-1 bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white py-3 rounded-lg font-bold"><Save className="w-5 h-5 inline mr-2" />{editingId ? 'Update' : 'Add'}</button>
+              <div className="flex gap-3 pt-2">
+                <button onClick={()=>setModal(false)} className="flex-1 py-3 rounded-2xl border-2 border-[#E5E7EB] font-semibold hover:bg-[#F4F4F4] transition-all">Cancel</button>
+                <button onClick={handleSave} disabled={saving} className="flex-1 py-3 rounded-2xl bg-[#1A1F5E] text-white font-semibold hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 transition-all">
+                  {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}{saving ? 'Saving…' : 'Save'}
+                </button>
               </div>
             </div>
           </div>
@@ -266,4 +173,3 @@ const AdminOpportunities: React.FC = () => {
 };
 
 export default AdminOpportunities;
-

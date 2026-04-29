@@ -19,8 +19,8 @@ const SimpleLogin: React.FC = () => {
     setError('');
 
     try {
-      await login(email, password);
-      navigate('/home');
+      const role = await login(email, password);
+      navigate(role === 'admin' ? '/admin' : '/home');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred. Please try again.');
     } finally {
@@ -50,22 +50,22 @@ const SimpleLogin: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="text-center p-4 rounded-xl bg-white/50 backdrop-blur-sm">
-              <div className="w-8 h-8 bg-[#1A1F5E] rounded-full mx-auto mb-2 flex items-center justify-center">
+            <div className="text-center p-4 -xl bg-white/50 backdrop-blur-sm">
+              <div className="w-8 h-8 bg-[#1A1F5E] -full mx-auto mb-2 flex items-center justify-center">
                 <span className="text-white font-bold text-sm">10K+</span>
               </div>
               <h3 className="font-semibold text-[#333333]">Active Members</h3>
               <p className="text-sm text-gray-600">Across Africa</p>
             </div>
-            <div className="text-center p-4 rounded-xl bg-white/50 backdrop-blur-sm">
-              <div className="w-8 h-8 bg-[#1A1F5E] rounded-full mx-auto mb-2 flex items-center justify-center">
+            <div className="text-center p-4 -xl bg-white/50 backdrop-blur-sm">
+              <div className="w-8 h-8 bg-[#1A1F5E] -full mx-auto mb-2 flex items-center justify-center">
                 <span className="text-white font-bold text-sm">54</span>
               </div>
               <h3 className="font-semibold text-[#333333]">Countries</h3>
               <p className="text-sm text-gray-600">Connected</p>
             </div>
-            <div className="text-center p-4 rounded-xl bg-white/50 backdrop-blur-sm">
-              <div className="w-8 h-8 bg-[#1A1F5E] rounded-full mx-auto mb-2 flex items-center justify-center">
+            <div className="text-center p-4 -xl bg-white/50 backdrop-blur-sm">
+              <div className="w-8 h-8 bg-[#1A1F5E] -full mx-auto mb-2 flex items-center justify-center">
                 <span className="text-white font-bold text-sm">5K+</span>
               </div>
               <h3 className="font-semibold text-[#333333]">Connections</h3>
@@ -76,15 +76,15 @@ const SimpleLogin: React.FC = () => {
 
         {/* Right Side - Login Form */}
         <div className="w-full max-w-md mx-auto">
-          <div className="bg-white rounded-3xl shadow-xl p-8 border-t-4 border-t-[#1A1F5E] border border-[#E5E7EB]">
+          <div className="bg-white -3xl shadow-xl p-8 border-t-4 border-t-[#1A1F5E] border border-[#E5E7EB]">
             <div className="text-center mb-8">
-              <div className="h-1 w-12 bg-[#E83E2D] rounded-full mx-auto mb-4" />
+              <div className="h-1 w-12 bg-[#E83E2D] -full mx-auto mb-4" />
               <h2 className="text-3xl font-bold text-[#1A1F5E] mb-2">Welcome Back</h2>
               <p className="text-[#8C8C8C]">Sign in to continue your journey</p>
             </div>
 
             {error && (
-              <div className="mb-6 flex items-center gap-3 bg-[#E83E2D]/10 border border-[#E83E2D]/30 text-[#E83E2D] px-5 py-4 rounded-2xl">
+              <div className="mb-6 flex items-center gap-3 bg-[#E83E2D]/10 border border-[#E83E2D]/30 text-[#E83E2D] px-5 py-4 -2xl">
                 <p className="text-sm">{error}</p>
               </div>
             )}
@@ -98,7 +98,7 @@ const SimpleLogin: React.FC = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all duration-200"
+                  className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all duration-200"
                   placeholder="your.email@example.com"
                   required
                 />
@@ -113,7 +113,7 @@ const SimpleLogin: React.FC = () => {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all duration-200 pr-12"
+                    className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all duration-200 pr-12"
                     placeholder="Enter your password"
                     required
                   />
@@ -130,7 +130,7 @@ const SimpleLogin: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white py-3 rounded-full font-semibold transition-all duration-200 hover:opacity-90 hover:scale-105 active:scale-95 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-full bg-[#1A1F5E] text-white py-3 -full font-semibold transition-all duration-200 hover:opacity-90 hover:scale-105 active:scale-95 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {loading ? (
                   <>

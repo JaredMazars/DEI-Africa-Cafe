@@ -71,6 +71,28 @@ class Session {
         }
     }
 
+    static async getConnectionSessions(connectionId) {
+        try {
+            const query = `
+                SELECT s.*, 
+                       mu.name as mentor_name, mu.avatar_url as mentor_avatar,
+                       eu.name as mentee_name, eu.avatar_url as mentee_avatar
+                FROM Sessions s
+                INNER JOIN connections c ON s.connection_id = c.id
+                LEFT JOIN experts ex ON c.expert_id = ex.id
+                LEFT JOIN users mu ON ex.user_id = mu.id
+                LEFT JOIN users eu ON c.requester_id = eu.id
+                WHERE s.connection_id = '${connectionId}'
+                ORDER BY s.scheduled_at DESC
+            `;
+            const result = await executeQuery(query);
+            return result.recordset.map(session => new Session(session));
+        } catch (error) {
+            console.error('Error getting connection sessions:', error);
+            throw error;
+        }
+    }
+
     static async getUpcomingSessions(userId) {
         try {
             const query = `

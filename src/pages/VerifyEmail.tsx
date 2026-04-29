@@ -107,10 +107,10 @@ const VerifyEmail: React.FC = () => {
         </div>
 
         {/* Verification Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white -2xl shadow-xl p-8">
           {status === 'verifying' && (
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-[#1A1F5E]/10 rounded-full mb-6">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-[#1A1F5E]/10 -full mb-6">
                 <Loader className="w-10 h-10 text-[#0072CE] animate-spin" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Verifying Your Email</h2>
@@ -122,19 +122,19 @@ const VerifyEmail: React.FC = () => {
 
           {status === 'success' && (
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 -full mb-6">
                 <CheckCircle className="w-10 h-10 text-green-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Email Verified!</h2>
               <p className="text-gray-600 mb-6">{message}</p>
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <div className="bg-green-50 border border-green-200 -lg p-4 mb-6">
                 <p className="text-sm text-green-800">
                   Redirecting you to login page in 3 seconds...
                 </p>
               </div>
               <Link
                 to="/login"
-                className="inline-flex items-center justify-center w-full px-6 py-3 bg-[#0072CE] text-white rounded-lg hover:bg-[#1A1F5E] transition-colors font-medium"
+                className="inline-flex items-center justify-center w-full px-6 py-3 bg-[#0072CE] text-white -lg hover:bg-[#1A1F5E] transition-colors font-medium"
               >
                 Go to Login Now
               </Link>
@@ -143,14 +143,14 @@ const VerifyEmail: React.FC = () => {
 
           {status === 'expired' && (
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-yellow-100 rounded-full mb-6">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-yellow-100 -full mb-6">
                 <Mail className="w-10 h-10 text-yellow-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Link Expired</h2>
               <p className="text-gray-600 mb-6">{message}</p>
               
               {resendSuccess ? (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                <div className="bg-green-50 border border-green-200 -lg p-4 mb-6">
                   <p className="text-sm text-green-800">
                     ✓ New verification email sent! Please check your inbox.
                   </p>
@@ -159,7 +159,7 @@ const VerifyEmail: React.FC = () => {
                 <button
                   onClick={handleResendVerification}
                   disabled={resendLoading}
-                  className="w-full px-6 py-3 bg-[#0072CE] text-white rounded-lg hover:bg-[#1A1F5E] transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center mb-4"
+                  className="w-full px-6 py-3 bg-[#0072CE] text-white -lg hover:bg-[#1A1F5E] transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center mb-4"
                 >
                   {resendLoading ? (
                     <>
@@ -187,7 +187,7 @@ const VerifyEmail: React.FC = () => {
 
           {status === 'error' && (
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-6">
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-red-100 -full mb-6">
                 <XCircle className="w-10 h-10 text-red-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Verification Failed</h2>
@@ -198,7 +198,7 @@ const VerifyEmail: React.FC = () => {
                   <button
                     onClick={handleResendVerification}
                     disabled={resendLoading}
-                    className="w-full px-6 py-3 bg-[#0072CE] text-white rounded-lg hover:bg-[#1A1F5E] transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
+                    className="w-full px-6 py-3 bg-[#0072CE] text-white -lg hover:bg-[#1A1F5E] transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
                   >
                     {resendLoading ? (
                       <>
@@ -216,7 +216,7 @@ const VerifyEmail: React.FC = () => {
                 
                 <Link
                   to="/register"
-                  className="block w-full px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-center"
+                  className="block w-full px-6 py-3 border border-gray-300 text-gray-700 -lg hover:bg-gray-50 transition-colors font-medium text-center"
                 >
                   Register Again
                 </Link>

@@ -59,7 +59,7 @@ const SimpleRegister: React.FC = () => {
               alt="Forvis Mazars"
               className="h-10 sm:h-14 lg:h-20 object-contain mx-auto lg:mx-0"
             />
-            <div className="h-1 w-12 bg-[#E83E2D] rounded-full mx-auto lg:mx-0" />
+            <div className="h-1 w-12 bg-[#E83E2D] -full mx-auto lg:mx-0" />
             <h1 className="text-4xl font-bold text-[#1A1F5E]">DEI Cafe</h1>
             <p className="text-xl text-[#333333] max-w-md mx-auto lg:mx-0 leading-relaxed">
               Join thousands of professionals across Africa in meaningful mentorship connections.
@@ -68,8 +68,8 @@ const SimpleRegister: React.FC = () => {
 
           <div className="hidden lg:grid grid-cols-3 gap-4">
             {stats.map(({ icon: Icon, value, label, sub }) => (
-              <div key={label} className="text-center p-5 rounded-3xl bg-white shadow-xl border border-[#E5E7EB]">
-                <div className="w-10 h-10 bg-gradient-to-br from-[#1A1F5E] to-[#0072CE] rounded-2xl mx-auto mb-3 flex items-center justify-center">
+              <div key={label} className="text-center p-5 -3xl bg-white shadow-xl border border-[#E5E7EB]">
+                <div className="w-10 h-10 bg-gradient-to-br from-[#1A1F5E] to-[#0072CE] -2xl mx-auto mb-3 flex items-center justify-center">
                   <Icon className="w-5 h-5 text-white" />
                 </div>
                 <p className="text-lg font-bold text-[#1A1F5E]">{value}</p>
@@ -82,15 +82,15 @@ const SimpleRegister: React.FC = () => {
 
         {/* Right Side – Register Form */}
         <div className="w-full max-w-md mx-auto">
-          <div className="bg-white rounded-3xl shadow-xl p-8 border-t-4 border-t-[#1A1F5E] border border-[#E5E7EB]">
+          <div className="bg-white -3xl shadow-xl p-8 border-t-4 border-t-[#1A1F5E] border border-[#E5E7EB]">
             <div className="text-center mb-8">
-              <div className="h-1 w-12 bg-[#E83E2D] rounded-full mx-auto mb-4" />
+              <div className="h-1 w-12 bg-[#E83E2D] -full mx-auto mb-4" />
               <h2 className="text-3xl font-bold text-[#1A1F5E] mb-2">Create Account</h2>
               <p className="text-[#8C8C8C]">Join the DEI Cafe community</p>
             </div>
 
             {error && (
-              <div className="mb-6 flex items-center gap-3 bg-[#E83E2D]/10 border border-[#E83E2D]/30 text-[#E83E2D] px-5 py-4 rounded-2xl">
+              <div className="mb-6 flex items-center gap-3 bg-[#E83E2D]/10 border border-[#E83E2D]/30 text-[#E83E2D] px-5 py-4 -2xl">
                 <p className="text-sm">{error}</p>
               </div>
             )}
@@ -106,7 +106,7 @@ const SimpleRegister: React.FC = () => {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all duration-200"
+                    className="w-full pl-12 pr-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all duration-200"
                     placeholder="your.email@example.com"
                     required
                   />
@@ -123,7 +123,7 @@ const SimpleRegister: React.FC = () => {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-12 pr-12 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all duration-200"
+                    className="w-full pl-12 pr-12 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all duration-200"
                     placeholder="Create a strong password"
                     required
                   />
@@ -144,7 +144,7 @@ const SimpleRegister: React.FC = () => {
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full pl-12 pr-12 py-3 rounded-2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all duration-200"
+                    className="w-full pl-12 pr-12 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all duration-200"
                     placeholder="Confirm your password"
                     required
                   />
@@ -158,7 +158,7 @@ const SimpleRegister: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] text-white py-3 rounded-full font-semibold transition-all duration-200 hover:opacity-90 hover:scale-105 active:scale-95 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mt-2"
+                className="w-full bg-[#1A1F5E] text-white py-3 -full font-semibold transition-all duration-200 hover:opacity-90 hover:scale-105 active:scale-95 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mt-2"
               >
                 {loading ? (
                   <><Loader className="w-5 h-5 animate-spin mr-2" />Creating Account...</>

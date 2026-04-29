@@ -95,9 +95,9 @@ font-family: 'GT Walsheim', 'Inter', Arial, sans-serif;
 ### Primary Button
 ```tsx
 <button className="
-  bg-gradient-to-r from-[#0072CE] to-[#1A1F5E]
+  bg-[#1A1F5E]
   text-white font-semibold
-  px-8 py-3 rounded-full
+  px-8 py-3 -full
   transition-all duration-200
   hover:opacity-90 hover:scale-105
   active:scale-95
@@ -112,7 +112,7 @@ font-family: 'GT Walsheim', 'Inter', Arial, sans-serif;
 <button className="
   bg-transparent
   text-[#1A1F5E] font-semibold
-  px-8 py-3 rounded-full
+  px-8 py-3 -full
   border-2 border-[#1A1F5E]
   transition-all duration-200
   hover:bg-[#1A1F5E] hover:text-white
@@ -127,7 +127,7 @@ font-family: 'GT Walsheim', 'Inter', Arial, sans-serif;
 <button className="
   bg-gradient-to-r from-[#E83E2D] to-[#c0321f]
   text-white font-semibold
-  px-8 py-3 rounded-full
+  px-8 py-3 -full
   transition-all duration-200
   hover:opacity-90 hover:scale-105
   shadow-lg
@@ -139,7 +139,7 @@ font-family: 'GT Walsheim', 'Inter', Arial, sans-serif;
 ### Icon Button
 ```tsx
 <button className="
-  p-2 rounded-full
+  p-2 -full
   text-[#1A1F5E]
   hover:bg-[#1A1F5E]/10
   transition-colors duration-200
@@ -156,7 +156,7 @@ font-family: 'GT Walsheim', 'Inter', Arial, sans-serif;
 ```tsx
 <div className="
   bg-white
-  rounded-3xl
+  -3xl
   shadow-xl
   p-8
   border border-[#E5E7EB]
@@ -169,7 +169,7 @@ font-family: 'GT Walsheim', 'Inter', Arial, sans-serif;
 ```tsx
 <div className="
   bg-white
-  rounded-3xl
+  -3xl
   shadow-xl
   p-8
   border-t-4 border-t-[#1A1F5E]
@@ -181,7 +181,7 @@ font-family: 'GT Walsheim', 'Inter', Arial, sans-serif;
 ```tsx
 <div className="
   bg-white
-  rounded-3xl
+  -3xl
   shadow-xl
   p-8
   border-t-4 border-t-[#E83E2D]
@@ -194,7 +194,7 @@ font-family: 'GT Walsheim', 'Inter', Arial, sans-serif;
 <div className="
   bg-gradient-to-br from-[#1A1F5E] to-[#0072CE]
   text-white
-  rounded-3xl
+  -3xl
   shadow-xl
   p-6
 ">
@@ -209,7 +209,7 @@ font-family: 'GT Walsheim', 'Inter', Arial, sans-serif;
 <input className="
   w-full
   px-4 py-3
-  rounded-2xl
+  -2xl
   border-2 border-[#E5E7EB]
   text-[#333333]
   placeholder-[#8C8C8C]
@@ -226,7 +226,7 @@ font-family: 'GT Walsheim', 'Inter', Arial, sans-serif;
 <select className="
   w-full
   px-4 py-3
-  rounded-2xl
+  -2xl
   border-2 border-[#E5E7EB]
   text-[#333333]
   bg-white
@@ -295,27 +295,27 @@ font-family: 'GT Walsheim', 'Inter', Arial, sans-serif;
 ### Status Badges
 ```tsx
 // Active / Success
-<span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+<span className="px-3 py-1 -full text-xs font-semibold bg-green-100 text-green-700">
   Active
 </span>
 
 // Pending / Warning
-<span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
+<span className="px-3 py-1 -full text-xs font-semibold bg-yellow-100 text-yellow-700">
   Pending
 </span>
 
 // Closed / Inactive
-<span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#8C8C8C]/10 text-[#8C8C8C]">
+<span className="px-3 py-1 -full text-xs font-semibold bg-[#8C8C8C]/10 text-[#8C8C8C]">
   Closed
 </span>
 
 // Featured / Navy
-<span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#1A1F5E]/10 text-[#1A1F5E]">
+<span className="px-3 py-1 -full text-xs font-semibold bg-[#1A1F5E]/10 text-[#1A1F5E]">
   Resolution
 </span>
 
 // Alert / Coral
-<span className="px-3 py-1 rounded-full text-xs font-semibold bg-[#E83E2D]/10 text-[#E83E2D]">
+<span className="px-3 py-1 -full text-xs font-semibold bg-[#E83E2D]/10 text-[#E83E2D]">
   Urgent
 </span>
 ```
@@ -330,7 +330,7 @@ font-family: 'GT Walsheim', 'Inter', Arial, sans-serif;
   flex items-center gap-3
   bg-green-50 border border-green-200
   text-green-800
-  px-5 py-4 rounded-2xl
+  px-5 py-4 -2xl
 ">
 ```
 
@@ -340,7 +340,7 @@ font-family: 'GT Walsheim', 'Inter', Arial, sans-serif;
   flex items-center gap-3
   bg-[#E83E2D]/10 border border-[#E83E2D]/30
   text-[#E83E2D]
-  px-5 py-4 rounded-2xl
+  px-5 py-4 -2xl
 ">
 ```
 
@@ -350,7 +350,7 @@ font-family: 'GT Walsheim', 'Inter', Arial, sans-serif;
   flex items-center gap-3
   bg-[#0072CE]/10 border border-[#0072CE]/30
   text-[#1A1F5E]
-  px-5 py-4 rounded-2xl
+  px-5 py-4 -2xl
 ">
 ```
 
@@ -422,12 +422,12 @@ const itemVariants = {
 
 ### Accent Divider (navy)
 ```tsx
-<div className="h-1 w-16 bg-[#1A1F5E] rounded-full my-4" />
+<div className="h-1 w-16 bg-[#1A1F5E] -full my-4" />
 ```
 
 ### Coral Accent Line
 ```tsx
-<div className="h-1 w-12 bg-[#E83E2D] rounded-full my-4" />
+<div className="h-1 w-12 bg-[#E83E2D] -full my-4" />
 ```
 
 ### Spacing Scale Convention
@@ -485,7 +485,7 @@ const itemVariants = {
 | ❌ Avoid                                     | ✅ Do Instead                                  |
 |----------------------------------------------|------------------------------------------------|
 | Inline `style={{}}` for colours              | Use Tailwind arbitrary values `[#hex]`         |
-| `rounded` or `rounded-lg` on cards           | Use `rounded-2xl` or `rounded-3xl`             |
+| `` or `-lg` on cards           | Use `-2xl` or `-3xl`             |
 | Generic grey buttons                         | Use navy/coral/blue gradient buttons           |
 | `shadow-sm` on elevated components          | Use `shadow-xl` or `shadow-2xl`                |
 | Coral as a background colour                 | Use coral only as **accent/border/text**       |
@@ -506,7 +506,7 @@ export default function ExamplePage() {
 
         {/* Page Header */}
         <div className="mb-10">
-          <div className="h-1 w-12 bg-[#E83E2D] rounded-full mb-4" />
+          <div className="h-1 w-12 bg-[#E83E2D] -full mb-4" />
           <h1 className="text-4xl font-bold text-[#1A1F5E]">Page Title</h1>
           <p className="text-[#8C8C8C] mt-2 text-base leading-relaxed">
             Supporting description text.
@@ -515,7 +515,7 @@ export default function ExamplePage() {
 
         {/* Content Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-white rounded-3xl shadow-xl p-8 border-t-4 border-t-[#1A1F5E]">
+          <div className="bg-white -3xl shadow-xl p-8 border-t-4 border-t-[#1A1F5E]">
             {/* Card content */}
           </div>
         </div>

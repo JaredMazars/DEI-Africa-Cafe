@@ -103,7 +103,7 @@ The journey toward true workplace diversity is ongoing, but the destination—or
           </button>
 
           <div className="mb-4">
-            <span className="bg-[#0072CE] text-white px-4 py-2 rounded-full text-sm font-bold">
+            <span className="bg-[#0072CE] text-white px-4 py-2 -full text-sm font-bold">
               {article.category}
             </span>
           </div>
@@ -142,11 +142,11 @@ The journey toward true workplace diversity is ongoing, but the destination—or
       <div className="max-w-4xl mx-auto px-6 py-16">
         {/* Action Buttons */}
         <div className="flex justify-end gap-4 mb-12">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg text-gray-700 font-medium transition-colors shadow-sm">
+          <button className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border border-gray-300 -lg text-gray-700 font-medium transition-colors shadow-sm">
             <Bookmark className="w-4 h-4" />
             Save
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white rounded-lg font-medium transition-colors shadow-lg">
+          <button className="flex items-center gap-2 px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white -lg font-medium transition-colors shadow-lg">
             <Share2 className="w-4 h-4" />
             Share
           </button>
@@ -161,9 +161,9 @@ The journey toward true workplace diversity is ongoing, but the destination—or
 
         {/* Author Card */}
         <div className="mt-16 pt-8 border-t-2 border-gray-200">
-          <div className="bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] rounded-2xl p-8 border border-[#0072CE]/30">
+          <div className="bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] -2xl p-8 border border-[#0072CE]/30">
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] rounded-full flex items-center justify-center text-white text-2xl font-bold">
+              <div className="w-16 h-16 bg-gradient-to-br from-[#0072CE] to-[#1A1F5E] -full flex items-center justify-center text-white text-2xl font-bold">
                 {article.author.split(' ').map(n => n[0]).join('')}
               </div>
               <div>
@@ -194,14 +194,14 @@ The journey toward true workplace diversity is ongoing, but the destination—or
                 image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=600'
               }
             ].map((relatedArticle, idx) => (
-              <div key={idx} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer border border-gray-200">
+              <div key={idx} className="bg-white -xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer border border-gray-200">
                 <img 
                   src={relatedArticle.image}
                   alt={relatedArticle.title}
                   className="w-full h-48 object-cover"
                 />
                 <div className="p-6">
-                  <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-3 py-1 rounded-full text-xs font-bold">
+                  <span className="bg-[#1A1F5E]/10 text-[#1A1F5E] px-3 py-1 -full text-xs font-bold">
                     {relatedArticle.category}
                   </span>
                   <h3 className="text-xl font-bold text-gray-900 mt-3">{relatedArticle.title}</h3>

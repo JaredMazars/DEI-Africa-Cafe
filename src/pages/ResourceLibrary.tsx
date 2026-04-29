@@ -108,7 +108,7 @@ const ResourceLibrary: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Professional Header with Forvis Mazars Branding */}
-      <div className="bg-gradient-to-r from-[#1A1F5E] via-[#0072CE] to-[#1A1F5E] text-white">
+      <div className="bg-[#1A1F5E] text-white">
         <div className="max-w-[1920px] mx-auto px-12 sm:px-16 lg:px-20 py-12">
           <div className="text-center">
             <h1 className="text-4xl font-bold mb-3 text-white">Resource Library</h1>
@@ -120,7 +120,7 @@ const ResourceLibrary: React.FC = () => {
       </div>
 
       <div className="max-w-[1920px] mx-auto px-12 sm:px-16 lg:px-20 py-8">{/* Search and Filters */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 mb-8">
+        <div className="bg-white -2xl shadow-lg border border-gray-200 p-6 mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-6">
             {/* Search */}
             <div className="flex-1 relative">
@@ -130,7 +130,7 @@ const ResourceLibrary: React.FC = () => {
                 placeholder="Search resources..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 focus:border-[#1A1F5E] transition-all"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-blue-900 focus:border-[#1A1F5E] transition-all"
               />
             </div>
 
@@ -139,7 +139,7 @@ const ResourceLibrary: React.FC = () => {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 focus:border-[#1A1F5E] transition-all"
+                className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-blue-900 focus:border-[#1A1F5E] transition-all"
               >
                 {categories.map(category => (
                   <option key={category} value={category}>{category}</option>
@@ -152,7 +152,7 @@ const ResourceLibrary: React.FC = () => {
               <select
                 value={selectedType}
                 onChange={(e) => setSelectedType(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-900 focus:border-[#1A1F5E] transition-all"
+                className="w-full px-4 py-3 border border-gray-300 -lg focus:ring-2 focus:ring-blue-900 focus:border-[#1A1F5E] transition-all"
               >
                 {types.map(type => (
                   <option key={type} value={type}>{type}</option>
@@ -161,16 +161,16 @@ const ResourceLibrary: React.FC = () => {
             </div>
 
             {/* View Toggle */}
-            <div className="flex bg-gray-100 rounded-lg p-1">
+            <div className="flex bg-gray-100 -lg p-1">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-[#1A1F5E]' : 'text-gray-600'}`}
+                className={`p-2 -lg transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-[#1A1F5E]' : 'text-gray-600'}`}
               >
                 <Grid className="w-5 h-5" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-[#1A1F5E]' : 'text-gray-600'}`}
+                className={`p-2 -lg transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-[#1A1F5E]' : 'text-gray-600'}`}
               >
                 <List className="w-5 h-5" />
               </button>
@@ -188,7 +188,7 @@ const ResourceLibrary: React.FC = () => {
                 return (
                   <div
                     key={resource.id}
-                    className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 group hover:scale-[1.02]"
+                    className="bg-white -xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 group hover:scale-[1.02]"
                   >
                     {/* Card Header */}
                     <div className="h-40 bg-gradient-to-br from-[#1A1F5E] to-[#0072CE] p-6 flex items-center justify-center relative">
@@ -197,7 +197,7 @@ const ResourceLibrary: React.FC = () => {
                       </div>
                       <button
                         onClick={() => toggleSaveResource(resource.id)}
-                        className="absolute top-4 right-4 p-2 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-all"
+                        className="absolute top-4 right-4 p-2 bg-white/20 backdrop-blur-sm -full hover:bg-white/30 transition-all"
                       >
                         <Bookmark className={`w-5 h-5 ${isSaved ? 'fill-white text-white' : 'text-white'}`} />
                       </button>
@@ -206,7 +206,7 @@ const ResourceLibrary: React.FC = () => {
                     {/* Card Body */}
                     <div className="p-6">
                       <div className="flex items-start justify-between mb-3">
-                        <span className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] rounded-lg text-xs font-semibold">
+                        <span className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] -lg text-xs font-semibold">
                           {resource.type}
                         </span>
                         {resource.rating && (
@@ -237,7 +237,7 @@ const ResourceLibrary: React.FC = () => {
                             </div>
                           )}
                         </div>
-                        <button className="px-4 py-2 bg-[#1A1F5E] hover:bg-[#1A1F5E] text-white rounded-lg font-medium transition-colors text-sm">
+                        <button className="px-4 py-2 bg-[#1A1F5E] hover:bg-[#1A1F5E] text-white -lg font-medium transition-colors text-sm">
                           View
                         </button>
                       </div>
@@ -249,11 +249,11 @@ const ResourceLibrary: React.FC = () => {
                 return (
                   <div
                     key={resource.id}
-                    className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 border border-gray-200"
+                    className="bg-white -xl shadow-md hover:shadow-lg transition-all duration-300 p-6 border border-gray-200"
                   >
                     <div className="flex items-center space-x-6">
                       {/* Icon */}
-                      <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-[#1A1F5E] to-[#0072CE] rounded-lg flex items-center justify-center text-white">
+                      <div className="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-[#1A1F5E] to-[#0072CE] -lg flex items-center justify-center text-white">
                         {getIconForType(resource.type)}
                       </div>
 
@@ -265,7 +265,7 @@ const ResourceLibrary: React.FC = () => {
                               <h3 className="text-lg font-bold text-gray-900 hover:text-[#1A1F5E] transition-colors">
                                 {resource.title}
                               </h3>
-                              <span className="px-2 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] rounded-lg text-xs font-semibold">
+                              <span className="px-2 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] -lg text-xs font-semibold">
                                 {resource.type}
                               </span>
                             </div>
@@ -281,7 +281,7 @@ const ResourceLibrary: React.FC = () => {
 
                         <div className="flex items-center justify-between mt-3">
                           <div className="flex items-center space-x-4 text-xs text-gray-500">
-                            <span className="bg-gray-100 px-2 py-1 rounded">{resource.category}</span>
+                            <span className="bg-gray-100 px-2 py-1 ">{resource.category}</span>
                             {resource.duration && (
                               <div className="flex items-center">
                                 <Clock className="w-3 h-3 mr-1" />
@@ -301,14 +301,14 @@ const ResourceLibrary: React.FC = () => {
                           <div className="flex items-center space-x-2">
                             <button
                               onClick={() => toggleSaveResource(resource.id)}
-                              className={`p-2 rounded-lg border transition-all ${isSaved ? 'bg-[#F4F4F4] border-[#1A1F5E] text-[#1A1F5E]' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+                              className={`p-2 -lg border transition-all ${isSaved ? 'bg-[#F4F4F4] border-[#1A1F5E] text-[#1A1F5E]' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}
                             >
                               <Bookmark className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
                             </button>
-                            <button className="px-4 py-2 bg-[#1A1F5E] hover:bg-[#1A1F5E] text-white rounded-lg font-medium transition-colors">
+                            <button className="px-4 py-2 bg-[#1A1F5E] hover:bg-[#1A1F5E] text-white -lg font-medium transition-colors">
                               View
                             </button>
-                            <button className="p-2 border border-[#1A1F5E] text-[#1A1F5E] hover:bg-[#1A1F5E]/5 rounded-lg transition-colors"
+                            <button className="p-2 border border-[#1A1F5E] text-[#1A1F5E] hover:bg-[#1A1F5E]/5 -lg transition-colors"
                               onClick={() => { resourcesAPI.recordDownload(resource.id); window.open(resource.url, '_blank'); }}
                             >
                               <Download className="w-5 h-5" />
@@ -330,7 +330,7 @@ const ResourceLibrary: React.FC = () => {
             <button
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-4 py-2 -lg text-sm font-medium transition-colors ${
                 currentPage === 1
                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
@@ -343,7 +343,7 @@ const ResourceLibrary: React.FC = () => {
               <button
                 key={page}
                 onClick={() => setCurrentPage(page)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-4 py-2 -lg text-sm font-medium transition-colors ${
                   currentPage === page
                     ? 'bg-[#0072CE] text-white'
                     : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
@@ -356,7 +356,7 @@ const ResourceLibrary: React.FC = () => {
             <button
               onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredResources.length / itemsPerPage), prev + 1))}
               disabled={currentPage === Math.ceil(filteredResources.length / itemsPerPage)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-4 py-2 -lg text-sm font-medium transition-colors ${
                 currentPage === Math.ceil(filteredResources.length / itemsPerPage)
                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
@@ -370,7 +370,7 @@ const ResourceLibrary: React.FC = () => {
         {/* No Results */}
         {filteredResources.length === 0 && (
           <div className="text-center py-16">
-            <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-24 h-24 bg-gray-200 -full flex items-center justify-center mx-auto mb-4">
               <Search className="w-12 h-12 text-gray-400" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No resources found</h3>
@@ -381,7 +381,7 @@ const ResourceLibrary: React.FC = () => {
                 setSelectedCategory('All');
                 setSelectedType('All');
               }}
-              className="px-6 py-3 bg-[#1A1F5E] text-white rounded-lg hover:bg-[#1A1F5E] transition-colors font-medium"
+              className="px-6 py-3 bg-[#1A1F5E] text-white -lg hover:bg-[#1A1F5E] transition-colors font-medium"
             >
               Clear Filters
             </button>

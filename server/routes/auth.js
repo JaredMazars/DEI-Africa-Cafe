@@ -172,28 +172,29 @@ router.post('/register', [
             { expiresIn: '7d' }
         );
 
-        // Send verification email (non-blocking)
-        try {
-            const verificationToken = jwt.sign(
-                { email, type: 'email-verification' },
-                process.env.JWT_SECRET || 'demo-secret-key-change-in-production',
-                { expiresIn: '24h' }
-            );
-            await sendVerificationEmail(email, verificationToken, email.split('@')[0]);
-            console.log(`📧 Verification email sent to ${email}`);
-        } catch (emailError) {
-            console.error('Verification email failed (non-fatal):', emailError.message);
-        }
+        // EMAIL VERIFICATION DISABLED - users are active immediately on registration
+        // TODO: Re-enable when FRONTEND_URL and email deliverability are confirmed working
+        // try {
+        //     const verificationToken = jwt.sign(
+        //         { email, type: 'email-verification' },
+        //         process.env.JWT_SECRET || 'demo-secret-key-change-in-production',
+        //         { expiresIn: '24h' }
+        //     );
+        //     await sendVerificationEmail(email, verificationToken, email.split('@')[0]);
+        //     console.log(`📧 Verification email sent to ${email}`);
+        // } catch (emailError) {
+        //     console.error('Verification email failed (non-fatal):', emailError.message);
+        // }
 
         res.status(201).json({
             success: true,
-            message: `Registration successful! Please check ${email} to verify your account.`,
+            message: `Registration successful! Welcome to DEI Cafe.`,
             data: {
                 user: {
                     id: newUser.id,
                     email: newUser.email,
                     isFirstLogin: true,
-                    emailVerified: false
+                    emailVerified: true
                 },
                 token
             }
@@ -233,6 +234,26 @@ router.post('/login', [
         const { email, password } = req.body;
 
         console.log('🔐 Login attempt:', email);
+
+        // ── Admin shortcut ──────────────────────────────────────────────────
+        const adminEmail = process.env.ADMIN_EMAIL || 'admin@deiafrica.com';
+        const adminPassword = process.env.ADMIN_PASSWORD || 'DEICafe@Admin2024!';
+        if (email === adminEmail && password === adminPassword) {
+            const token = jwt.sign(
+                { userId: 'admin-user', email, role: 'admin' },
+                process.env.JWT_SECRET || 'demo-secret-key-change-in-production',
+                { expiresIn: '8h' }
+            );
+            return res.json({
+                success: true,
+                message: 'Admin login successful',
+                data: {
+                    token,
+                    user: { id: 'admin-user', email, role: 'admin', name: 'Admin' }
+                }
+            });
+        }
+        // ───────────────────────────────────────────────────────────────────
 
         // Find user in DB
         const user = await User.findByEmail(email);
@@ -276,6 +297,10 @@ router.post('/login', [
                 user: {
                     id: user.id,
                     email: user.email,
+                    role: user.role,
+                    is_mentor: user.is_mentor,
+                    is_mentee: user.is_mentee,
+                    is_expert: user.is_expert,
                     isFirstLogin: !profile,
                     profile: profile ? {
                         name:             profile.name || user.name,
@@ -308,16 +333,25 @@ router.post('/login', [
 // Get current user profile
 router.get('/me', auth, async (req, res) => {
     try {
-        const profile = await UserProfile.findByUserId(req.user.id);
-        
+        const userId = req.user.id || req.user.user_id;
+        const [profile, expertiseRows, desiredRows] = await Promise.all([
+            UserProfile.findByUserId(userId),
+            UserExpertise.findByUserId(userId),
+            UserDesiredExpertise.findByUserId(userId),
+        ]);
+
         res.json({
             success: true,
             data: {
                 user: {
-                    id: req.user.id,
+                    id: userId,
                     email: req.user.email,
                     isFirstLogin: !profile,
-                    profile: profile || null
+                    profile: profile ? {
+                        ...profile,
+                        expertise:         expertiseRows.map(e => e.expertise),
+                        desired_expertise: desiredRows.map(d => d.expertise),
+                    } : null
                 }
             }
         });
@@ -328,6 +362,40 @@ router.get('/me', auth, async (req, res) => {
             success: false,
             message: 'Server error getting profile'
         });
+    }
+});
+
+// Update expertise and desired_expertise
+router.put('/expertise', auth, async (req, res) => {
+    try {
+        const userId = req.user.id || req.user.user_id;
+        const { expertise, desired_expertise } = req.body;
+
+        if (Array.isArray(expertise)) {
+            await UserExpertise.deleteByUserId(userId);
+            if (expertise.length > 0) await UserExpertise.create(userId, expertise);
+        }
+        if (Array.isArray(desired_expertise)) {
+            await UserDesiredExpertise.deleteByUserId(userId);
+            if (desired_expertise.length > 0) await UserDesiredExpertise.create(userId, desired_expertise);
+        }
+
+        const [updatedExpertise, updatedDesired] = await Promise.all([
+            UserExpertise.findByUserId(userId),
+            UserDesiredExpertise.findByUserId(userId),
+        ]);
+
+        res.json({
+            success: true,
+            message: 'Expertise updated successfully',
+            data: {
+                expertise:         updatedExpertise.map(e => e.expertise),
+                desired_expertise: updatedDesired.map(d => d.expertise),
+            }
+        });
+    } catch (error) {
+        console.error('Update expertise error:', error);
+        res.status(500).json({ success: false, message: 'Failed to update expertise' });
     }
 });
 
@@ -362,6 +430,29 @@ router.post('/complete-profile', auth, [
         // Create expertise entries
         if (expertise && expertise.length > 0) {
             await UserExpertise.create(req.user.id, expertise);
+
+            // If mentor/both, also insert into expert_expertise so they appear in the matching pool
+            const role = profileData.role;
+            if (role === 'mentor' || role === 'both') {
+                try {
+                    // Get the expert_id for this user
+                    const expertRow = await executeQuery(
+                        `SELECT id FROM experts WHERE user_id = '${req.user.id}'`
+                    );
+                    if (expertRow.recordset.length > 0) {
+                        const expertId = expertRow.recordset[0].id;
+                        // Delete stale entries first, then re-insert
+                        await executeQuery(`DELETE FROM expert_expertise WHERE expert_id = '${expertId}'`);
+                        const expValues = expertise
+                            .map(e => `('${expertId}', '${e.replace(/'/g, "''")}')`).join(', ');
+                        await executeQuery(
+                            `INSERT INTO expert_expertise (expert_id, expertise) VALUES ${expValues}`
+                        );
+                    }
+                } catch (expErr) {
+                    console.error('expert_expertise insert failed (non-fatal):', expErr.message);
+                }
+            }
         }
 
         // Create interests entries
@@ -667,6 +758,31 @@ router.post('/reset-password', async (req, res) => {
             success: false,
             error: 'Failed to reset password'
         });
+    }
+});
+
+// ─── GET /users/search?q=  — search platform users by name or email ──────────
+router.get('/users/search', auth, async (req, res) => {
+    try {
+        const q = (req.query.q || '').replace(/'/g, "''").toLowerCase();
+        if (!q || q.length < 2) {
+            return res.json({ success: true, data: { users: [] } });
+        }
+        const result = await executeQuery(`
+            SELECT TOP 10
+                id, name, email,
+                COALESCE(avatar_url, '') AS avatar,
+                role,
+                COALESCE(bio, '') AS organization
+            FROM users
+            WHERE (LOWER(name) LIKE '%${q}%' OR LOWER(email) LIKE '%${q}%')
+              AND is_active = 1
+            ORDER BY name
+        `);
+        res.json({ success: true, data: { users: result.recordset } });
+    } catch (err) {
+        console.error('GET /auth/users/search error:', err);
+        res.status(500).json({ success: false, message: 'Search failed' });
     }
 });
 

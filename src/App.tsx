@@ -119,6 +119,7 @@ function AppContent() {
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/mentorship-activities" element={<ProtectedRoute><MyMentors /></ProtectedRoute>} />
         <Route path="/mentorship-activities/:mentorId" element={<ProtectedRoute><MentorshipActivitiesEnhanced /></ProtectedRoute>} />
+        <Route path="/mentorship-session/:connectionId" element={<ProtectedRoute><MentorshipActivitiesEnhanced /></ProtectedRoute>} />
         <Route path="/my-mentees" element={<ProtectedRoute><MyMentees /></ProtectedRoute>} />
         <Route path="/mentor-content" element={<ProtectedRoute><MentorContent /></ProtectedRoute>} />
         <Route path="/mentor-view/mentee/:menteeId" element={<ProtectedRoute><MentorshipActivitiesEnhanced /></ProtectedRoute>} />

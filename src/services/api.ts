@@ -6,8 +6,9 @@ const API_BASE_URL = '/api';
 const USE_MOCK_DATA = false;
 
 // Get auth token from localStorage
+// Admin token takes priority (admin sessions use adminToken key)
 const getAuthToken = () => {
-  return localStorage.getItem('token');
+  return localStorage.getItem('adminToken') || localStorage.getItem('token');
 };
 
 // Create headers with auth token
@@ -34,10 +35,15 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
 
   try {
     const response = await fetch(url, config);
-    const data = await response.json();
+
+    // Only attempt JSON parse if there is a body and it's JSON content
+    const contentType = response.headers.get('content-type') || '';
+    const hasJsonBody = contentType.includes('application/json');
+    const data = hasJsonBody ? await response.json() : (response.status === 204 ? {} : await response.text().then(t => ({ message: t || 'No content' })));
 
     if (!response.ok) {
-      throw new Error(data.message || 'API request failed');
+      const msg = typeof data === 'object' && data !== null && 'message' in data ? (data as any).message : 'API request failed';
+      throw new Error(msg);
     }
 
     return data;
@@ -279,6 +285,72 @@ export const expertsAPI = {
   },
 };
 
+// Expert Connections API
+export const expertConnectionsAPI = {
+  requestConnection: async (expertId: string, message: string) => {
+    return apiRequest('/expert-connections', {
+      method: 'POST',
+      body: JSON.stringify({ expert_id: expertId, message }),
+    });
+  },
+
+  getMyConnections: async () => {
+    return apiRequest('/expert-connections/mine');
+  },
+
+  getIncomingRequests: async () => {
+    return apiRequest('/expert-connections/incoming');
+  },
+
+  updateStatus: async (connectionId: string, status: 'approved' | 'declined') => {
+    return apiRequest(`/expert-connections/${connectionId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    });
+  },
+
+  getStats: async () => {
+    return apiRequest('/expert-connections/stats');
+  },
+};
+
+// Expert Webinars API
+export const expertWebinarsAPI = {
+  getWebinars: async () => apiRequest('/expert-webinars'),
+  getMyWebinars: async () => apiRequest('/expert-webinars/mine'),
+  getRegisteredWebinars: async () => apiRequest('/expert-webinars/registered'),
+  registerForWebinar: async (id: string) => apiRequest(`/expert-webinars/${id}/register`, { method: 'POST', body: '{}' }),
+  unregisterFromWebinar: async (id: string) => apiRequest(`/expert-webinars/${id}/register`, { method: 'DELETE' }),
+  createWebinar: async (data: any) => apiRequest('/expert-webinars', { method: 'POST', body: JSON.stringify(data) }),
+  deleteWebinar: async (id: string) => apiRequest(`/expert-webinars/${id}`, { method: 'DELETE' }),
+};
+
+// Collaboration Hub API
+export const collaborationAPI = {
+  getGroups: async () => apiRequest('/collaboration/groups'),
+  createGroup: async (data: any) => apiRequest('/collaboration/groups', { method: 'POST', body: JSON.stringify(data) }),
+  getApplications: async () => apiRequest('/collaboration/applications'),
+  submitApplication: async (data: any) => apiRequest('/collaboration/applications', { method: 'POST', body: JSON.stringify(data) }),
+  updateApplication: async (id: string, status: string) => apiRequest(`/collaboration/applications/${id}`, { method: 'PUT', body: JSON.stringify({ status }) }),
+  getCaseStudies: async () => apiRequest('/collaboration/case-studies'),
+  getDeals: async () => apiRequest('/collaboration/deals'),
+  deleteGroup: async (id: string) => apiRequest(`/collaboration/groups/${id}`, { method: 'DELETE' }),
+  addMember: async (groupId: string, userId: string, role?: string) => apiRequest(`/collaboration/groups/${groupId}/members`, { method: 'POST', body: JSON.stringify({ userId, role }) }),
+  removeMember: async (groupId: string, userId: string) => apiRequest(`/collaboration/groups/${groupId}/members/${userId}`, { method: 'DELETE' }),
+};
+
+// Expert Meetings API
+export const expertMeetingsAPI = {
+  getMyMeetings: async () => apiRequest('/expert-meetings/mine'),
+  createMeeting: async (data: any) => apiRequest('/expert-meetings', { method: 'POST', body: JSON.stringify(data) }),
+  deleteMeeting: async (id: string) => apiRequest(`/expert-meetings/${id}`, { method: 'DELETE' }),
+};
+
+// Users Search API
+export const usersAPI = {
+  search: async (q: string) => apiRequest(`/auth/users/search?q=${encodeURIComponent(q)}`),
+};
+
 // Questions API
 export const questionsAPI = {
   getQuestions: async () => {
@@ -374,6 +446,111 @@ export const adminAPI = {
 
   deleteMentor: async (id: string) => {
     return apiRequest(`/admin/mentors/${id}`, { method: 'DELETE' });
+  },
+
+  getExperts: async () => {
+    return apiRequest('/admin/experts');
+  },
+
+  getPendingExperts: async () => {
+    return apiRequest('/admin/experts/pending');
+  },
+
+  verifyExpert: async (id: string, isVerified: boolean) => {
+    return apiRequest(`/admin/experts/${id}/verify`, {
+      method: 'PUT',
+      body: JSON.stringify({ is_verified: isVerified }),
+    });
+  },
+
+  // ── Users ──────────────────────────────────────────────────────
+  deleteUser: async (userId: string) => {
+    return apiRequest(`/admin/users/${userId}`, { method: 'DELETE' });
+  },
+
+  // ── Audit log ─────────────────────────────────────────────────
+  getAuditLog: async (filters?: { action?: string; search?: string; limit?: number }) => {
+    const params = new URLSearchParams();
+    if (filters?.action) params.append('action', filters.action);
+    if (filters?.search) params.append('search', filters.search);
+    if (filters?.limit) params.append('limit', String(filters.limit));
+    return apiRequest(`/admin/audit?${params.toString()}`);
+  },
+
+  logAudit: async (action: string, entityType: string, entityName: string, details?: string) => {
+    const adminEmail = localStorage.getItem('adminUser') || 'admin';
+    return apiRequest('/admin/audit', {
+      method: 'POST',
+      body: JSON.stringify({ action, entity_type: entityType, entity_name: entityName, details, admin_email: adminEmail }),
+    });
+  },
+
+  // ── Notifications / Announcements ─────────────────────────────
+  getNotifications: async () => {
+    return apiRequest('/admin/notifications');
+  },
+
+  createNotification: async (data: any) => {
+    return apiRequest('/admin/notifications', { method: 'POST', body: JSON.stringify(data) });
+  },
+
+  updateNotification: async (id: string, data: any) => {
+    return apiRequest(`/admin/notifications/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  },
+
+  deleteNotification: async (id: string) => {
+    return apiRequest(`/admin/notifications/${id}`, { method: 'DELETE' });
+  },
+
+  // ── Content ───────────────────────────────────────────────────
+  getContent: async () => {
+    return apiRequest('/admin/content');
+  },
+
+  createContent: async (data: any) => {
+    return apiRequest('/admin/content', { method: 'POST', body: JSON.stringify(data) });
+  },
+
+  updateContent: async (id: string, data: any) => {
+    return apiRequest(`/admin/content/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  },
+
+  deleteContent: async (id: string) => {
+    return apiRequest(`/admin/content/${id}`, { method: 'DELETE' });
+  },
+
+  // ── Opportunities ─────────────────────────────────────────────
+  getOpportunities: async () => {
+    return apiRequest('/admin/opportunities');
+  },
+
+  createOpportunity: async (data: any) => {
+    return apiRequest('/admin/opportunities', { method: 'POST', body: JSON.stringify(data) });
+  },
+
+  updateOpportunity: async (id: string, data: any) => {
+    return apiRequest(`/admin/opportunities/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  },
+
+  deleteOpportunity: async (id: string) => {
+    return apiRequest(`/admin/opportunities/${id}`, { method: 'DELETE' });
+  },
+
+  // ── Resources (admin) ─────────────────────────────────────────
+  adminGetResources: async () => {
+    return apiRequest('/admin/resources');
+  },
+
+  adminCreateResource: async (data: any) => {
+    return apiRequest('/admin/resources', { method: 'POST', body: JSON.stringify(data) });
+  },
+
+  adminUpdateResource: async (id: string, data: any) => {
+    return apiRequest(`/admin/resources/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  },
+
+  adminDeleteResource: async (id: string) => {
+    return apiRequest(`/admin/resources/${id}`, { method: 'DELETE' });
   },
 };
 

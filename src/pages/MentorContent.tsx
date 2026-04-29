@@ -278,7 +278,7 @@ const MentorContent: React.FC = () => {
           
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-[#0072CE] to-[#1A1F5E] bg-clip-text text-transparent mb-2">
+              <h1 className="text-4xl font-bold bg-[#1A1F5E] bg-clip-text text-transparent mb-2">
                 Content Management
               </h1>
               <p className="text-gray-600">
@@ -289,7 +289,7 @@ const MentorContent: React.FC = () => {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 mb-6">
+        <div className="bg-white -xl shadow-lg border border-gray-200 mb-6">
           <div className="border-b border-gray-200">
             <div className="flex gap-4 px-6">
               {[
@@ -328,7 +328,7 @@ const MentorContent: React.FC = () => {
                   </div>
                   <button
                     onClick={() => setShowAddQuestion(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white rounded-lg font-medium shadow-lg transition-all"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white -lg font-medium shadow-lg transition-all"
                   >
                     <Plus className="w-5 h-5" />
                     Add Question
@@ -337,7 +337,7 @@ const MentorContent: React.FC = () => {
 
                 {/* Add Question Form */}
                 {showAddQuestion && (
-                  <div className="bg-[#F4F4F4] border-2 border-[#0072CE]/30 rounded-xl p-6">
+                  <div className="bg-[#F4F4F4] border-2 border-[#0072CE]/30 -xl p-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-bold text-gray-900">New Question</h3>
                       <button
@@ -355,7 +355,7 @@ const MentorContent: React.FC = () => {
                           type="text"
                           value={newQuestion.category}
                           onChange={(e) => setNewQuestion({ ...newQuestion, category: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+                          className="w-full px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
                           placeholder="e.g., Mentorship Basics, Communication Skills"
                         />
                       </div>
@@ -365,7 +365,7 @@ const MentorContent: React.FC = () => {
                         <textarea
                           value={newQuestion.question}
                           onChange={(e) => setNewQuestion({ ...newQuestion, question: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+                          className="w-full px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
                           rows={3}
                           placeholder="Enter your question..."
                         />
@@ -389,12 +389,12 @@ const MentorContent: React.FC = () => {
                                   newOptions[index] = e.target.value;
                                   setNewQuestion({ ...newQuestion, options: newOptions });
                                 }}
-                                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+                                className="flex-1 px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
                                 placeholder={`Option ${index + 1}`}
                               />
                               <button
                                 onClick={() => setNewQuestion({ ...newQuestion, correctAnswer: index })}
-                                className={`px-3 py-2 rounded-lg transition-all ${
+                                className={`px-3 py-2 -lg transition-all ${
                                   newQuestion.correctAnswer === index
                                     ? 'bg-green-600 text-white'
                                     : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
@@ -412,7 +412,7 @@ const MentorContent: React.FC = () => {
                         <textarea
                           value={newQuestion.explanation}
                           onChange={(e) => setNewQuestion({ ...newQuestion, explanation: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+                          className="w-full px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
                           rows={2}
                           placeholder="Explain why this is the correct answer..."
                         />
@@ -421,13 +421,13 @@ const MentorContent: React.FC = () => {
                       <div className="flex gap-3 justify-end">
                         <button
                           onClick={() => setShowAddQuestion(false)}
-                          className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium"
+                          className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 -lg font-medium"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={handleSaveQuestion}
-                          className="flex items-center gap-2 px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white rounded-lg font-medium"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white -lg font-medium"
                         >
                           <Save className="w-4 h-4" />
                           Save Question
@@ -440,11 +440,11 @@ const MentorContent: React.FC = () => {
                 {/* Questions List */}
                 <div className="space-y-4">
                   {questions.map((question, index) => (
-                    <div key={question.id} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all">
+                    <div key={question.id} className="bg-white border border-gray-200 -xl p-6 hover:shadow-lg transition-all">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <span className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] rounded-full text-xs font-medium">
+                            <span className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] -full text-xs font-medium">
                               {question.category}
                             </span>
                             <span className="text-gray-500 text-sm">Question #{index + 1}</span>
@@ -454,7 +454,7 @@ const MentorContent: React.FC = () => {
                             {question.options.map((option, optIndex) => (
                               <div
                                 key={optIndex}
-                                className={`px-3 py-2 rounded-lg text-sm ${
+                                className={`px-3 py-2 -lg text-sm ${
                                   optIndex === question.correctAnswer
                                     ? 'bg-green-100 border-2 border-green-500 text-green-800 font-medium'
                                     : 'bg-gray-50 border border-gray-200 text-gray-700'
@@ -483,7 +483,7 @@ const MentorContent: React.FC = () => {
                 </div>
 
                 {questions.length === 0 && !showAddQuestion && (
-                  <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                  <div className="text-center py-12 bg-gray-50 -xl border-2 border-dashed border-gray-300">
                     <HelpCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                     <p className="text-gray-600">No questions created yet. Click "Add Question" to get started.</p>
                   </div>
@@ -501,7 +501,7 @@ const MentorContent: React.FC = () => {
                   </div>
                   <button
                     onClick={() => setShowAddPath(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white rounded-lg font-medium shadow-lg transition-all"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white -lg font-medium shadow-lg transition-all"
                   >
                     <Plus className="w-5 h-5" />
                     New Learning Path
@@ -510,7 +510,7 @@ const MentorContent: React.FC = () => {
 
                 {/* Add Path Form */}
                 {showAddPath && (
-                  <div className="bg-[#F4F4F4] border-2 border-[#0072CE]/30 rounded-xl p-6">
+                  <div className="bg-[#F4F4F4] border-2 border-[#0072CE]/30 -xl p-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-bold text-gray-900">New Learning Path</h3>
                       <button
@@ -528,7 +528,7 @@ const MentorContent: React.FC = () => {
                           type="text"
                           value={newPath.title}
                           onChange={(e) => setNewPath({ ...newPath, title: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+                          className="w-full px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
                           placeholder="e.g., Leadership Fundamentals"
                         />
                       </div>
@@ -538,7 +538,7 @@ const MentorContent: React.FC = () => {
                         <textarea
                           value={newPath.description}
                           onChange={(e) => setNewPath({ ...newPath, description: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+                          className="w-full px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
                           rows={3}
                           placeholder="Describe what mentees will learn..."
                         />
@@ -550,7 +550,7 @@ const MentorContent: React.FC = () => {
                           <select
                             value={newPath.category}
                             onChange={(e) => setNewPath({ ...newPath, category: e.target.value })}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+                            className="w-full px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
                           >
                             <option value="Leadership">Leadership</option>
                             <option value="Technical">Technical</option>
@@ -565,7 +565,7 @@ const MentorContent: React.FC = () => {
                           <select
                             value={newPath.level}
                             onChange={(e) => setNewPath({ ...newPath, level: e.target.value as any })}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1A1F5E]/20"
+                            className="w-full px-4 py-2 border border-gray-300 -lg focus:ring-2 focus:ring-[#1A1F5E]/20"
                           >
                             <option value="beginner">Beginner</option>
                             <option value="intermediate">Intermediate</option>
@@ -577,13 +577,13 @@ const MentorContent: React.FC = () => {
                       <div className="flex gap-3 justify-end">
                         <button
                           onClick={() => setShowAddPath(false)}
-                          className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium"
+                          className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 -lg font-medium"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={handleSavePath}
-                          className="flex items-center gap-2 px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white rounded-lg font-medium"
+                          className="flex items-center gap-2 px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white -lg font-medium"
                         >
                           <Save className="w-4 h-4" />
                           Create Path
@@ -596,20 +596,20 @@ const MentorContent: React.FC = () => {
                 {/* Learning Paths List */}
                 <div className="space-y-4">
                   {learningPaths.map((path) => (
-                    <div key={path.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                    <div key={path.id} className="bg-white border border-gray-200 -xl overflow-hidden">
                       <div className="p-6">
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                               <h3 className="text-xl font-bold text-gray-900">{path.title}</h3>
-                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              <span className={`px-3 py-1 -full text-xs font-medium ${
                                 path.level === 'beginner' ? 'bg-green-100 text-green-700' :
                                 path.level === 'intermediate' ? 'bg-yellow-100 text-yellow-700' :
                                 'bg-red-100 text-red-700'
                               }`}>
                                 {path.level.charAt(0).toUpperCase() + path.level.slice(1)}
                               </span>
-                              <span className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] rounded-full text-xs font-medium">
+                              <span className="px-3 py-1 bg-[#1A1F5E]/10 text-[#1A1F5E] -full text-xs font-medium">
                                 {path.category}
                               </span>
                             </div>
@@ -638,7 +638,7 @@ const MentorContent: React.FC = () => {
                             <h4 className="text-lg font-bold text-gray-900 mb-4">Modules</h4>
                             
                             {/* Add Module Form */}
-                            <div className="bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] rounded-lg p-5 mb-4 border border-[#0072CE]/30">
+                            <div className="bg-gradient-to-br from-[#F4F4F4] to-[#F4F4F4] -lg p-5 mb-4 border border-[#0072CE]/30">
                               <h5 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                                 <Plus className="w-5 h-5 text-[#0072CE]" />
                                 Add New Module
@@ -651,7 +651,7 @@ const MentorContent: React.FC = () => {
                                       type="text"
                                       value={newModule.title}
                                       onChange={(e) => setNewModule({ ...newModule, title: e.target.value })}
-                                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1A1F5E]/20"
+                                      className="w-full px-3 py-2 border border-gray-300 -lg text-sm focus:ring-2 focus:ring-[#1A1F5E]/20"
                                       placeholder="e.g., Introduction to Leadership"
                                     />
                                   </div>
@@ -660,7 +660,7 @@ const MentorContent: React.FC = () => {
                                     <select
                                       value={newModule.type}
                                       onChange={(e) => setNewModule({ ...newModule, type: e.target.value as any })}
-                                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1A1F5E]/20"
+                                      className="w-full px-3 py-2 border border-gray-300 -lg text-sm focus:ring-2 focus:ring-[#1A1F5E]/20"
                                     >
                                       <option value="video">📹 Video</option>
                                       <option value="reading">📄 Reading/Article</option>
@@ -673,7 +673,7 @@ const MentorContent: React.FC = () => {
                                   <textarea
                                     value={newModule.description}
                                     onChange={(e) => setNewModule({ ...newModule, description: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1A1F5E]/20"
+                                    className="w-full px-3 py-2 border border-gray-300 -lg text-sm focus:ring-2 focus:ring-[#1A1F5E]/20"
                                     rows={2}
                                     placeholder="What will mentees learn in this module?"
                                   />
@@ -692,7 +692,7 @@ const MentorContent: React.FC = () => {
                                           ? { videoUrl: e.target.value } 
                                           : { articleUrl: e.target.value })
                                       })}
-                                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1A1F5E]/20"
+                                      className="w-full px-3 py-2 border border-gray-300 -lg text-sm focus:ring-2 focus:ring-[#1A1F5E]/20"
                                       placeholder={newModule.type === 'video' ? 'https://youtube.com/watch?v=...' : 'https://...'}
                                     />
                                   </div>
@@ -702,7 +702,7 @@ const MentorContent: React.FC = () => {
                                       type="text"
                                       value={newModule.duration}
                                       onChange={(e) => setNewModule({ ...newModule, duration: e.target.value })}
-                                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1A1F5E]/20"
+                                      className="w-full px-3 py-2 border border-gray-300 -lg text-sm focus:ring-2 focus:ring-[#1A1F5E]/20"
                                       placeholder="e.g., 15:30 or 10 min"
                                     />
                                   </div>
@@ -713,7 +713,7 @@ const MentorContent: React.FC = () => {
                                     <textarea
                                       value={newModule.content}
                                       onChange={(e) => setNewModule({ ...newModule, content: e.target.value })}
-                                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1A1F5E]/20"
+                                      className="w-full px-3 py-2 border border-gray-300 -lg text-sm focus:ring-2 focus:ring-[#1A1F5E]/20"
                                       rows={3}
                                       placeholder="Add article summary or key points..."
                                     />
@@ -721,7 +721,7 @@ const MentorContent: React.FC = () => {
                                 )}
                                 <button
                                   onClick={() => handleAddModule(path.id)}
-                                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white rounded-lg font-medium text-sm"
+                                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#0072CE] hover:bg-[#1A1F5E] text-white -lg font-medium text-sm"
                                 >
                                   <Plus className="w-4 h-4" />
                                   Add Module
@@ -732,18 +732,18 @@ const MentorContent: React.FC = () => {
                             {/* Modules List */}
                             <div className="space-y-3">
                               {path.modules.length === 0 && (
-                                <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                                <div className="text-center py-8 bg-gray-50 -lg border-2 border-dashed border-gray-300">
                                   <BookOpen className="w-10 h-10 text-gray-400 mx-auto mb-2" />
                                   <p className="text-gray-600 text-sm">No modules yet. Add your first module above.</p>
                                 </div>
                               )}
                               {path.modules.map((module, index) => (
-                                <div key={module.id} className="bg-white border-2 border-gray-200 rounded-lg p-4 hover:border-[#0072CE]/40 transition-colors">
+                                <div key={module.id} className="bg-white border-2 border-gray-200 -lg p-4 hover:border-[#0072CE]/40 transition-colors">
                                   <div className="flex gap-4">
                                     {/* Module Icon/Thumbnail */}
                                     <div className="flex-shrink-0">
                                       {module.type === 'video' && module.videoId ? (
-                                        <div className="relative w-32 h-20 rounded-lg overflow-hidden group cursor-pointer">
+                                        <div className="relative w-32 h-20 -lg overflow-hidden group cursor-pointer">
                                           <img 
                                             src={`https://img.youtube.com/vi/${module.videoId}/mqdefault.jpg`}
                                             alt={module.title}
@@ -754,7 +754,7 @@ const MentorContent: React.FC = () => {
                                           </div>
                                         </div>
                                       ) : (
-                                        <div className={`w-20 h-20 rounded-lg flex items-center justify-center ${
+                                        <div className={`w-20 h-20 -lg flex items-center justify-center ${
                                           module.type === 'video' ? 'bg-red-100' :
                                           module.type === 'reading' ? 'bg-[#1A1F5E]/10' : 'bg-green-100'
                                         }`}>
@@ -771,7 +771,7 @@ const MentorContent: React.FC = () => {
                                         <div>
                                           <div className="flex items-center gap-2 mb-1">
                                             <span className="text-xs font-bold text-[#0072CE]">Module {index + 1}</span>
-                                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                            <span className={`px-2 py-0.5  text-xs font-medium ${
                                               module.type === 'video' ? 'bg-red-100 text-red-700' :
                                               module.type === 'reading' ? 'bg-[#1A1F5E]/10 text-[#1A1F5E]' : 'bg-green-100 text-green-700'
                                             }`}>
@@ -799,7 +799,7 @@ const MentorContent: React.FC = () => {
                                             href={module.videoUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="flex items-center gap-1 px-3 py-1 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-xs font-medium transition-colors"
+                                            className="flex items-center gap-1 px-3 py-1 bg-red-50 hover:bg-red-100 text-red-700 -lg text-xs font-medium transition-colors"
                                           >
                                             <Video className="w-3 h-3" />
                                             Watch Video
@@ -810,7 +810,7 @@ const MentorContent: React.FC = () => {
                                             href={module.articleUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="flex items-center gap-1 px-3 py-1 bg-[#F4F4F4] hover:bg-[#1A1F5E]/10 text-[#1A1F5E] rounded-lg text-xs font-medium transition-colors"
+                                            className="flex items-center gap-1 px-3 py-1 bg-[#F4F4F4] hover:bg-[#1A1F5E]/10 text-[#1A1F5E] -lg text-xs font-medium transition-colors"
                                           >
                                             <FileText className="w-3 h-3" />
                                             Read Article
@@ -820,7 +820,7 @@ const MentorContent: React.FC = () => {
                                       
                                       {/* Content Preview */}
                                       {module.content && (
-                                        <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                        <div className="mt-3 p-3 bg-gray-50 -lg border border-gray-200">
                                           <p className="text-xs text-gray-600 line-clamp-2">{module.content}</p>
                                         </div>
                                       )}
@@ -837,7 +837,7 @@ const MentorContent: React.FC = () => {
                 </div>
 
                 {learningPaths.length === 0 && !showAddPath && (
-                  <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                  <div className="text-center py-12 bg-gray-50 -xl border-2 border-dashed border-gray-300">
                     <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                     <p className="text-gray-600">No learning paths created yet. Click "New Learning Path" to get started.</p>
                   </div>
@@ -851,7 +851,7 @@ const MentorContent: React.FC = () => {
                 <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Resources & Guides</h3>
                 <p className="text-gray-600 mb-6">Upload documents, PDFs, and other learning materials</p>
-                <button className="flex items-center gap-2 px-6 py-3 bg-[#0072CE] hover:bg-[#1A1F5E] text-white rounded-lg font-medium mx-auto">
+                <button className="flex items-center gap-2 px-6 py-3 bg-[#0072CE] hover:bg-[#1A1F5E] text-white -lg font-medium mx-auto">
                   <Upload className="w-5 h-5" />
                   Upload Resource
                 </button>

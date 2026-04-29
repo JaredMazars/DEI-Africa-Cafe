@@ -1,5 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+// Safe JSON parse — avoids "Unexpected end of JSON input" when server returns empty/HTML body
+const safeJson = async (res: Response): Promise<any> => {
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('application/json')) return res.json();
+  const text = await res.text();
+  try { return JSON.parse(text); } catch { return { success: false, message: text || 'Server error' }; }
+};
+
 interface UserProfile {
   name: string;
   role: 'mentor' | 'mentee' | 'both' | string;
@@ -28,7 +36,7 @@ interface CurrentUser {
 interface AuthContextType {
   isAuthenticated: boolean;
   currentUser: CurrentUser | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<string>;
   logout: () => void;
   updateUserProfile: (profile: Partial<UserProfile>) => void;
 }
@@ -74,14 +82,14 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     }
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<string> => {
     const response = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
 
-    const data = await response.json();
+    const data = await safeJson(response);
 
     if (!response.ok || !data.success) {
       throw new Error(data.message || 'Invalid email or password.');
@@ -89,7 +97,15 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
 
     const { token, user } = data.data;
 
-    const resolvedRole = user.profile?.role || 'mentee';
+    // Admin login — store admin-specific keys and return early
+    if (user.role === 'admin') {
+      localStorage.setItem('adminToken', token);
+      localStorage.setItem('isAdmin', 'true');
+      localStorage.setItem('adminUser', email);
+      return 'admin';
+    }
+
+    const resolvedRole = user.profile?.role || user.role || (user.is_mentor ? 'mentor' : user.is_mentee ? 'mentee' : 'mentee');
     const userToStore: CurrentUser = {
       id: user.id,
       email: user.email,
@@ -117,6 +133,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
 
     setCurrentUser(userToStore);
     setIsAuthenticated(true);
+    return resolvedRole;
   };
 
   const updateUserProfile = (profile: Partial<UserProfile>) => {

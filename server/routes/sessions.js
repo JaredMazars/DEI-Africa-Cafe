@@ -26,6 +26,18 @@ router.get('/', auth, async (req, res) => {
     }
 });
 
+// Get sessions for a specific connection
+router.get('/connection/:connectionId', auth, async (req, res) => {
+    try {
+        const { connectionId } = req.params;
+        const result = await Session.getConnectionSessions(connectionId);
+        res.json({ success: true, data: { sessions: result } });
+    } catch (error) {
+        console.error('Error fetching connection sessions:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch sessions' });
+    }
+});
+
 // Get upcoming sessions
 router.get('/upcoming', auth, async (req, res) => {
     try {
