@@ -3189,8 +3189,8 @@ const ExpertDirectory: React.FC = () => {
             <div className="p-8">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-[#1A1F5E] -xl flex items-center justify-center">
-                    <Award className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 bg-[#F4F4F4] -xl flex items-center justify-center">
+                    <Award className="w-6 h-6 text-[#1A1F5E]" />
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">Become an Expert</h2>

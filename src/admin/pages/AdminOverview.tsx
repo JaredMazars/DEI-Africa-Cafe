@@ -55,7 +55,7 @@ const AdminOverview: React.FC = () => {
         {loading ? [...Array(5)].map((_,i) => <div key={i} className="bg-white rounded-3xl shadow-xl p-6 border border-[#E5E7EB] animate-pulse h-28" />) :
           cards.map((c,i) => { const Icon = c.icon; return (
             <div key={i} className="bg-white rounded-3xl shadow-xl p-5 border border-[#E5E7EB] hover:shadow-2xl transition-shadow">
-              <div className="inline-flex p-2.5 rounded-xl bg-[#1A1F5E] mb-3"><Icon className="w-5 h-5 text-white" /></div>
+              <div className="inline-flex p-2.5 rounded-xl bg-[#F4F4F4] mb-3"><Icon className="w-5 h-5 text-[#1A1F5E]" /></div>
               <p className="text-xs text-[#8C8C8C] font-medium">{c.label}</p>
               <p className="text-2xl font-bold text-[#1A1F5E] mt-0.5">{c.value ?? 0}</p>
               <p className="text-xs text-[#8C8C8C] mt-0.5">{c.sub}</p>

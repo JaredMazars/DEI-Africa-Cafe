@@ -164,8 +164,8 @@ const Preferences: React.FC = () => {
   const renderMentorPreferences = () => (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <div className="w-16 h-16 bg-[#1A1F5E] -full flex items-center justify-center mx-auto">
-          <Target className="w-8 h-8 text-white" />
+        <div className="w-16 h-16 bg-[#F4F4F4] -full flex items-center justify-center mx-auto">
+          <Target className="w-8 h-8 text-[#1A1F5E]" />
         </div>
         <h2 className="text-3xl font-bold text-gray-900">Mentor Preferences</h2>
         <p className="text-lg text-gray-600">Customize your mentor discovery experience</p>
@@ -296,8 +296,8 @@ const Preferences: React.FC = () => {
   const renderAvailability = () => (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <div className="w-16 h-16 bg-[#1A1F5E] -full flex items-center justify-center mx-auto">
-          <Clock className="w-8 h-8 text-white" />
+        <div className="w-16 h-16 bg-[#F4F4F4] -full flex items-center justify-center mx-auto">
+          <Clock className="w-8 h-8 text-[#1A1F5E]" />
         </div>
         <h2 className="text-3xl font-bold text-gray-900">Availability Settings</h2>
         <p className="text-lg text-gray-600">Set your preferred meeting times</p>
@@ -366,8 +366,8 @@ const Preferences: React.FC = () => {
   const renderNotifications = () => (
     <div className="space-y-8">
       <div className="text-center space-y-4">
-        <div className="w-16 h-16 bg-[#1A1F5E] -full flex items-center justify-center mx-auto">
-          <Settings className="w-8 h-8 text-white" />
+        <div className="w-16 h-16 bg-[#F4F4F4] -full flex items-center justify-center mx-auto">
+          <Settings className="w-8 h-8 text-[#1A1F5E]" />
         </div>
         <h2 className="text-3xl font-bold text-gray-900">Notification Settings</h2>
         <p className="text-lg text-gray-600">Choose how you want to stay updated</p>
@@ -448,8 +448,8 @@ const Preferences: React.FC = () => {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-[#1A1F5E] -full flex items-center justify-center mx-auto mb-4">
-            <Settings className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 bg-[#F4F4F4] -full flex items-center justify-center mx-auto mb-4">
+            <Settings className="w-8 h-8 text-[#1A1F5E]" />
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Preferences</h1>
           <p className="text-xl text-gray-600">Customize your mentorship experience</p>

@@ -253,7 +253,7 @@ const ResourceLibrary: React.FC = () => {
                   >
                     <div className="flex items-center space-x-6">
                       {/* Icon */}
-                      <div className="flex-shrink-0 w-16 h-16 bg-[#1A1F5E] -lg flex items-center justify-center text-white">
+                      <div className="flex-shrink-0 w-16 h-16 bg-[#F4F4F4] -lg flex items-center justify-center text-[#1A1F5E]">
                         {getIconForType(resource.type)}
                       </div>
 

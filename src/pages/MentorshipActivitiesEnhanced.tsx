@@ -1598,8 +1598,8 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                         onClick={() => setActiveTab('reflections')}
                         className="bg-[#F4F4F4] -xl shadow-sm border-2 border-[#E5E7EB] p-8 hover:shadow-lg hover:scale-105 transition-all text-left group"
                       >
-                        <div className="w-14 h-14 bg-[#1A1F5E] -lg flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                          <BookOpen className="w-7 h-7 text-white" />
+                        <div className="w-14 h-14 bg-[#F4F4F4] -lg flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                          <BookOpen className="w-7 h-7 text-[#1A1F5E]" />
                         </div>
                         <h3 className="text-lg font-bold text-gray-900 mb-2">Mentee Reflections</h3>
                         <p className="text-gray-600 text-sm mb-3">Read your mentee's reflection entries and growth insights</p>
@@ -1614,8 +1614,8 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                         onClick={() => setShowQuizManager(true)}
                         className="bg-gradient-to-br from-[#1A1F5E]/5 to-[#0072CE]/10 -xl shadow-sm border-2 border-[#0072CE]/30 p-8 hover:shadow-lg hover:scale-105 transition-all text-left group"
                       >
-                        <div className="w-14 h-14 bg-[#1A1F5E] -lg flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                          <Trophy className="w-7 h-7 text-white" />
+                        <div className="w-14 h-14 bg-[#F4F4F4] -lg flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                          <Trophy className="w-7 h-7 text-[#1A1F5E]" />
                         </div>
                         <h3 className="text-lg font-bold text-gray-900 mb-2">Set Quiz Questions</h3>
                         <p className="text-gray-600 text-sm mb-3">Choose and customise which questions appear in your mentee's challenge game</p>
@@ -1630,8 +1630,8 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                         onClick={() => setActiveTab('goals')}
                         className="bg-[#F4F4F4] -xl shadow-sm border-2 border-[#E5E7EB] p-8 hover:shadow-lg hover:scale-105 transition-all text-left group"
                       >
-                        <div className="w-14 h-14 bg-[#1A1F5E] -lg flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                          <TrendingUp className="w-7 h-7 text-white" />
+                        <div className="w-14 h-14 bg-[#F4F4F4] -lg flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                          <TrendingUp className="w-7 h-7 text-[#1A1F5E]" />
                         </div>
                         <h3 className="text-lg font-bold text-gray-900 mb-2">Mentee Progress</h3>
                         <p className="text-gray-600 text-sm mb-3">Review goal progress, milestones, and progress reports</p>
@@ -1680,8 +1680,8 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                         onClick={() => setShowReflectionBoard(true)}
                         className="bg-[#F4F4F4] -xl shadow-sm border-2 border-[#E5E7EB] p-8 hover:shadow-lg hover:scale-105 transition-all text-left group"
                       >
-                        <div className="w-16 h-16 bg-[#1A1F5E] -lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                          <BookOpen className="w-8 h-8 text-white" />
+                        <div className="w-16 h-16 bg-[#F4F4F4] -lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                          <BookOpen className="w-8 h-8 text-[#1A1F5E]" />
                         </div>
                         <h3 className="text-xl font-bold text-gray-900 mb-3">Reflection Board</h3>
                         <p className="text-gray-600 mb-4">Share and explore mentorship reflections and growth insights</p>
@@ -3767,7 +3767,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
               <div className="space-y-6">
                 <div className="bg-[#F4F4F4] -xl p-6 border border-[#0072CE]/30">
                   <div className="flex items-center space-x-2 mb-3">
-                    <div className="w-8 h-8 bg-[#0072CE] text-white -full flex items-center justify-center font-bold">1</div>
+                    <div className="w-8 h-8 bg-[#F4F4F4] text-white -full flex items-center justify-center font-bold">1</div>
                     <h3 className="font-bold text-gray-900">First Meeting Nerves</h3>
                   </div>
                   <p className="text-gray-700 mb-4">Your mentee seems nervous and quiet. What's the best approach?</p>
@@ -3789,7 +3789,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
 
                 <div className="bg-[#F4F4F4] -xl p-6 border border-[#0072CE]/30">
                   <div className="flex items-center space-x-2 mb-3">
-                    <div className="w-8 h-8 bg-[#0072CE] text-white -full flex items-center justify-center font-bold">2</div>
+                    <div className="w-8 h-8 bg-[#F4F4F4] text-white -full flex items-center justify-center font-bold">2</div>
                     <h3 className="font-bold text-gray-900">Dealing with Setbacks</h3>
                   </div>
                   <p className="text-gray-700 mb-4">Your mentee didn't achieve their goal. How do you respond?</p>
@@ -4292,7 +4292,7 @@ How are you feeling about your progress?"
                             </p>
                             <ol className="space-y-4 ml-4">
                               <li className="flex items-start">
-                                <span className="flex-shrink-0 w-8 h-8 bg-[#0072CE] text-white -full flex items-center justify-center font-bold text-sm mr-3 mt-1">1</span>
+                                <span className="flex-shrink-0 w-8 h-8 bg-[#F4F4F4] text-white -full flex items-center justify-center font-bold text-sm mr-3 mt-1">1</span>
                                 <div>
                                   <h5 className="font-semibold text-gray-900 mb-1">Assessment & Planning</h5>
                                   <p className="text-gray-600 leading-6">
@@ -4302,7 +4302,7 @@ How are you feeling about your progress?"
                                 </div>
                               </li>
                               <li className="flex items-start">
-                                <span className="flex-shrink-0 w-8 h-8 bg-[#0072CE] text-white -full flex items-center justify-center font-bold text-sm mr-3 mt-1">2</span>
+                                <span className="flex-shrink-0 w-8 h-8 bg-[#F4F4F4] text-white -full flex items-center justify-center font-bold text-sm mr-3 mt-1">2</span>
                                 <div>
                                   <h5 className="font-semibold text-gray-900 mb-1">Active Learning & Practice</h5>
                                   <p className="text-gray-600 leading-6">
@@ -4312,7 +4312,7 @@ How are you feeling about your progress?"
                                 </div>
                               </li>
                               <li className="flex items-start">
-                                <span className="flex-shrink-0 w-8 h-8 bg-[#0072CE] text-white -full flex items-center justify-center font-bold text-sm mr-3 mt-1">3</span>
+                                <span className="flex-shrink-0 w-8 h-8 bg-[#F4F4F4] text-white -full flex items-center justify-center font-bold text-sm mr-3 mt-1">3</span>
                                 <div>
                                   <h5 className="font-semibold text-gray-900 mb-1">Review & Refinement</h5>
                                   <p className="text-gray-600 leading-6">
@@ -4443,8 +4443,8 @@ How are you feeling about your progress?"
             {gameState === 'menu' && (
               <div className="p-8">
                 <div className="text-center mb-8">
-                  <div className="w-20 h-20 bg-[#1A1F5E] -full flex items-center justify-center mx-auto mb-4">
-                    <Trophy className="w-10 h-10 text-white" />
+                  <div className="w-20 h-20 bg-[#F4F4F4] -full flex items-center justify-center mx-auto mb-4">
+                    <Trophy className="w-10 h-10 text-[#1A1F5E]" />
                   </div>
                   <h2 className="text-3xl font-bold text-gray-900 mb-2">Mentorship Challenge</h2>
                   <p className="text-gray-600">Test your mentorship knowledge and earn points!</p>

@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { MessageSquare, Video, Users, Calendar, ChevronRight, CheckCircle } from 'lucide-react';
 
 const Chat: React.FC = () => {
@@ -56,8 +56,8 @@ const Chat: React.FC = () => {
 
             <div className="bg-[#F4F4F4] border-2 border-[#E5E7EB] -xl p-6">
               <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-[#1A1F5E] -lg flex items-center justify-center flex-shrink-0">
-                  <Users className="w-6 h-6 text-white" />
+                <div className="w-12 h-12 bg-[#F4F4F4] -lg flex items-center justify-center flex-shrink-0">
+                  <Users className="w-6 h-6 text-[#1A1F5E]" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Group Channels</h3>
@@ -68,8 +68,8 @@ const Chat: React.FC = () => {
 
             <div className="bg-[#F4F4F4] border-2 border-[#E5E7EB] -xl p-6">
               <div className="flex items-start space-x-4">
-                <div className="w-12 h-12 bg-[#1A1F5E] -lg flex items-center justify-center flex-shrink-0">
-                  <Calendar className="w-6 h-6 text-white" />
+                <div className="w-12 h-12 bg-[#F4F4F4] -lg flex items-center justify-center flex-shrink-0">
+                  <Calendar className="w-6 h-6 text-[#1A1F5E]" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Meeting Scheduling</h3>

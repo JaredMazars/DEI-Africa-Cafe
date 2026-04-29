@@ -859,8 +859,8 @@ export default function Dashboard() {
         <div className="max-w-[1920px] mx-auto px-8 sm:px-12 lg:px-16">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-[#1A1F5E] -xl flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 bg-[#F4F4F4] -xl flex items-center justify-center">
+                <Building2 className="w-6 h-6 text-[#1A1F5E]" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold bg-[#1A1F5E] bg-clip-text text-transparent">

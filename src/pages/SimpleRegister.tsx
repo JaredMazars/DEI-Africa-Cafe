@@ -69,8 +69,8 @@ const SimpleRegister: React.FC = () => {
           <div className="hidden lg:grid grid-cols-3 gap-4">
             {stats.map(({ icon: Icon, value, label, sub }) => (
               <div key={label} className="text-center p-5 -3xl bg-white shadow-xl border border-[#E5E7EB]">
-                <div className="w-10 h-10 bg-[#1A1F5E] -2xl mx-auto mb-3 flex items-center justify-center">
-                  <Icon className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 bg-[#F4F4F4] -2xl mx-auto mb-3 flex items-center justify-center">
+                  <Icon className="w-5 h-5 text-[#1A1F5E]" />
                 </div>
                 <p className="text-lg font-bold text-[#1A1F5E]">{value}</p>
                 <p className="text-sm font-semibold text-[#333333]">{label}</p>
