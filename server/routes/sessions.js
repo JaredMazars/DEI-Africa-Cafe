@@ -85,7 +85,12 @@ router.post('/', auth, [
             });
         }
 
-        if (req.user.user_id !== connection.mentor_id && req.user.user_id !== connection.mentee_id) {
+        // connection.mentee_id = requester_id (users.id) — direct match
+        // connection.mentor_id = expert_id (experts.id) — need expert_user_id for comparison
+        const userId = req.user.user_id;
+        const isMentee = userId === connection.mentee_id;
+        const isMentor = userId === connection.expert_user_id || userId === connection.mentor_id;
+        if (!isMentee && !isMentor) {
             return res.status(403).json({
                 success: false,
                 message: 'You can only create sessions for your own connections'
@@ -138,7 +143,11 @@ router.put('/:sessionId/status', auth, [
 
         // Get the connection to verify user access
         const connection = await Connection.findById(session.connection_id);
-        if (req.user.user_id !== connection.mentor_id && req.user.user_id !== connection.mentee_id) {
+        const userId = req.user.user_id;
+        const canAccess = userId === connection.mentee_id
+            || userId === connection.expert_user_id
+            || userId === connection.mentor_id;
+        if (!canAccess) {
             return res.status(403).json({
                 success: false,
                 message: 'You can only update your own sessions'
@@ -176,7 +185,8 @@ router.patch('/:sessionId/link', auth, [
         const session = await Session.findById(sessionId);
         if (!session) return res.status(404).json({ success: false, message: 'Session not found' });
         const connection = await Connection.findById(session.connection_id);
-        if (req.user.user_id !== connection.mentor_id && req.user.user_id !== connection.mentee_id) {
+        const userId = req.user.user_id;
+        if (userId !== connection.mentee_id && userId !== connection.expert_user_id && userId !== connection.mentor_id) {
             return res.status(403).json({ success: false, message: 'Access denied' });
         }
         await Session.updateMeetingLink(sessionId, meeting_link);

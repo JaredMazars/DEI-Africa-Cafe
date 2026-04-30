@@ -46,10 +46,17 @@ class Connection {
     static async findById(connectionId) {
         try {
             const result = await executeParameterized(
-                'SELECT * FROM connections WHERE id = @id',
+                `SELECT c.*, e.user_id AS expert_user_id
+                 FROM connections c
+                 LEFT JOIN experts e ON c.expert_id = e.id
+                 WHERE c.id = @id`,
                 { id: connectionId }
             );
-            return result.recordset.length > 0 ? new Connection(result.recordset[0]) : null;
+            if (result.recordset.length === 0) return null;
+            const row = result.recordset[0];
+            const conn = new Connection(row);
+            conn.expert_user_id = row.expert_user_id; // actual users.id of the mentor
+            return conn;
         } catch (error) {
             console.error('Error finding connection by ID:', error);
             throw error;
