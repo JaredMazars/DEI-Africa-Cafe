@@ -1,10 +1,11 @@
-# DEI Cafe — Full System Test Guide
+﻿# DEI Cafe — Walkthrough Test Guide
 
-**Base URLs**
-- Frontend: `http://localhost:5173`
-- API: `http://localhost:5000`
+---
 
-**Start both servers before testing**
+## Before you start
+
+Open two terminals:
+
 ```powershell
 # Terminal 1 — backend
 cd server; node server.js
@@ -13,506 +14,213 @@ cd server; node server.js
 npm run dev
 ```
 
----
-
-## 0. Health Check
-
-```powershell
-Invoke-WebRequest -Uri http://localhost:5000/health -UseBasicParsing | Select-Object -ExpandProperty Content
-```
-**Expect:** `{"success":true,"message":"DEI Cafe API is running",...}`
+Then open **http://localhost:5173** in your browser.
 
 ---
 
-## 1. Authentication
+## Step 1 — Register & Onboard
 
-### 1.1 Register
-```powershell
-$body = '{"email":"testuser@example.com","password":"Test1234!"}'
-Invoke-WebRequest -Uri http://localhost:5000/api/auth/register `
-  -Method POST -ContentType "application/json" -Body $body `
-  -UseBasicParsing | Select-Object -ExpandProperty Content
-```
-**Expect:** `success: true`, `token` in response, `refreshToken` httpOnly cookie set.
+1. Go to `/register`
+2. Enter an email + password (min 6 chars) → click **Register**
+3. You land on `/onboarding` — fill in every field:
+   - Name, Role = **Mentee**, Location, Experience level
+   - Pick 2–3 expertise tags, desired expertise, interests, goals, languages
+4. Submit → you should land on `/home`
+5. Check your name appears in the sidebar/nav
 
-### 1.2 Duplicate email rejected
-Repeat the same request.
-**Expect:** HTTP 409, `"An account with this email already exists."`
-
-### 1.3 Weak password rejected
-```powershell
-$body = '{"email":"x@x.com","password":"abc"}'
-```
-**Expect:** HTTP 400, validation error about password length.
-
-### 1.4 Login
-```powershell
-$body = '{"email":"testuser@example.com","password":"Test1234!"}'
-$resp = Invoke-WebRequest -Uri http://localhost:5000/api/auth/login `
-  -Method POST -ContentType "application/json" -Body $body `
-  -SessionVariable session -UseBasicParsing
-$data = $resp.Content | ConvertFrom-Json
-$TOKEN = $data.data.token
-```
-**Expect:** short-lived access token (15 min JWT), `refreshToken` cookie, user object.
-
-### 1.5 Wrong password rejected
-```powershell
-$body = '{"email":"testuser@example.com","password":"wrongpass"}'
-```
-**Expect:** HTTP 401, `"Invalid email or password."`
-
-### 1.6 Token refresh
-```powershell
-# Uses the refreshToken cookie set by the session variable above
-Invoke-WebRequest -Uri http://localhost:5000/api/auth/refresh `
-  -Method POST -ContentType "application/json" -Body '{}' `
-  -WebSession $session -UseBasicParsing | Select-Object -ExpandProperty Content
-```
-**Expect:** new `token` in response (fresh 15-min access token).
-
-### 1.7 Logout
-```powershell
-Invoke-WebRequest -Uri http://localhost:5000/api/auth/logout `
-  -Method POST -ContentType "application/json" -Body '{}' `
-  -WebSession $session -UseBasicParsing
-```
-**Expect:** `success: true`, `refreshToken` cookie cleared.
-
-### 1.8 Refresh after logout fails
-Repeat the refresh request after logout.
-**Expect:** HTTP 401, `"Invalid or expired refresh token."`
-
-### 1.9 Forgot password
-```powershell
-$body = '{"email":"testuser@example.com"}'
-Invoke-WebRequest -Uri http://localhost:5000/api/auth/forgot-password `
-  -Method POST -ContentType "application/json" -Body $body -UseBasicParsing
-```
-**Expect:** `success: true` (email attempt, non-fatal if SMTP not configured).
-
-### 1.10 Auth rate limiting
-Send 21+ rapid login requests.
-**Expect:** HTTP 429, `"Too many authentication attempts."` on the 21st.
-
-### 1.11 Get current user
-```powershell
-Invoke-WebRequest -Uri http://localhost:5000/api/auth/me `
-  -Headers @{Authorization="Bearer $TOKEN"} -UseBasicParsing
-```
-**Expect:** user profile data.
+**Verify:** no blank screen, no console errors, nav shows your name.
 
 ---
 
-## 2. Admin Login
+## Step 2 — Home & Dashboard
 
-### 2.1 Valid admin credentials
-```powershell
-$body = '{"email":"admin@deiafrica.com","password":"DEICafe@Admin2024!"}'
-$resp = Invoke-WebRequest -Uri http://localhost:5000/api/auth/admin-login `
-  -Method POST -ContentType "application/json" -Body $body -UseBasicParsing
-$ADMIN_TOKEN = ($resp.Content | ConvertFrom-Json).data.token
-```
-**Expect:** token with `role: "admin"`.
-
-### 2.2 Wrong admin password
-**Expect:** HTTP 401.
-
-### 2.3 Regular token rejected for admin routes
-```powershell
-Invoke-WebRequest -Uri http://localhost:5000/api/admin/users `
-  -Headers @{Authorization="Bearer $TOKEN"} -UseBasicParsing
-```
-**Expect:** HTTP 403 (non-admin token).
+1. Click **Home** → welcome banner and quick-access cards load
+2. Click **Dashboard** (`/dashboard`) → 4 stat cards visible (Connections, Sessions, Messages, Resources)
+   - All should show numbers, not broken icons or zeros
 
 ---
 
-## 3. Onboarding / Profile
+## Step 3 — Browse Mentors & Request a Connection
 
-### 3.1 Complete profile via UI
-1. Register a new account at `http://localhost:5173/register`
-2. You are redirected to `/onboarding`
-3. Fill name, role (Mentee), location, expertise, goals, languages
-4. Submit — **Expect:** redirect to `/home`, sidebar shows your name
+1. Go to `/mentors` → mentor cards load with name, expertise, location
+2. Go to `/mentor-matching` → scored recommendation list based on your profile
+3. On any mentor card, click **Connect** → fill in a message → submit
+4. Go to `/mentorship-activities` → your pending request should appear
 
-### 3.2 Profile GET
-```powershell
-Invoke-WebRequest -Uri http://localhost:5000/api/auth/me `
-  -Headers @{Authorization="Bearer $TOKEN"} -UseBasicParsing
-```
-**Expect:** `profile` object with the fields saved in onboarding.
+> **Tip:** If you want to find a specific mentor by name, type their name in the search box — search works across all mentors regardless of the active category tab.
 
 ---
 
-## 4. SQL Injection — Parameterization Check
+## Step 4 — Accept the Connection (as Mentor)
 
-These inputs should be saved safely, not cause errors or data leakage:
+Either:
+- Open a second browser (incognito) and log in as the mentor account
+- Or use the admin panel (Step 10) to manually accept
 
-```powershell
-# Attempt injection in email field during register
-$body = '{"email":"x'\''@test.com","password":"Test1234!"}'
-Invoke-WebRequest -Uri http://localhost:5000/api/auth/register `
-  -Method POST -ContentType "application/json" -Body $body -UseBasicParsing
-```
-**Expect:** HTTP 400 (email validation) or 500 — **NOT** a DB syntax error exposing query structure.
-
-```powershell
-# Classic ' OR '1'='1 in login
-$body = '{"email":"x'\'' OR '\''1'\''='\''1","password":"any"}'
-Invoke-WebRequest -Uri http://localhost:5000/api/auth/login `
-  -Method POST -ContentType "application/json" -Body $body -UseBasicParsing
-```
-**Expect:** HTTP 401 `"Invalid email or password."` — NOT a successful login.
+Once accepted, both users should see status change to **Accepted**.
 
 ---
 
-## 5. Experts & Mentor Discovery
+## Step 5 — Real-Time Messaging
 
-### 5.1 List experts (public-ish)
-```powershell
-Invoke-WebRequest -Uri "http://localhost:5000/api/experts" `
-  -Headers @{Authorization="Bearer $TOKEN"} -UseBasicParsing
-```
-**Expect:** array of expert profiles.
-
-### 5.2 UI — browse mentors
-Navigate to `http://localhost:5173/mentors`
-**Expect:** mentor cards with name, expertise, location, Connect button.
-
-### 5.3 Apply to become expert
-```powershell
-$body = '{"title":"Senior Dev","bio":"10 years experience","expertise":["Technology"]}'
-Invoke-WebRequest -Uri http://localhost:5000/api/experts/apply `
-  -Method POST -ContentType "application/json" `
-  -Headers @{Authorization="Bearer $TOKEN"} -Body $body -UseBasicParsing
-```
-**Expect:** `success: true`, application recorded.
-
-### 5.4 Mentor matching
-Navigate to `http://localhost:5173/mentor-matching`
-**Expect:** scored mentor recommendations based on profile interests.
+1. Open **two browser tabs** — one as mentee, one as mentor (incognito)
+2. Both go to `/messages`
+3. Both select the **same connection** from the left sidebar
+4. Mentee types a message and hits Send
+5. **Message should appear in the mentor tab instantly** — no page refresh needed
+   - If it only shows after refresh → socket.io isn't connecting (check browser console)
+6. Reply from the mentor tab → should appear instantly in the mentee tab
+7. Check the bell icon — unread count should appear
 
 ---
 
-## 6. Connections
+## Step 6 — Schedule a Session
 
-### 6.1 Create connection request
-```powershell
-# Replace EXPERT_ID with a real experts.id from step 5.1
-$body = '{"expert_id":"EXPERT_ID","message":"I would like to connect!"}'
-$resp = Invoke-WebRequest -Uri http://localhost:5000/api/connections `
-  -Method POST -ContentType "application/json" `
-  -Headers @{Authorization="Bearer $TOKEN"} -Body $body -UseBasicParsing
-$CONN_ID = ($resp.Content | ConvertFrom-Json).data.connection.id
-```
-**Expect:** connection with `status: "pending"`.
-
-### 6.2 List connections
-```powershell
-Invoke-WebRequest -Uri http://localhost:5000/api/connections `
-  -Headers @{Authorization="Bearer $TOKEN"} -UseBasicParsing
-```
-**Expect:** array including the new pending connection.
-
-### 6.3 Duplicate connection blocked
-Repeat 6.1 with same expert ID.
-**Expect:** HTTP 409 or error about existing connection.
-
-### 6.4 Accept connection (as mentor — use mentor token)
-```powershell
-$body = '{"status":"accepted"}'
-Invoke-WebRequest -Uri "http://localhost:5000/api/connections/$CONN_ID/status" `
-  -Method PUT -ContentType "application/json" `
-  -Headers @{Authorization="Bearer $MENTOR_TOKEN"} -Body $body -UseBasicParsing
-```
-**Expect:** `status: "accepted"`.
-
-### 6.5 Capacity check
-Create 3 accepted connections for one mentor, then attempt a 4th.
-**Expect:** HTTP 400, capacity error.
+1. Go to `/mentorship-activities` → open the accepted connection
+2. Click **Schedule Session** (or go to `/calendar`)
+3. Fill in: title, date (future), duration → Save
+4. Go to `/calendar` → session appears on the correct date
+5. Mark the session as **Completed**
 
 ---
 
-## 7. Messages & WebSocket
+## Step 7 — Write a Reflection
 
-### 7.1 Send message (REST)
-```powershell
-$body = "{`"connection_id`":`"$CONN_ID`",`"message_text`":`"Hello mentor!`"}"
-Invoke-WebRequest -Uri http://localhost:5000/api/messages `
-  -Method POST -ContentType "application/json" `
-  -Headers @{Authorization="Bearer $TOKEN"} -Body $body -UseBasicParsing
-```
-**Expect:** new message object, `success: true`.
-
-### 7.2 Retrieve messages
-```powershell
-Invoke-WebRequest -Uri "http://localhost:5000/api/messages/connection/$CONN_ID" `
-  -Headers @{Authorization="Bearer $TOKEN"} -UseBasicParsing
-```
-**Expect:** array of messages in chronological order.
-
-### 7.3 WebSocket real-time (UI test)
-1. Open `http://localhost:5173/messages` in two browser tabs (logged in as mentor + mentee)
-2. Select the same connection in both tabs
-3. Type and send a message as the mentee
-**Expect:** message appears instantly in the mentor tab **without page refresh** (no polling — socket.io `new_message` event).
-
-### 7.4 Unread count
-```powershell
-Invoke-WebRequest -Uri http://localhost:5000/api/messages/unread-count `
-  -Headers @{Authorization="Bearer $TOKEN"} -UseBasicParsing
-```
-**Expect:** numeric `unread_count`.
-
-### 7.5 Mark as read
-```powershell
-# Replace MSG_ID with a real message_id from 7.2
-Invoke-WebRequest -Uri "http://localhost:5000/api/messages/MSG_ID/read" `
-  -Method PUT -ContentType "application/json" -Body '{}' `
-  -Headers @{Authorization="Bearer $TOKEN"} -UseBasicParsing
-```
+1. Go to `/reflection`
+2. Fill the reflection form (what went well, what to improve, rating)
+3. Submit → entry appears on the board below
 
 ---
 
-## 8. Sessions / Calendar
+## Step 8 — Resource Library
 
-### 8.1 Schedule session
-```powershell
-$body = "{`"connection_id`":`"$CONN_ID`",`"title`":`"Intro call`",`"scheduled_at`":`"2026-05-15T14:00:00Z`",`"duration_minutes`":60}"
-$resp = Invoke-WebRequest -Uri http://localhost:5000/api/sessions `
-  -Method POST -ContentType "application/json" `
-  -Headers @{Authorization="Bearer $TOKEN"} -Body $body -UseBasicParsing
-$SESSION_ID = ($resp.Content | ConvertFrom-Json).data.session.session_id
-```
-**Expect:** session with `status: "scheduled"`.
-
-### 8.2 Get sessions
-```powershell
-Invoke-WebRequest -Uri http://localhost:5000/api/sessions `
-  -Headers @{Authorization="Bearer $TOKEN"} -UseBasicParsing
-```
-
-### 8.3 Upcoming sessions
-```powershell
-Invoke-WebRequest -Uri http://localhost:5000/api/sessions/upcoming `
-  -Headers @{Authorization="Bearer $TOKEN"} -UseBasicParsing
-```
-
-### 8.4 UI Calendar
-Navigate to `http://localhost:5173/calendar`
-**Expect:** scheduled sessions appear on correct dates.
-
-### 8.5 Update session status
-```powershell
-$body = '{"status":"completed"}'
-Invoke-WebRequest -Uri "http://localhost:5000/api/sessions/$SESSION_ID/status" `
-  -Method PUT -ContentType "application/json" `
-  -Headers @{Authorization="Bearer $TOKEN"} -Body $body -UseBasicParsing
-```
+1. Go to `/resources`
+2. Use the search bar — type a topic keyword
+3. Filter by a category tab
+4. Click a resource card → article opens or PDF downloads/previews
+5. Click the bookmark/save button on a card
 
 ---
 
-## 9. Resources
+## Step 9 — Discussion Board
 
-### 9.1 List resources
-```powershell
-Invoke-WebRequest -Uri http://localhost:5000/api/resources `
-  -Headers @{Authorization="Bearer $TOKEN"} -UseBasicParsing
-```
-**Expect:** paginated array of resources with `cache-control` header.
-
-### 9.2 UI Resources
-Navigate to `http://localhost:5173/resources`
-**Expect:** library loads with category filter tabs, search bar, resource cards.
-
-### 9.3 PDF upload (admin)
-In admin panel → Resources → upload a PDF file.
-**Expect:** file saved to `server/uploads/`, URL stored in DB.
-
-### 9.4 PDF open
-Click a PDF resource card.
-**Expect:** opens in-browser viewer or downloads.
+1. Go to `/discussion`
+2. Click the **Ask** tab → post a question with a title and description
+3. Click the **Feed** tab → your question appears
+4. Click the **Experts** tab → expert-answered posts listed
+5. Click **Events** and **Announcements** tabs → both render without errors
 
 ---
 
-## 10. Discussion / Questions
+## Step 10 — Expert Directory & Apply
 
-### 10.1 Post question
-```powershell
-$body = '{"title":"How do I get started?","content":"Looking for advice on DEI in tech."}'
-Invoke-WebRequest -Uri http://localhost:5000/api/questions `
-  -Method POST -ContentType "application/json" `
-  -Headers @{Authorization="Bearer $TOKEN"} -Body $body -UseBasicParsing
-```
-
-### 10.2 List questions
-```powershell
-Invoke-WebRequest -Uri http://localhost:5000/api/questions `
-  -Headers @{Authorization="Bearer $TOKEN"} -UseBasicParsing
-```
-
-### 10.3 UI Discussion
-Navigate to `http://localhost:5173/discussion`
-**Expect:** 5-tab layout (Feed, Ask, Experts, Events, Announcements).
+1. Go to `/experts` → expert profiles load with tags and bios
+2. Click on an expert card → detail view opens
+3. If your account is eligible, click **Apply to be a Mentor** → fill the form → submit
 
 ---
 
-## 11. Dashboard
+## Step 11 — Opportunities
 
-```powershell
-Invoke-WebRequest -Uri http://localhost:5000/api/dashboard `
-  -Headers @{Authorization="Bearer $TOKEN"} -UseBasicParsing
-```
-**Expect:** stat cards (connections, sessions, messages, resources), recent activity.
-
-Navigate to `http://localhost:5173/dashboard`
-**Expect:** all 4 stat cards show real numbers (not zeros), no broken icons.
+1. Go to `/opportunities`
+2. Browse job/program listings
+3. Use the filter/search — results update
+4. Click **Apply** on a listing
 
 ---
 
-## 12. Goals & Reflections
+## Step 12 — Collaboration Hub
 
-### 12.1 Save goals
-```powershell
-$body = '{"goals":["Improve leadership","Expand network"]}'
-Invoke-WebRequest -Uri http://localhost:5000/api/goals `
-  -Method POST -ContentType "application/json" `
-  -Headers @{Authorization="Bearer $TOKEN"} -Body $body -UseBasicParsing
-```
-
-### 12.2 Post reflection
-Navigate to `http://localhost:5173/reflection`
-Fill in the reflection form and submit.
-**Expect:** reflection saved, appears in the board.
+1. Go to `/collaboration`
+2. Explore tabs — projects, team spaces, or shared resources
+3. Create or join a group if the feature is available
 
 ---
 
-## 13. Opportunities
+## Step 13 — Profile & Preferences
 
-```powershell
-Invoke-WebRequest -Uri http://localhost:5000/api/opportunities `
-  -Headers @{Authorization="Bearer $TOKEN"} -UseBasicParsing
-```
-Navigate to `http://localhost:5173/opportunities`
-**Expect:** job/opportunity cards with filter options.
+1. Go to `/profile` → edit your name, bio, location → save
+2. Go to `/preferences` → toggle notification settings → save
+3. Refresh and confirm settings persisted
 
 ---
 
-## 14. Collaboration Hub
+## Step 14 — Admin Console
 
-Navigate to `http://localhost:5173/collaboration`
-```powershell
-Invoke-WebRequest -Uri http://localhost:5000/api/collaboration `
-  -Headers @{Authorization="Bearer $TOKEN"} -UseBasicParsing
-```
-**Expect:** projects/team spaces load without errors.
+1. Open a new tab, go to `/admin/login`
+2. Email: `admin@deiafrica.com`, Password: `DEICafe@Admin2024!`
+3. Work through each sidebar item:
 
----
-
-## 15. Admin Console
-
-### 15.1 Login
-Navigate to `http://localhost:5173/admin/login`
-Enter: `admin@deiafrica.com` / `DEICafe@Admin2024!`
-**Expect:** redirected to `/admin/overview`
-
-### 15.2 Overview dashboard
-**Expect:** total users, mentors, mentees, connections stat cards with real numbers.
-
-### 15.3 User management (`/admin/users`)
-**Expect:** paginated user table, enable/disable toggle works.
-
-### 15.4 Mentor management (`/admin/mentors`)
-**Expect:** mentor list, capacity info visible.
-
-### 15.5 Expert management (`/admin/experts`)  
-**Expect:** pending applications visible, approve/reject buttons work.
-
-### 15.6 Content / Resources management (`/admin/resources`)
-**Expect:** upload form works, existing resources listed, delete works.
-
-### 15.7 Notifications (`/admin/notifications`)
-**Expect:** send broadcast notification, appears in users' notification bell.
-
-### 15.8 Audit log (`/admin/audit`)
-**Expect:** recent admin actions logged.
-
-### 15.9 Non-admin cannot access admin API
-```powershell
-Invoke-WebRequest -Uri http://localhost:5000/api/admin/users `
-  -Headers @{Authorization="Bearer $TOKEN"} -UseBasicParsing
-```
-**Expect:** HTTP 403.
+| Section | What to check |
+|---------|--------------|
+| **Overview** | Stat cards show real user/connection counts |
+| **Users** | User list loads; toggle active/inactive on a user |
+| **Mentors** | Mentor list with capacity shown |
+| **Experts** | Pending applications visible; click Approve on one |
+| **Content** | Articles listed; create/edit/delete one |
+| **Resources** | Upload a PDF → confirm it appears at `/resources` |
+| **Opportunities** | Create a new opportunity → confirm at `/opportunities` |
+| **Notifications** | Send a broadcast → check bell in regular user tab |
+| **Audit** | Recent actions logged with timestamp + actor |
 
 ---
 
-## 16. Notification System
+## Step 15 — Security Checks
 
-### 16.1 Bell icon in nav
-Log in and trigger an event (new connection, message, etc.)
-**Expect:** red badge count appears on bell icon in navigation.
+**SQL injection — try this in the login form:**
+- Email field: type `'` OR `'1'='1`
+- Password: anything
+- Should get "Invalid email or password" — **not** a successful login
 
-### 16.2 Mark all read
-Click the bell, then "Mark all read".
-**Expect:** badge clears.
+**No token:**
+- Log out and try visiting `/dashboard` directly
+- Should redirect to `/login`
 
----
+**Wrong password — rate limiting:**
+- Attempt login 20+ times with wrong password
+- Should get "Too many authentication attempts" after ~20 and be blocked
 
-## 17. Security Checks
-
-### 17.1 No token → 401
-```powershell
-Invoke-WebRequest -Uri http://localhost:5000/api/connections -UseBasicParsing
-```
-**Expect:** HTTP 401.
-
-### 17.2 Expired/invalid token → 401
-```powershell
-Invoke-WebRequest -Uri http://localhost:5000/api/connections `
-  -Headers @{Authorization="Bearer invalidsignature.fake.token"} -UseBasicParsing
-```
-**Expect:** HTTP 401.
-
-### 17.3 Refresh token used as access token → rejected
-Sign a fake `type: "refresh"` JWT, try to call a protected route.
-**Expect:** HTTP 401 (auth middleware checks `type === 'access'`).
-
-### 17.4 CSRF guard — wrong content-type
-```powershell
-Invoke-WebRequest -Uri http://localhost:5000/api/connections `
-  -Method POST -ContentType "text/plain" -Body 'data' -UseBasicParsing
-```
-**Expect:** HTTP 400, `"Invalid content type."`
-
-### 17.5 Rate limiting on auth
-Rapidly POST to `/api/auth/login` 25 times.
-**Expect:** HTTP 429 after ~20 attempts.
-
-### 17.6 SQL injection (parameterized queries)
-```powershell
-$body = '{"email":"test@x.com'\''--","password":"x"}'
-Invoke-WebRequest -Uri http://localhost:5000/api/auth/login `
-  -Method POST -ContentType "application/json" -Body $body -UseBasicParsing
-```
-**Expect:** HTTP 400 or 401 — no DB error, no auth bypass.
+**Refresh token:**
+- After login, open DevTools → Application → Cookies
+- Confirm `refreshToken` is present and marked **HttpOnly** (not readable by JS)
+- Log out → confirm the cookie disappears
 
 ---
 
-## 18. Performance / Caching
+## Step 16 — Logout & Re-entry
 
-```powershell
-# First request
-$r1 = Invoke-WebRequest -Uri http://localhost:5000/api/resources `
-  -Headers @{Authorization="Bearer $TOKEN"} -UseBasicParsing
-$r1.Headers["Cache-Control"]
-# Should see: private, max-age=120
-```
+1. Click logout from the nav menu
+2. Confirm you are redirected to `/login`
+3. Confirm `token` is gone from localStorage (DevTools → Application → Local Storage)
+4. Confirm `refreshToken` cookie is cleared (DevTools → Application → Cookies)
+5. Try navigating to `/dashboard` directly → should redirect to `/login`
+6. Log back in → everything resumes normally
 
 ---
 
-## 19. Frontend — Page Load Smoke Test
+## Quick sanity checklist
 
-Visit each route and confirm it loads without a blank screen or console error:
+| Done | Check |
+|------|-------|
+| | Registration + onboarding flow completes |
+| | Dashboard stat cards show real data |
+| | Mentor cards load at `/mentors` |
+| | Searching by name finds mentors regardless of category tab |
+| | Connection request sends and gets accepted |
+| | Messages appear in real-time (no page refresh) |
+| | Session appears on Calendar after creation |
+| | Reflection saves and displays |
+| | Resources search/filter works, PDFs open |
+| | Discussion: post a question, see it in Feed |
+| | Admin can approve expert, upload resource, send notification |
+| | Logout clears both token + cookie |
+| | SQL injection attempt fails cleanly |
+
+---
+
+## Page load smoke test
+
+Visit each route — confirm it loads without a blank screen or console error:
 
 | Route | Expected content |
 |-------|-----------------|
@@ -521,9 +229,9 @@ Visit each route and confirm it loads without a blank screen or console error:
 | `/forgot-password` | Email input form |
 | `/home` | Welcome banner, quick-access cards |
 | `/dashboard` | 4 stat cards, activity feed |
-| `/mentors` | Mentor cards grid |
+| `/mentors` | Mentor cards grid with search + category tabs |
 | `/mentor-matching` | Scored match list |
-| `/messages` | Split-pane: connection list + chat (no polling — WebSocket) |
+| `/messages` | Split-pane: connection list + chat (real-time, no polling) |
 | `/resources` | Resource library with search/filter |
 | `/calendar` | Month/week calendar view |
 | `/discussion` | 5-tab discussion board |
@@ -532,23 +240,4 @@ Visit each route and confirm it loads without a blank screen or console error:
 | `/opportunities` | Opportunity listings |
 | `/profile` | User profile editor |
 | `/preferences` | Notification + account preferences |
-| `/admin/overview` | Admin stat overview (admin token required) |
-
----
-
-## 20. End-to-End Happy Path
-
-1. **Register** as a new mentee → onboard with profile
-2. **Browse mentors** at `/mentors` → click Connect on one
-3. **Admin approves** or mentor accepts the connection
-4. **Open Messages** → send a message → verify it arrives instantly in the other browser tab (WebSocket, no reload)
-5. **Schedule a session** → verify it appears on Calendar
-6. **Mark session completed**
-7. **Write a reflection** on the session
-8. **Browse resources** → open a PDF article
-9. **Admin** → check the audit log shows the connection + session events
-10. **Logout** → confirm refresh token cookie is cleared, re-accessing protected routes requires new login
-
----
-
-*All API examples assume both servers are running locally. Replace token values with actual JWTs obtained from login/register responses. Replace IDs with real values from your DB.*
+| `/admin/overview` | Admin stat overview (admin login required) |
