@@ -1,9 +1,32 @@
 import express from 'express';
 import https from 'https';
 import http from 'http';
+import multer from 'multer';
+import { BlobServiceClient } from '@azure/storage-blob';
+import { v4 as uuidv4 } from 'uuid';
 import auth from '../middleware/auth.js';
 import { executeQuery } from '../config/database.js';
 import { cache } from '../utils/cache.js';
+
+// Multer — store file in memory (max 50 MB) for direct Azure Blob upload
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 50 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+        const allowed = [
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-powerpoint',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+            'video/mp4', 'video/webm',
+            'application/zip',
+        ];
+        if (allowed.includes(file.mimetype)) cb(null, true);
+        else cb(new Error('Unsupported file type'));
+    },
+});
 
 const router = express.Router();
 
@@ -67,6 +90,76 @@ router.post('/', auth, async (req, res) => {
     } catch (error) {
         console.error('Error creating resource:', error);
         res.status(500).json({ success: false, message: 'Failed to create resource' });
+    }
+});
+
+// ── POST /api/resources/upload — upload file to Azure Blob Storage ─────────────
+router.post('/upload', auth, upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ success: false, message: 'No file provided' });
+
+        const connStr = process.env.AZURE_STORAGE_CONNECTION_STRING;
+        const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME || 'resources';
+
+        if (!connStr || connStr.includes('YOUR_ACCOUNT_NAME')) {
+            return res.status(503).json({ success: false, message: 'Azure Blob Storage is not configured. Please set AZURE_STORAGE_CONNECTION_STRING in .env' });
+        }
+
+        const blobServiceClient = BlobServiceClient.fromConnectionString(connStr);
+        const containerClient = blobServiceClient.getContainerClient(containerName);
+        // Ensure container exists (public blob read access)
+        await containerClient.createIfNotExists({ access: 'blob' });
+
+        const ext = req.file.originalname.split('.').pop();
+        const blobName = `${uuidv4()}.${ext}`;
+        const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+        await blockBlobClient.uploadData(req.file.buffer, {
+            blobHTTPHeaders: { blobContentType: req.file.mimetype },
+        });
+
+        const blobUrl = blockBlobClient.url;
+
+        // Optionally auto-create the resource DB record when metadata is provided
+        const { title, type, category, description, connection_id } = req.body;
+        let insertedId = null;
+        if (title) {
+            const userId = req.user.id || req.user.user_id;
+            const userRes = await executeQuery(`SELECT name FROM users WHERE id='${userId}'`);
+            const uploaderName = userRes.recordset[0]?.name || 'Unknown';
+            const ins = await executeQuery(`
+                INSERT INTO resources (title, type, category, url, description, uploaded_by, uploader_name, is_active, created_at, updated_at)
+                OUTPUT INSERTED.id
+                VALUES (
+                    '${title.replace(/'/g, "''")}',
+                    '${((type || 'article')).replace(/'/g, "''")}',
+                    '${((category || 'General')).replace(/'/g, "''")}',
+                    '${blobUrl.replace(/'/g, "''")}',
+                    ${description ? `'${description.replace(/'/g, "''")}'` : 'NULL'},
+                    '${userId}', '${uploaderName}', 1,
+                    GETDATE(), GETDATE()
+                )
+            `);
+            insertedId = ins.recordset[0]?.id;
+            cache.invalidatePattern('resources:');
+        }
+
+        res.status(201).json({
+            success: true,
+            data: {
+                url: blobUrl,
+                blobName,
+                id: insertedId,
+                title,
+                type: type || 'article',
+                category: category || 'General',
+                description,
+                uploadedBy: req.user?.name || 'Forvis Mazars',
+            },
+        });
+    } catch (error) {
+        console.error('Blob upload error:', error);
+        res.status(500).json({ success: false, message: error.message || 'Upload failed' });
     }
 });
 

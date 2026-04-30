@@ -894,6 +894,9 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
   const [expandedMilestone, setExpandedMilestone] = useState<string | null>(null);
   const [showUploadResource, setShowUploadResource] = useState(false);
   const [newResource, setNewResource] = useState({ title: '', description: '', url: '', type: 'article' as 'article' | 'video' | 'guide', category: '' });
+  const [uploadMode, setUploadMode] = useState<'url' | 'file'>('url');
+  const [pickedFile, setPickedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   
   // Goals State Management � seeded from DB per connection
   const [goals, setGoals] = useState<SMARTGoal[]>([]);
@@ -2686,7 +2689,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                 <h2 className="text-2xl font-bold text-white">Upload Resource</h2>
                 <p className="text-white/80 text-sm mt-1">Share a guide, article, or video with your mentee</p>
               </div>
-              <button onClick={() => { setShowUploadResource(false); setNewResource({ title: '', description: '', url: '', type: 'article', category: '' }); }} className="text-white hover:text-white/70 transition-colors">
+              <button onClick={() => { setShowUploadResource(false); setNewResource({ title: '', description: '', url: '', type: 'article', category: '' }); setUploadMode('url'); setPickedFile(null); }} className="text-white hover:text-white/70 transition-colors">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -2725,15 +2728,73 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                   />
                 </div>
               </div>
+              {/* Source toggle */}
               <div>
-                <label className="block text-sm font-semibold text-[#333333] mb-2">URL / Link *</label>
-                <input
-                  type="url"
-                  value={newResource.url}
-                  onChange={e => setNewResource(r => ({ ...r, url: e.target.value }))}
-                  placeholder="https://..."
-                  className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
-                />
+                <label className="block text-sm font-semibold text-[#333333] mb-2">Source *</label>
+                <div className="flex -full border-2 border-[#E5E7EB] overflow-hidden mb-3">
+                  <button
+                    type="button"
+                    onClick={() => { setUploadMode('url'); setPickedFile(null); }}
+                    className={`flex-1 py-2.5 text-sm font-semibold transition-all ${
+                      uploadMode === 'url'
+                        ? 'bg-[#1A1F5E] text-white'
+                        : 'bg-white text-[#8C8C8C] hover:text-[#333333]'
+                    }`}
+                  >
+                    Paste a Link
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setUploadMode('file'); setNewResource(r => ({ ...r, url: '' })); }}
+                    className={`flex-1 py-2.5 text-sm font-semibold transition-all ${
+                      uploadMode === 'file'
+                        ? 'bg-[#1A1F5E] text-white'
+                        : 'bg-white text-[#8C8C8C] hover:text-[#333333]'
+                    }`}
+                  >
+                    Upload File
+                  </button>
+                </div>
+
+                {uploadMode === 'url' ? (
+                  <input
+                    type="url"
+                    value={newResource.url}
+                    onChange={e => setNewResource(r => ({ ...r, url: e.target.value }))}
+                    placeholder="https://..."
+                    className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
+                  />
+                ) : (
+                  <div>
+                    <label
+                      htmlFor="resource-file-input"
+                      className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed -2xl cursor-pointer transition-all ${
+                        pickedFile ? 'border-[#1A1F5E] bg-[#1A1F5E]/5' : 'border-[#E5E7EB] bg-[#F4F4F4] hover:border-[#1A1F5E]/50'
+                      }`}
+                    >
+                      {pickedFile ? (
+                        <>
+                          <svg className="w-8 h-8 text-[#1A1F5E] mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                          <span className="text-sm font-semibold text-[#1A1F5E]">{pickedFile.name}</span>
+                          <span className="text-xs text-[#8C8C8C] mt-1">{(pickedFile.size / (1024 * 1024)).toFixed(2)} MB — click to change</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-8 h-8 text-[#8C8C8C] mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                          <span className="text-sm font-semibold text-[#333333]">Click to browse or drag & drop</span>
+                          <span className="text-xs text-[#8C8C8C] mt-1">PDF, Word, PowerPoint, images, video — max 50 MB</span>
+                        </>
+                      )}
+                    </label>
+                    <input
+                      id="resource-file-input"
+                      type="file"
+                      className="hidden"
+                      accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.zip"
+                      onChange={e => setPickedFile(e.target.files?.[0] ?? null)}
+                    />
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-semibold text-[#333333] mb-2">Description</label>
@@ -2748,36 +2809,72 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
               <div className="flex space-x-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => { setShowUploadResource(false); setNewResource({ title: '', description: '', url: '', type: 'article', category: '' }); }}
+                  onClick={() => {
+                    setShowUploadResource(false);
+                    setNewResource({ title: '', description: '', url: '', type: 'article', category: '' });
+                    setUploadMode('url');
+                    setPickedFile(null);
+                  }}
                   className="flex-1 bg-transparent text-[#1A1F5E] font-semibold px-6 py-3 -full border-2 border-[#1A1F5E] hover:bg-[#1A1F5E] hover:text-white transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
+                  disabled={uploading}
                   onClick={async () => {
-                    if (!newResource.title || !newResource.url) { alert('Please fill in the title and URL.'); return; }
+                    if (!newResource.title) { alert('Please enter a title.'); return; }
+                    if (uploadMode === 'url' && !newResource.url) { alert('Please paste a URL.'); return; }
+                    if (uploadMode === 'file' && !pickedFile) { alert('Please choose a file to upload.'); return; }
                     try {
+                      setUploading(true);
                       const token = localStorage.getItem('token');
-                      const res = await fetch('/api/resources', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                        body: JSON.stringify({ ...newResource, connection_id: activeConnectionId }),
-                      });
-                      const data = await res.json();
-                      if (data.success) {
-                        setDbResources((prev: any[]) => [data.data, ...prev]);
-                        setShowUploadResource(false);
-                        setNewResource({ title: '', description: '', url: '', type: 'article', category: '' });
-                        alert('? Resource uploaded successfully!');
+                      let savedResource: any;
+
+                      if (uploadMode === 'file' && pickedFile) {
+                        // Multipart upload to Azure Blob Storage
+                        const fd = new FormData();
+                        fd.append('file', pickedFile);
+                        fd.append('title', newResource.title);
+                        fd.append('type', newResource.type);
+                        fd.append('category', newResource.category || 'General');
+                        fd.append('description', newResource.description || '');
+                        if (activeConnectionId) fd.append('connection_id', String(activeConnectionId));
+                        const res = await fetch('/api/resources/upload', {
+                          method: 'POST',
+                          headers: { Authorization: `Bearer ${token}` },
+                          body: fd,
+                        });
+                        const data = await res.json();
+                        if (!data.success) throw new Error(data.message || 'Upload failed');
+                        savedResource = { ...data.data, uploadedBy: data.data.uploadedBy || 'Forvis Mazars' };
                       } else {
-                        alert('Failed to upload resource. Please try again.');
+                        // URL-based resource
+                        const res = await fetch('/api/resources', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                          body: JSON.stringify({ ...newResource, connection_id: activeConnectionId }),
+                        });
+                        const data = await res.json();
+                        if (!data.success) throw new Error(data.message || 'Failed to save resource');
+                        savedResource = { ...newResource, id: data.data?.id, uploadedBy: 'Forvis Mazars' };
                       }
-                    } catch { alert('Failed to upload resource. Please check your connection.'); }
+
+                      setDbResources((prev: any[]) => [savedResource, ...prev]);
+                      setShowUploadResource(false);
+                      setNewResource({ title: '', description: '', url: '', type: 'article', category: '' });
+                      setUploadMode('url');
+                      setPickedFile(null);
+                      alert('✓ Resource saved successfully!');
+                    } catch (err: any) {
+                      alert(err.message || 'Failed to upload resource. Please check your connection.');
+                    } finally {
+                      setUploading(false);
+                    }
                   }}
-                  className="flex-1 bg-[#1A1F5E] text-white font-semibold px-6 py-3 -full hover:opacity-90 transition-all shadow-lg"
+                  className="flex-1 bg-[#1A1F5E] text-white font-semibold px-6 py-3 -full hover:opacity-90 transition-all shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  Upload Resource
+                  {uploading ? 'Uploading…' : 'Upload Resource'}
                 </button>
               </div>
             </div>
