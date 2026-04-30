@@ -162,6 +162,31 @@ router.put('/:sessionId/status', auth, [
     }
 });
 
+// Update session meeting link
+router.patch('/:sessionId/link', auth, [
+    body('meeting_link').isURL().withMessage('Valid URL required')
+], async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, message: 'Invalid URL', errors: errors.array() });
+        }
+        const { sessionId } = req.params;
+        const { meeting_link } = req.body;
+        const session = await Session.findById(sessionId);
+        if (!session) return res.status(404).json({ success: false, message: 'Session not found' });
+        const connection = await Connection.findById(session.connection_id);
+        if (req.user.user_id !== connection.mentor_id && req.user.user_id !== connection.mentee_id) {
+            return res.status(403).json({ success: false, message: 'Access denied' });
+        }
+        await Session.updateMeetingLink(sessionId, meeting_link);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating meeting link:', error);
+        res.status(500).json({ success: false, message: 'Failed to update meeting link' });
+    }
+});
+
 // Get session statistics
 router.get('/stats', auth, async (req, res) => {
     try {

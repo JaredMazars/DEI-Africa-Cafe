@@ -982,18 +982,52 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
       const res = await fetch('/api/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ ...newSession, connection_id: activeConnectionId }),
+        body: JSON.stringify({ ...newSession, meeting_link: undefined, connection_id: activeConnectionId }),
       });
       const data = await res.json();
       if (data.success) {
+        const sessionId = data.data?.session?.session_id;
+        setPendingSessionId(sessionId ?? null);
+        setPendingTeamsLink('');
+
+        // Build Teams deep-link pre-populated with meeting details
+        const startIso = new Date(newSession.scheduled_at).toISOString();
+        const endDate = new Date(newSession.scheduled_at);
+        endDate.setMinutes(endDate.getMinutes() + (newSession.duration_minutes || 60));
+        const endIso = endDate.toISOString();
+        const teamsUrl = `https://teams.microsoft.com/l/meeting/new?` +
+          `subject=${encodeURIComponent(newSession.title)}` +
+          `&startTime=${encodeURIComponent(startIso)}` +
+          `&endTime=${encodeURIComponent(endIso)}` +
+          (newSession.description ? `&content=${encodeURIComponent(newSession.description)}` : '');
+        window.open(teamsUrl, '_blank');
+
+        setSessionStep('teams-opened');
         refreshSessions();
-        setShowNewSession(false);
-        setNewSession({ title: '', scheduled_at: '', duration_minutes: 60, meeting_link: '', description: '' });
       } else {
         alert(data.message || 'Failed to create session');
       }
     } catch { alert('Failed to create session'); }
     setSessionLoading(false);
+  };
+
+  const handleAttachLink = async (sessionId: string, link: string, onDone?: () => void) => {
+    if (!link || !link.startsWith('http')) { alert('Please paste a valid Teams meeting URL.'); return; }
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/sessions/${sessionId}/link`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ meeting_link: link }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        refreshSessions();
+        onDone?.();
+      } else {
+        alert(data.message || 'Failed to save link');
+      }
+    } catch { alert('Failed to save link'); }
   };
 
   // Reflections State Management
@@ -1025,11 +1059,17 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
   const [newCustomQ, setNewCustomQ] = useState({ question: '', options: ['', '', '', ''], correctAnswer: 0, category: '', explanation: '' });
   const [selectedRating, setSelectedRating] = useState(0);
   const [gameHighScore, setGameHighScore] = useState(() => parseInt(localStorage.getItem('mentorship_game_high') || '0'));
-  // Sessions state
   const [sessions, setSessions] = useState<any[]>([]);
   const [showNewSession, setShowNewSession] = useState(false);
   const [newSession, setNewSession] = useState({ title: '', scheduled_at: '', duration_minutes: 60, meeting_link: '', description: '' });
   const [sessionLoading, setSessionLoading] = useState(false);
+  // Step-2 state: after saving, prompt to paste Teams link
+  const [sessionStep, setSessionStep] = useState<'form' | 'teams-opened'>('form');
+  const [pendingSessionId, setPendingSessionId] = useState<string | null>(null);
+  const [pendingTeamsLink, setPendingTeamsLink] = useState('');
+  // Attach-link modal for existing sessions
+  const [attachLinkSessionId, setAttachLinkSessionId] = useState<string | null>(null);
+  const [attachLinkValue, setAttachLinkValue] = useState('');
   // Resources state
   const [dbResources, setDbResources] = useState<any[]>([]);
   const [resourceSearch, setResourceSearch] = useState('');
@@ -2350,7 +2390,7 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                                 </span>
                               </div>
                             </div>
-                            {session.meeting_link && (
+                            {session.meeting_link ? (
                               <a
                                 href={session.meeting_link}
                                 target="_blank"
@@ -2360,6 +2400,14 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                                 <span>Join Teams</span>
                                 <ChevronRight className="w-4 h-4" />
                               </a>
+                            ) : (
+                              <button
+                                onClick={() => { setAttachLinkSessionId(session.session_id); setAttachLinkValue(''); }}
+                                className="ml-4 text-[#0072CE] text-sm font-semibold px-4 py-2 border border-[#0072CE]/40 -full hover:bg-[#0072CE]/10 transition-all whitespace-nowrap flex items-center space-x-1"
+                              >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                                <span>Attach Teams Link</span>
+                              </button>
                             )}
                           </div>
                         </div>
@@ -2371,77 +2419,191 @@ const MentorshipActivitiesEnhanced: React.FC = () => {
                 {/* New Session Modal */}
                 {showNewSession && (
                   <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white -3xl shadow-2xl max-w-lg w-full p-8 border border-[#E5E7EB]">
-                      <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-bold text-[#1A1F5E]">Schedule Teams Session</h2>
-                        <button onClick={() => setShowNewSession(false)} className="text-[#8C8C8C] hover:text-[#333333]">
-                          <X className="w-6 h-6" />
+                    <div className="bg-white -3xl shadow-2xl max-w-lg w-full border border-[#E5E7EB] overflow-hidden">
+
+                      {/* ── STEP 1: Fill in session details ──────────────────── */}
+                      {sessionStep === 'form' && (
+                        <>
+                          <div className="bg-[#1A1F5E] px-8 py-6 flex items-center justify-between">
+                            <div>
+                              <h2 className="text-2xl font-bold text-white">Schedule Teams Session</h2>
+                              <p className="text-white/70 text-sm mt-1">Fill in details — Teams will open automatically</p>
+                            </div>
+                            <button onClick={() => { setShowNewSession(false); setSessionStep('form'); }} className="text-white/70 hover:text-white">
+                              <X className="w-6 h-6" />
+                            </button>
+                          </div>
+                          <div className="p-8 space-y-4">
+                            <div>
+                              <label className="block text-sm font-semibold text-[#333333] mb-2">Session Title *</label>
+                              <input
+                                value={newSession.title}
+                                onChange={e => setNewSession(s => ({ ...s, title: e.target.value }))}
+                                placeholder="e.g. Monthly check-in, Goal review..."
+                                className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-semibold text-[#333333] mb-2">Date & Time *</label>
+                              <input
+                                type="datetime-local"
+                                value={newSession.scheduled_at}
+                                onChange={e => setNewSession(s => ({ ...s, scheduled_at: e.target.value }))}
+                                className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-semibold text-[#333333] mb-2">Duration (minutes)</label>
+                              <select
+                                value={newSession.duration_minutes}
+                                onChange={e => setNewSession(s => ({ ...s, duration_minutes: parseInt(e.target.value) }))}
+                                className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
+                              >
+                                <option value="30">30 minutes</option>
+                                <option value="45">45 minutes</option>
+                                <option value="60">60 minutes</option>
+                                <option value="90">90 minutes</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-semibold text-[#333333] mb-2">Description</label>
+                              <textarea
+                                value={newSession.description}
+                                onChange={e => setNewSession(s => ({ ...s, description: e.target.value }))}
+                                placeholder="What will you discuss?"
+                                rows={2}
+                                className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all resize-none"
+                              />
+                            </div>
+                            <div className="flex space-x-3 pt-2">
+                              <button
+                                onClick={() => setShowNewSession(false)}
+                                className="flex-1 bg-transparent text-[#1A1F5E] font-semibold px-6 py-3 -full border-2 border-[#1A1F5E] hover:bg-[#1A1F5E] hover:text-white transition-all"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={handleCreateSession}
+                                disabled={sessionLoading}
+                                className="flex-1 bg-[#1A1F5E] text-white font-semibold px-6 py-3 -full hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+                              >
+                                {sessionLoading ? (
+                                  <span>Scheduling...</span>
+                                ) : (
+                                  <>
+                                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                                      <path d="M17 3H7C5.9 3 5 3.9 5 5v14c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z" fill="#5059C9"/>
+                                      <path d="M9 7h6M9 11h6M9 15h4" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                                    </svg>
+                                    <span>Schedule & Open Teams</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {/* ── STEP 2: Teams opened — paste link back ───────────── */}
+                      {sessionStep === 'teams-opened' && (
+                        <>
+                          <div className="bg-[#1A1F5E] px-8 py-6">
+                            <div className="flex items-center space-x-3 mb-1">
+                              <div className="w-8 h-8 bg-green-400 -full flex items-center justify-center">
+                                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                              </div>
+                              <h2 className="text-2xl font-bold text-white">Session Saved!</h2>
+                            </div>
+                            <p className="text-white/70 text-sm">Teams has opened in a new tab — create the meeting there, then paste the link below.</p>
+                          </div>
+                          <div className="p-8 space-y-5">
+                            {/* Info banner */}
+                            <div className="bg-[#0072CE]/10 border border-[#0072CE]/30 -2xl px-5 py-4">
+                              <p className="text-sm text-[#1A1F5E] font-semibold mb-1">How to get your Teams link:</p>
+                              <ol className="text-sm text-[#333333] space-y-1 list-decimal ml-4">
+                                <li>In the Teams tab that opened, confirm the details and click <strong>Send</strong></li>
+                                <li>Open the meeting event in your Teams Calendar</li>
+                                <li>Click <strong>Copy join link</strong> and paste it below</li>
+                              </ol>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-semibold text-[#333333] mb-2">Teams Meeting Link (optional)</label>
+                              <input
+                                value={pendingTeamsLink}
+                                onChange={e => setPendingTeamsLink(e.target.value)}
+                                placeholder="https://teams.microsoft.com/l/meetup-join/..."
+                                className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
+                              />
+                            </div>
+                            <div className="flex space-x-3">
+                              <button
+                                onClick={() => {
+                                  setShowNewSession(false);
+                                  setSessionStep('form');
+                                  setNewSession({ title: '', scheduled_at: '', duration_minutes: 60, meeting_link: '', description: '' });
+                                }}
+                                className="flex-1 bg-transparent text-[#8C8C8C] font-semibold px-6 py-3 -full border-2 border-[#E5E7EB] hover:text-[#333333] hover:border-[#333333] transition-all"
+                              >
+                                Skip for now
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  if (pendingSessionId && pendingTeamsLink) {
+                                    await handleAttachLink(pendingSessionId, pendingTeamsLink, () => {
+                                      setShowNewSession(false);
+                                      setSessionStep('form');
+                                      setNewSession({ title: '', scheduled_at: '', duration_minutes: 60, meeting_link: '', description: '' });
+                                    });
+                                  }
+                                }}
+                                disabled={!pendingTeamsLink}
+                                className="flex-1 bg-[#1A1F5E] text-white font-semibold px-6 py-3 -full hover:opacity-90 transition-all shadow-lg disabled:opacity-40 disabled:cursor-not-allowed"
+                              >
+                                Save Link
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                    </div>
+                  </div>
+                )}
+
+                {/* Attach Teams Link modal (for existing sessions) */}
+                {attachLinkSessionId && (
+                  <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white -3xl shadow-2xl max-w-md w-full border border-[#E5E7EB] overflow-hidden">
+                      <div className="bg-[#1A1F5E] px-6 py-5 flex items-center justify-between">
+                        <h2 className="text-xl font-bold text-white">Attach Teams Link</h2>
+                        <button onClick={() => { setAttachLinkSessionId(null); setAttachLinkValue(''); }} className="text-white/70 hover:text-white">
+                          <X className="w-5 h-5" />
                         </button>
                       </div>
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-semibold text-[#333333] mb-2">Session Title *</label>
-                          <input
-                            value={newSession.title}
-                            onChange={e => setNewSession(s => ({ ...s, title: e.target.value }))}
-                            placeholder="e.g. Monthly check-in, Goal review..."
-                            className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-[#333333] mb-2">Date & Time *</label>
-                          <input
-                            type="datetime-local"
-                            value={newSession.scheduled_at}
-                            onChange={e => setNewSession(s => ({ ...s, scheduled_at: e.target.value }))}
-                            className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-[#333333] mb-2">Duration (minutes)</label>
-                          <select
-                            value={newSession.duration_minutes}
-                            onChange={e => setNewSession(s => ({ ...s, duration_minutes: parseInt(e.target.value) }))}
-                            className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
-                          >
-                            <option value="30">30 minutes</option>
-                            <option value="45">45 minutes</option>
-                            <option value="60">60 minutes</option>
-                            <option value="90">90 minutes</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-[#333333] mb-2">Teams Meeting Link</label>
-                          <input
-                            value={newSession.meeting_link}
-                            onChange={e => setNewSession(s => ({ ...s, meeting_link: e.target.value }))}
-                            placeholder="https://teams.microsoft.com/..."
-                            className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-semibold text-[#333333] mb-2">Description</label>
-                          <textarea
-                            value={newSession.description}
-                            onChange={e => setNewSession(s => ({ ...s, description: e.target.value }))}
-                            placeholder="What will you discuss?"
-                            rows={2}
-                            className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all resize-none"
-                          />
-                        </div>
-                        <div className="flex space-x-3 pt-2">
+                      <div className="p-6 space-y-4">
+                        <p className="text-sm text-[#8C8C8C]">Paste the Teams meeting join link so participants can access the session.</p>
+                        <input
+                          value={attachLinkValue}
+                          onChange={e => setAttachLinkValue(e.target.value)}
+                          placeholder="https://teams.microsoft.com/l/meetup-join/..."
+                          className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
+                        />
+                        <div className="flex space-x-3">
                           <button
-                            onClick={() => setShowNewSession(false)}
-                            className="flex-1 bg-transparent text-[#1A1F5E] font-semibold px-6 py-3 -full border-2 border-[#1A1F5E] hover:bg-[#1A1F5E] hover:text-white transition-all"
+                            onClick={() => { setAttachLinkSessionId(null); setAttachLinkValue(''); }}
+                            className="flex-1 bg-transparent text-[#1A1F5E] font-semibold px-5 py-2.5 -full border-2 border-[#1A1F5E] hover:bg-[#1A1F5E] hover:text-white transition-all"
                           >
                             Cancel
                           </button>
                           <button
-                            onClick={handleCreateSession}
-                            disabled={sessionLoading}
-                            className="flex-1 bg-[#1A1F5E] text-white font-semibold px-6 py-3 -full hover:opacity-90 transition-all disabled:opacity-50"
+                            onClick={() => handleAttachLink(attachLinkSessionId, attachLinkValue, () => {
+                              setAttachLinkSessionId(null);
+                              setAttachLinkValue('');
+                            })}
+                            disabled={!attachLinkValue}
+                            className="flex-1 bg-[#1A1F5E] text-white font-semibold px-5 py-2.5 -full hover:opacity-90 transition-all shadow-lg disabled:opacity-40 disabled:cursor-not-allowed"
                           >
-                            {sessionLoading ? 'Scheduling...' : 'Schedule Session'}
+                            Save Link
                           </button>
                         </div>
                       </div>

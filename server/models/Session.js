@@ -140,6 +140,18 @@ class Session {
         }
     }
 
+    static async updateMeetingLink(sessionId, meetingLink) {
+        try {
+            await executeParameterized(
+                `UPDATE Sessions SET meeting_link = @link, updated_at = GETDATE() WHERE session_id = @id`,
+                { link: meetingLink, id: sessionId }
+            );
+        } catch (error) {
+            console.error('Error updating meeting link:', error);
+            throw error;
+        }
+    }
+
     static async getSessionStats() {
         try {
             const query = `
