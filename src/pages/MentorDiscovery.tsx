@@ -6,7 +6,7 @@ import { useLocation } from 'react-router-dom';
 interface Mentor {
   id: string;
   name: string;
-  role: string;       // seniority level e.g. "Senior (6–10 years)"
+  role: string;       // seniority level e.g. "Senior (6ï¿½10 years)"
   company: string;
   location: string;
   expertise: string[];
@@ -23,9 +23,9 @@ interface Mentor {
 export default function MentorDiscovery() {
   const { currentUser } = useSimpleAuth();
   const location = useLocation();
-  // Role detection — mentors see prospective mentees; mentees see available mentors
+  // Role detection ï¿½ mentors see prospective mentees; mentees see available mentors
   const isMentor = currentUser?.role === 'mentor' || currentUser?.role === 'both';
-  // Stable keys — changing these triggers a rematch fetch
+  // Stable keys ï¿½ changing these triggers a rematch fetch
   const expertiseKey = (currentUser?.profile?.expertise || []).join(',');
   const desiredKey   = (currentUser?.profile?.desired_expertise || []).join(',');
   const [mentors, setMentors] = useState<Mentor[]>([]);
@@ -132,11 +132,14 @@ export default function MentorDiscovery() {
     }
 
     // Tab filtering
-    if (activeTab === 'for-you') {
-      // Only show mentors with =1 matching expertise tag — exclude completely unrelated ones
+    // If user is actively searching, skip the matchScore gate so search works across all mentors
+    if (activeTab === 'for-you' && !searchQuery) {
       filtered = filtered
         .filter(m => (m.matchScore ?? 0) > 0)
         .sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+    } else if (activeTab === 'for-you' && searchQuery) {
+      // Searching: show all matches sorted by score, search already applied above
+      filtered = filtered.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
     } else if (activeTab !== 'all') {
       filtered = filtered.filter(mentor =>
         mentor.expertise.some(exp => exp.toLowerCase() === activeTab.toLowerCase())
@@ -171,12 +174,15 @@ export default function MentorDiscovery() {
     }
     setConnectError(null);
 
+    // Capture button ref BEFORE any await â€” event.currentTarget is nulled by React after async
+    const buttonEl = event.currentTarget;
+
     // Mark button as loading
     setConnectingMentors(prev => new Set(prev).add(personId));
 
     try {
       const token = localStorage.getItem('token');
-      if (!token) { setConnectError('Session expired — please log in again.'); return; }
+      if (!token) { setConnectError('Session expired ï¿½ please log in again.'); return; }
 
       // When mentor views mentees: currentUser IS the mentor, personId is the mentee's user_id
       // When mentee views mentors:  personId is the mentor's expert_id, currentUser is the mentee
@@ -198,12 +204,11 @@ export default function MentorDiscovery() {
         return;
       }
 
-      // Success — run flying-avatar animation
-      const button = event.currentTarget;
-      const rect = button.getBoundingClientRect();
+      // Success â€” run flying-avatar animation
+      const rect = buttonEl?.getBoundingClientRect();
       const profileIcon = document.querySelector('[data-profile-icon]');
       const mentor = mentors.find(m => m.id === personId);
-      if (profileIcon && mentor) {
+      if (rect && profileIcon && mentor) {
         const profileRect = profileIcon.getBoundingClientRect();
         const flyingAvatar = document.createElement('div');
         flyingAvatar.innerHTML = `<img src="${mentor.image}" alt="${mentor.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`;
@@ -222,7 +227,7 @@ export default function MentorDiscovery() {
       setAnimatingMentor(personId);
       setTimeout(() => setAnimatingMentor(null), 1000);
     } catch (err: any) {
-      setConnectError(err?.message || 'Could not reach the server — is it running?');
+      setConnectError(err?.message || 'Could not reach the server ï¿½ is it running?');
     } finally {
       setConnectingMentors(prev => { const s = new Set(prev); s.delete(personId); return s; });
     }
@@ -237,7 +242,7 @@ export default function MentorDiscovery() {
   };
 
   const calculateMatchScore = (mentor: Mentor): number => {
-    // Backend now returns a proper 0–97 percentage already computed server-side
+    // Backend now returns a proper 0ï¿½97 percentage already computed server-side
     // (exact field = 95%, related field = 65%, weighted average across desired topics)
     return mentor.matchScore ?? 0;
   };
@@ -279,7 +284,7 @@ export default function MentorDiscovery() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8C8C8C] w-5 h-5" />
               <input
                 type="text"
-                placeholder="Search by name, role, or expertise…"
+                placeholder="Search by name, role, or expertiseï¿½"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 border-2 border-[#E5E7EB] -2xl text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
@@ -399,8 +404,8 @@ export default function MentorDiscovery() {
                   <span>?</span>
                   <span>
                     {isMentor
-                      ? <>No mentoring focus set — <a href="/profile" className="underline font-semibold">add topics in your profile</a> to filter your matches.</>  
-                      : <>No learning goals set — <a href="/profile" className="underline font-semibold">add them in your profile</a> to improve your matches.</> }
+                      ? <>No mentoring focus set ï¿½ <a href="/profile" className="underline font-semibold">add topics in your profile</a> to filter your matches.</>  
+                      : <>No learning goals set ï¿½ <a href="/profile" className="underline font-semibold">add them in your profile</a> to improve your matches.</> }
                   </span>
                 </div>
               )}
@@ -534,7 +539,7 @@ export default function MentorDiscovery() {
                         className="flex-1 bg-[#1A1F5E] hover:opacity-90 text-white py-2.5 -lg font-semibold transition-all shadow-sm disabled:opacity-60 flex items-center justify-center gap-2"
                       >
                         {connectingMentors.has(mentor.id) ? (
-                          <><Loader2 className="w-4 h-4 animate-spin" /> Sending…</>
+                          <><Loader2 className="w-4 h-4 animate-spin" /> Sendingï¿½</>
                         ) : 'Connect'}
                       </button>
                     )}
