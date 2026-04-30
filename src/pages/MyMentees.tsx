@@ -269,7 +269,7 @@ const MyMentees: React.FC = () => {
                         {(c.mentee_name || '?')[0]}
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold">{c.mentee_name || 'Mentee'}</h3>
+                        <h3 className="text-xl text-white font-bold">{c.mentee_name || 'Mentee'}</h3>
                         {c.mentee_location && <p className="text-white/70 text-sm">{c.mentee_location}</p>}
                       </div>
                     </div>
