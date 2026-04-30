@@ -2,10 +2,11 @@ import express from 'express';
 import User from '../models/User.js';
 import Expert from '../models/Expert.js';
 import { cache } from '../utils/cache.js';
+import { executeQuery } from '../config/database.js';
+import { body, validationResult } from 'express-validator';
 import Question from '../models/Question.js';
 import UserProfile from '../models/UserProfile.js';
 import auth from '../middleware/auth.js';
-import { body, validationResult } from 'express-validator';
 
 const router = express.Router();
 
@@ -56,6 +57,73 @@ router.get('/', auth, async (req, res) => {
             success: false,
             message: 'Failed to fetch experts'
         });
+    }
+});
+
+// Apply to become an expert (creates an unverified expert record for admin review)
+router.post('/apply', auth, [
+    body('motivation').notEmpty().trim().withMessage('Motivation is required'),
+    body('experience').notEmpty().trim().withMessage('Experience is required'),
+    body('expertise').isArray({ min: 1 }).withMessage('At least one expertise area is required'),
+], async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ success: false, message: errors.array()[0].msg });
+        }
+
+        const userId = req.user.id || req.user.user_id;
+        const { expertise, industries, motivation, experience, achievements } = req.body;
+
+        // Check if this user already has an expert record
+        const existing = await executeQuery(`SELECT id, is_verified FROM experts WHERE user_id = '${userId}'`);
+        if (existing.recordset.length > 0) {
+            const rec = existing.recordset[0];
+            if (rec.is_verified) {
+                return res.status(409).json({ success: false, message: 'You are already a verified expert.' });
+            }
+            return res.status(409).json({ success: false, message: 'Your application is already under review.' });
+        }
+
+        // Get user details for the expert record
+        const userRow = await executeQuery(`SELECT name, email FROM users WHERE id = '${userId}'`);
+        const user = userRow.recordset[0];
+        if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+
+        const bio = `${motivation.replace(/'/g, "''")} ${achievements ? '\n\nAchievements: ' + achievements.replace(/'/g, "''") : ''}`.trim();
+        const expStr = (experience || '').replace(/'/g, "''");
+
+        // Create expert record (is_verified=0 → pending admin approval)
+        const ins = await executeQuery(`
+            INSERT INTO experts (user_id, name, bio, location, is_available, is_verified, is_rejected,
+                                 experience_years, created_at, updated_at)
+            OUTPUT INSERTED.id
+            VALUES ('${userId}', '${user.name.replace(/'/g, "''")}', '${bio}', '',
+                    0, 0, 0, 0, GETDATE(), GETDATE())
+        `);
+        const expertId = ins.recordset[0].id;
+
+        // Insert expertise tags
+        if (Array.isArray(expertise) && expertise.length > 0) {
+            for (const exp of expertise) {
+                await executeQuery(`
+                    INSERT INTO expert_expertise (expert_id, expertise)
+                    VALUES ('${expertId}', '${exp.replace(/'/g, "''")}')
+                `);
+            }
+        }
+
+        // Bust the expert cache so the pending record appears to admins
+        cache.invalidatePattern('experts:');
+
+        res.status(201).json({
+            success: true,
+            message: 'Your application has been submitted! We will review it within 2-3 business days.',
+            data: { expertId }
+        });
+    } catch (error) {
+        console.error('Expert application error:', error);
+        res.status(500).json({ success: false, message: 'Failed to submit application. Please try again.' });
     }
 });
 

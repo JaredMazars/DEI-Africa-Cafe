@@ -52,7 +52,7 @@ const SimpleLogin: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div className="text-center p-4 -xl bg-white/50 backdrop-blur-sm">
               <div className="w-8 h-8 bg-[#1A1F5E] -full mx-auto mb-2 flex items-center justify-center">
-                <span className="text-white font-bold text-sm">10K+</span>
+                <span className="text-white font-bold text-sm">10K</span>
               </div>
               <h3 className="font-semibold text-[#333333]">Active Members</h3>
               <p className="text-sm text-gray-600">Across Africa</p>
@@ -125,6 +125,12 @@ const SimpleLogin: React.FC = () => {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Link to="/forgot-password" className="text-sm text-[#0072CE] hover:text-[#E83E2D] transition-colors">
+                  Forgot password?
+                </Link>
               </div>
 
               <button

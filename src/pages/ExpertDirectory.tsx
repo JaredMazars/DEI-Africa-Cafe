@@ -115,7 +115,7 @@ interface ExpertApplication {
 
 const ExpertDirectory: React.FC = () => {
   const { currentUser: authUser } = useSimpleAuth();
-  // Expert role: user has an expert/mentor role — experts can see extra tabs
+  // Expert role: user has an expert/mentor role ï¿½ experts can see extra tabs
   const isExpert = ['expert', 'mentor', 'both'].includes(authUser?.role || '');
   const [showBecomeExpertModal, setShowBecomeExpertModal] = useState(false);
   const [expertApplication, setExpertApplication] = useState<ExpertApplication>({
@@ -178,12 +178,12 @@ const ExpertDirectory: React.FC = () => {
   const [connectionRequests, setConnectionRequests] = useState<ConnectionRequest[]>([]);
   const [requestSubTab, setRequestSubTab] = useState<'connections' | 'meetings'>('connections');
   
-  // Scheduled meetings state – loaded from DB
+  // Scheduled meetings state ï¿½ loaded from DB
   const [scheduledMeetings, setScheduledMeetings] = useState<ScheduledMeeting[]>([]);
   const [meetingsLoading, setMeetingsLoading] = useState(false);
   const [showMeetingsList, setShowMeetingsList] = useState(false);
 
-  // Platform users for email invitations – searched live from DB
+  // Platform users for email invitations ï¿½ searched live from DB
   const [platformUsers] = useState<PlatformUser[]>([
     // kept empty: real users come from DB search in handleEmailInputChange
   ]);
@@ -364,21 +364,36 @@ const ExpertDirectory: React.FC = () => {
   };
 
   // Handle expert application submission
-  const handleSubmitExpertApplication = () => {
+  const handleSubmitExpertApplication = async () => {
     if (!expertApplication.motivation || !expertApplication.experience) {
       alert('Please fill in all required fields');
       return;
     }
-    // TODO: Submit application to backend
-    alert('Your expert application has been submitted! We will review it and get back to you within 2-3 business days.');
-    setShowBecomeExpertModal(false);
-    setExpertApplication({
-      expertise: [],
-      industries: [],
-      experience: '',
-      motivation: '',
-      achievements: ''
-    });
+    if (expertApplication.expertise.length === 0) {
+      alert('Please select at least one area of expertise');
+      return;
+    }
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/experts/apply', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(expertApplication),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(data.message);
+        setShowBecomeExpertModal(false);
+        setExpertApplication({ expertise: [], industries: [], experience: '', motivation: '', achievements: '' });
+      } else {
+        alert(data.message || 'Submission failed. Please try again.');
+      }
+    } catch {
+      alert('Network error. Please check your connection and try again.');
+    }
   };
 
   // Load my expert connections from DB (approved ? My Experts tab, pending ? button state)
@@ -579,12 +594,12 @@ const ExpertDirectory: React.FC = () => {
     loadMeetings();
   }, []);
 
-  // Sample access requests for private webinars (empty — DB-backed)
+  // Sample access requests for private webinars (empty ï¿½ DB-backed)
   // Webinars loaded from DB
   const [webinars, setWebinars] = useState<Webinar[]>([]);
 
-  // Static webinars removed — all data loaded from DB
-  const sampleAccessRequests: AccessRequest[] = []; // empty stub — access requests are DB-backed
+  // Static webinars removed ï¿½ all data loaded from DB
+  const sampleAccessRequests: AccessRequest[] = []; // empty stub ï¿½ access requests are DB-backed
 
   // Derive unique filter options dynamically from loaded experts
   const allExpertiseOptions = Array.from(new Set(experts.flatMap(e => e.expertise))).filter(Boolean).sort();
@@ -1375,7 +1390,7 @@ const ExpertDirectory: React.FC = () => {
         {/* Ask the Expert Forum Tab */}
         
 
-        {/* My Mentees Tab — approved short-term advice seekers */}
+        {/* My Mentees Tab ï¿½ approved short-term advice seekers */}
         {activeTab === 'myMentees' && (
           <div className="p-8">
             <div className="mb-8">
@@ -1584,7 +1599,7 @@ const ExpertDirectory: React.FC = () => {
               </div>
             )}
 
-            {/* Meeting Access Requests Content — removed (no DB table) */}
+            {/* Meeting Access Requests Content ï¿½ removed (no DB table) */}
             {false && (
               <div>
             {/* Stats Cards */}

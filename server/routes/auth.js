@@ -595,16 +595,16 @@ router.post('/resend-verification', async (req, res) => {
 });
 
 // Forgot password - Send reset email
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', [
+    body('email').isEmail().normalizeEmail().withMessage('A valid email address is required'),
+], async (req, res) => {
     try {
-        const { email } = req.body;
-
-        if (!email) {
-            return res.status(400).json({
-                success: false,
-                error: 'Email is required'
-            });
+        const validationErrors = validationResult(req);
+        if (!validationErrors.isEmpty()) {
+            return res.status(400).json({ success: false, error: validationErrors.array()[0].msg });
         }
+
+        const { email } = req.body;
 
         // Find user by email
         const user = await User.findByEmail(email);

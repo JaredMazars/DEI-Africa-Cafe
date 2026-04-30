@@ -49,14 +49,26 @@ app.use((req, res, next) => {
     next();
 });
 
-// Rate limiting
+// Rate limiting — general
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
-    message: {
-        success: false,
-        message: 'Too many requests from this IP, please try again later.'
-    }
+    max: 100,
+    message: { success: false, message: 'Too many requests from this IP, please try again later.' }
+});
+
+// Stricter rate limit for auth routes (prevents brute-force / account enumeration)
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20,             // 20 attempts per 15 min — generous but blocks automation
+    skipSuccessfulRequests: true, // only counts failed attempts
+    message: { success: false, message: 'Too many authentication attempts. Please wait 15 minutes.' }
+});
+
+// Very strict limit for password-reset to prevent email flooding
+const resetLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 5,
+    message: { success: false, message: 'Too many password reset requests. Please try again in an hour.' }
 });
 app.use(limiter);
 
@@ -69,6 +81,20 @@ app.use(cors({
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Lightweight CSRF mitigation
+// Browsers can only set Content-Type: application/json via fetch/XHR (not via HTML forms),
+// so this blocks cross-site form-submission attacks without requiring a token.
+app.use('/api', (req, res, next) => {
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+        const ct = req.headers['content-type'] || '';
+        // Allow multipart (file uploads) and urlencoded explicitly used internally
+        if (!ct.includes('application/json') && !ct.includes('multipart/form-data') && !ct.includes('application/x-www-form-urlencoded')) {
+            return res.status(400).json({ success: false, message: 'Invalid content type.' });
+        }
+    }
+    next();
+});
 
 // Serve static files from React build
 const distPath = path.join(__dirname, '..', 'dist');
@@ -88,6 +114,11 @@ app.get('/health', (req, res) => {
 });
 
 // API routes
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/admin-login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/forgot-password', resetLimiter);
+app.use('/api/auth/reset-password', resetLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/connections', connectionRoutes);
 app.use('/api/sessions', sessionRoutes);

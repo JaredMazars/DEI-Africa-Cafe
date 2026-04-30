@@ -1,11 +1,27 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Loader, Mail, Lock, Users, Globe, Network } from 'lucide-react';
+import { Eye, EyeOff, Loader, Mail, Lock, Users, Globe, Network, CheckCircle, XCircle } from 'lucide-react';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+function passwordStrength(pwd: string): { score: number; label: string; color: string } {
+  let score = 0;
+  if (pwd.length >= 8) score++;
+  if (pwd.length >= 12) score++;
+  if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) score++;
+  if (/\d/.test(pwd)) score++;
+  if (/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) score++;
+  const labels = ['', 'Weak', 'Fair', 'Good', 'Strong', 'Very Strong'];
+  const colors = ['', 'bg-red-500', 'bg-orange-400', 'bg-yellow-400', 'bg-blue-500', 'bg-green-500'];
+  return { score, label: labels[score] || '', color: colors[score] || '' };
+}
 
 const SimpleRegister: React.FC = () => {
   const [email, setEmail] = useState('');
+  const [emailTouched, setEmailTouched] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [confirmTouched, setConfirmTouched] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -13,11 +29,25 @@ const SimpleRegister: React.FC = () => {
   
   const navigate = useNavigate();
 
+  const emailValid = EMAIL_RE.test(email);
+  const emailError = emailTouched && !emailValid;
+  const pwStrength = passwordStrength(password);
+  const passwordsMatch = confirmPassword === password;
+  const confirmError = confirmTouched && confirmPassword.length > 0 && !passwordsMatch;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    
+    setEmailTouched(true);
+    setConfirmTouched(true);
+
+    if (!emailValid) {
+      setError('Please enter a valid email address.');
+      setLoading(false);
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       setLoading(false);
@@ -106,11 +136,26 @@ const SimpleRegister: React.FC = () => {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all duration-200"
+                    onBlur={() => setEmailTouched(true)}
+                    className={`w-full pl-12 pr-10 py-3 -2xl border-2 text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:ring-2 transition-all duration-200 ${
+                      emailError
+                        ? 'border-[#E83E2D] focus:border-[#E83E2D] focus:ring-[#E83E2D]/20'
+                        : 'border-[#E5E7EB] focus:border-[#1A1F5E] focus:ring-[#1A1F5E]/20'
+                    }`}
                     placeholder="your.email@example.com"
                     required
                   />
+                  {emailTouched && email.length > 0 && (
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                      {emailValid
+                        ? <CheckCircle className="w-5 h-5 text-green-500" />
+                        : <XCircle className="w-5 h-5 text-[#E83E2D]" />}
+                    </span>
+                  )}
                 </div>
+                {emailError && (
+                  <p className="text-xs text-[#E83E2D] mt-1">Please enter a valid email address.</p>
+                )}
               </div>
 
               <div>
@@ -132,6 +177,18 @@ const SimpleRegister: React.FC = () => {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                {password.length > 0 && (
+                  <div className="mt-2">
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map(i => (
+                        <div key={i} className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                          i <= pwStrength.score ? pwStrength.color : 'bg-[#E5E7EB]'
+                        }`} />
+                      ))}
+                    </div>
+                    <p className="text-xs text-[#8C8C8C] mt-1">{pwStrength.label || 'Enter a password'}</p>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -144,7 +201,12 @@ const SimpleRegister: React.FC = () => {
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full pl-12 pr-12 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all duration-200"
+                    onBlur={() => setConfirmTouched(true)}
+                    className={`w-full pl-12 pr-12 py-3 -2xl border-2 text-[#333333] placeholder-[#8C8C8C] bg-white focus:outline-none focus:ring-2 transition-all duration-200 ${
+                      confirmError
+                        ? 'border-[#E83E2D] focus:border-[#E83E2D] focus:ring-[#E83E2D]/20'
+                        : 'border-[#E5E7EB] focus:border-[#1A1F5E] focus:ring-[#1A1F5E]/20'
+                    }`}
                     placeholder="Confirm your password"
                     required
                   />
@@ -153,6 +215,9 @@ const SimpleRegister: React.FC = () => {
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                {confirmError && (
+                  <p className="text-xs text-[#E83E2D] mt-1">Passwords do not match.</p>
+                )}
               </div>
 
               <button

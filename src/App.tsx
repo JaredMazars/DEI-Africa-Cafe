@@ -31,6 +31,8 @@ const MentorContent         = lazy(() => import('./pages/MentorContent'));
 const AdminLogin            = lazy(() => import('./pages/AdminLogin'));
 const AdminContentManager   = lazy(() => import('./pages/AdminContentManager'));
 const ArticleView           = lazy(() => import('./pages/ArticleView'));
+const ForgotPassword        = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword         = lazy(() => import('./pages/ResetPassword'));
 
 // New Admin Console Components
 const AdminLayout           = lazy(() => import('./admin/AdminLayout'));
@@ -104,6 +106,8 @@ function AppContent() {
         <Route path="/onboarding" element={<SimpleOnboardingForm />} />
         <Route path="/verification-pending" element={<VerificationPending />} />
         <Route path="/verify-email" element={<SimpleVerifyEmail />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Admin Public Route */}
         <Route path="/admin/login" element={<AdminLogin />} />

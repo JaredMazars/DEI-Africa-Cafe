@@ -62,6 +62,7 @@ export default function SimpleOnboardingForm() {
   const [step, setStep]       = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
+  const [nameTouched, setNameTouched] = useState(false);
   const [data, setData] = useState({
     role: '' as Role,
     name: '', location: '',
@@ -78,7 +79,7 @@ export default function SimpleOnboardingForm() {
   const canProceed = (): boolean => {
     switch (step) {
       case 1: return data.role !== '';
-      case 2: return data.name.trim() !== '' && data.location !== '';
+      case 2: return data.name.trim().length >= 2 && data.location !== '';
       case 3:
         if (data.role === 'mentor' || data.role === 'both') return data.expertise.length > 0;
         return data.desired_expertise.length > 0; // mentee: step3 = desired
@@ -189,11 +190,30 @@ export default function SimpleOnboardingForm() {
               <h2 className="text-2xl font-bold text-[#1A1F5E] flex items-center gap-2">
                 <User className="w-6 h-6 text-[#E83E2D]" /> Basic information
               </h2>
+              {/* Show the email they registered with */}
+              {(() => {
+                const regEmail = sessionStorage.getItem('registrationEmail');
+                return regEmail ? (
+                  <div className="flex items-center gap-2 text-sm text-[#8C8C8C] bg-[#F4F4F4] px-4 py-2 -xl">
+                    <span>Registering as</span>
+                    <span className="font-semibold text-[#1A1F5E]">{regEmail}</span>
+                  </div>
+                ) : null;
+              })()}
               <div>
                 <label className="block text-sm font-semibold text-[#333333] mb-2">Full name</label>
-                <input type="text" value={data.name} onChange={e => setData({ ...data, name: e.target.value })}
-                  className="w-full px-4 py-3 -2xl border-2 border-[#E5E7EB] text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:border-[#1A1F5E] focus:ring-2 focus:ring-[#1A1F5E]/20 transition-all"
+                <input type="text" value={data.name}
+                  onChange={e => setData({ ...data, name: e.target.value })}
+                  onBlur={() => setNameTouched(true)}
+                  className={`w-full px-4 py-3 -2xl border-2 text-[#333333] placeholder-[#8C8C8C] focus:outline-none focus:ring-2 transition-all ${
+                    nameTouched && data.name.trim().length < 2
+                      ? 'border-[#E83E2D] focus:border-[#E83E2D] focus:ring-[#E83E2D]/20'
+                      : 'border-[#E5E7EB] focus:border-[#1A1F5E] focus:ring-[#1A1F5E]/20'
+                  }`}
                   placeholder="Your full name" />
+                {nameTouched && data.name.trim().length < 2 && (
+                  <p className="text-xs text-[#E83E2D] mt-1">Please enter your full name (at least 2 characters).</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-semibold text-[#333333] mb-2">
