@@ -13,6 +13,21 @@ import UserLanguages from '../models/UserLanguages.js';
 import auth from '../middleware/auth.js';
 import { sendVerificationEmail, sendPasswordResetEmail, sendWelcomeEmail } from '../utils/emailService.js';
 
+const ACCESS_SECRET  = process.env.JWT_SECRET || 'demo-secret-key-change-in-production';
+const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'demo-refresh-secret-change-in-production';
+
+const issueTokens = (res, payload) => {
+    const accessToken = jwt.sign({ ...payload, type: 'access' }, ACCESS_SECRET, { expiresIn: '15m' });
+    const refreshToken = jwt.sign({ ...payload, type: 'refresh' }, REFRESH_SECRET, { expiresIn: '7d' });
+    res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+    return accessToken;
+};
+
 const router = express.Router();
 
 // Admin login - credentials stored in env vars, never in code
@@ -29,7 +44,7 @@ router.post('/admin-login', async (req, res) => {
 
         const token = jwt.sign(
             { userId: 'admin-user', email, role: 'admin' },
-            process.env.JWT_SECRET || 'demo-secret-key-change-in-production',
+            ACCESS_SECRET,
             { expiresIn: '8h' }
         );
 
@@ -166,11 +181,7 @@ router.post('/register', [
         }
 
         // Generate JWT token
-        const token = jwt.sign(
-            { userId: newUser.id, email: newUser.email },
-            process.env.JWT_SECRET || 'demo-secret-key-change-in-production',
-            { expiresIn: '7d' }
-        );
+        const token = issueTokens(res, { userId: newUser.id, email: newUser.email });
 
         // EMAIL VERIFICATION DISABLED - users are active immediately on registration
         // TODO: Re-enable when FRONTEND_URL and email deliverability are confirmed working
@@ -284,11 +295,7 @@ router.post('/login', [
 
         await User.updateLastLogin(user.id);
 
-        const token = jwt.sign(
-            { userId: user.id, email: user.email },
-            process.env.JWT_SECRET || 'demo-secret-key-change-in-production',
-            { expiresIn: '7d' }
-        );
+        const token = issueTokens(res, { userId: user.id, email: user.email });
 
         res.json({
             success: true,
@@ -328,6 +335,31 @@ router.post('/login', [
             message: 'Server error during login'
         });
     }
+});
+
+// Refresh access token using httpOnly refresh token cookie
+router.post('/refresh', (req, res) => {
+    const token = req.cookies?.refreshToken;
+    if (!token) return res.status(401).json({ success: false, message: 'No refresh token' });
+    try {
+        const decoded = jwt.verify(token, REFRESH_SECRET);
+        if (decoded.type !== 'refresh') throw new Error('Invalid token type');
+        const accessToken = jwt.sign(
+            { userId: decoded.userId, email: decoded.email, type: 'access' },
+            ACCESS_SECRET,
+            { expiresIn: '15m' }
+        );
+        res.json({ success: true, data: { token: accessToken } });
+    } catch {
+        res.clearCookie('refreshToken');
+        res.status(401).json({ success: false, message: 'Invalid or expired refresh token' });
+    }
+});
+
+// Logout — clears the refresh token cookie
+router.post('/logout', (req, res) => {
+    res.clearCookie('refreshToken', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict' });
+    res.json({ success: true, message: 'Logged out successfully' });
 });
 
 // Get current user profile

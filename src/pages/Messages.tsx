@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Send, MessageSquare, Search, RefreshCw, User } from 'lucide-react';
+import { Send, MessageSquare, Search, User } from 'lucide-react';
+import { io as socketIO, Socket } from 'socket.io-client';
 import { messagesAPI } from '../services/api';
 
 interface Connection {
@@ -35,7 +36,7 @@ const Messages: React.FC = () => {
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const socketRef = useRef<Socket | null>(null);
 
   // Get current user id from token
   useEffect(() => {
@@ -43,9 +44,21 @@ const Messages: React.FC = () => {
       const token = localStorage.getItem('token');
       if (token) {
         const payload = JSON.parse(atob(token.split('.')[1]));
-        setCurrentUserId(payload.id || payload.user_id || payload.sub || '');
+        setCurrentUserId(payload.id || payload.userId || payload.user_id || payload.sub || '');
       }
     } catch { /* ignore */ }
+  }, []);
+
+  // WebSocket connection — reconnects when token changes
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const socket = socketIO('/', { auth: { token }, transports: ['websocket', 'polling'] });
+    socketRef.current = socket;
+    socket.on('new_message', (msg: Message) => {
+      setMessages(prev => [...prev, msg]);
+    });
+    return () => { socket.disconnect(); socketRef.current = null; };
   }, []);
 
   // Load connections
@@ -99,10 +112,8 @@ const Messages: React.FC = () => {
   useEffect(() => {
     if (!selectedId) return;
     loadMessages(selectedId);
-    // Poll for new messages every 8s
-    if (pollRef.current) clearInterval(pollRef.current);
-    pollRef.current = setInterval(() => loadMessages(selectedId), 8000);
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+    // Join the WebSocket room for this connection
+    socketRef.current?.emit('join_connection', selectedId);
   }, [selectedId, loadMessages]);
 
   // Scroll to bottom on new messages

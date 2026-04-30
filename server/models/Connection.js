@@ -1,4 +1,4 @@
-import { executeQuery } from '../config/database.js';
+import { executeQuery, executeParameterized } from '../config/database.js';
 
 /**
  * Connection model
@@ -30,14 +30,12 @@ class Connection {
             const requesterId = connectionData.requester_id || connectionData.mentee_id;
             const message     = connectionData.message || 'I would like to connect with you.';
 
-            const query = `
-                INSERT INTO connections (requester_id, expert_id, message, status, created_at, updated_at)
-                OUTPUT INSERTED.*
-                VALUES ('${requesterId}', '${expertId}',
-                        '${message.replace(/'/g, "''")}',
-                        'pending', GETDATE(), GETDATE())
-            `;
-            const result = await executeQuery(query);
+            const result = await executeParameterized(
+                `INSERT INTO connections (requester_id, expert_id, message, status, created_at, updated_at)
+                 OUTPUT INSERTED.*
+                 VALUES (@rid, @eid, @msg, 'pending', GETDATE(), GETDATE())`,
+                { rid: requesterId, eid: expertId, msg: message }
+            );
             return new Connection(result.recordset[0]);
         } catch (error) {
             console.error('Error creating connection:', error);
@@ -47,8 +45,10 @@ class Connection {
 
     static async findById(connectionId) {
         try {
-            const query = `SELECT * FROM connections WHERE id = '${connectionId}'`;
-            const result = await executeQuery(query);
+            const result = await executeParameterized(
+                'SELECT * FROM connections WHERE id = @id',
+                { id: connectionId }
+            );
             return result.recordset.length > 0 ? new Connection(result.recordset[0]) : null;
         } catch (error) {
             console.error('Error finding connection by ID:', error);
@@ -61,14 +61,13 @@ class Connection {
      */
     static async getUserConnections(userId) {
         try {
-            const query = `
-                SELECT c.*
-                FROM connections c
-                LEFT JOIN experts e ON c.expert_id = e.id
-                WHERE c.requester_id = '${userId}' OR e.user_id = '${userId}'
-                ORDER BY c.created_at DESC
-            `;
-            const result = await executeQuery(query);
+            const result = await executeParameterized(
+                `SELECT c.* FROM connections c
+                 LEFT JOIN experts e ON c.expert_id = e.id
+                 WHERE c.requester_id = @uid OR e.user_id = @uid
+                 ORDER BY c.created_at DESC`,
+                { uid: userId }
+            );
             return result.recordset.map(conn => new Connection(conn));
         } catch (error) {
             console.error('Error getting user connections:', error);
@@ -78,13 +77,11 @@ class Connection {
 
     static async updateStatus(connectionId, status) {
         try {
-            const query = `
-                UPDATE connections
-                SET status = '${status}', updated_at = GETDATE()
-                OUTPUT INSERTED.*
-                WHERE id = '${connectionId}'
-            `;
-            const result = await executeQuery(query);
+            const result = await executeParameterized(
+                `UPDATE connections SET status = @status, updated_at = GETDATE()
+                 OUTPUT INSERTED.* WHERE id = @id`,
+                { status, id: connectionId }
+            );
             return result.recordset.length > 0 ? new Connection(result.recordset[0]) : null;
         } catch (error) {
             console.error('Error updating connection status:', error);
@@ -116,11 +113,10 @@ class Connection {
      */
     static async checkExistingConnection(expertId, menteeUserId) {
         try {
-            const query = `
-                SELECT * FROM connections
-                WHERE expert_id = '${expertId}' AND requester_id = '${menteeUserId}'
-            `;
-            const result = await executeQuery(query);
+            const result = await executeParameterized(
+                'SELECT * FROM connections WHERE expert_id = @eid AND requester_id = @rid',
+                { eid: expertId, rid: menteeUserId }
+            );
             return result.recordset.length > 0 ? new Connection(result.recordset[0]) : null;
         } catch (error) {
             console.error('Error checking existing connection:', error);
@@ -130,26 +126,20 @@ class Connection {
 
     static async getConnectionsWithDetails(userId) {
         try {
-            const query = `
-                SELECT
-                    c.*,
-                    e.name as mentor_name,
-                    e.avatar_url as mentor_avatar,
-                    e.location as mentor_location,
-                    e.bio as mentor_bio,
-                    e.title as mentor_title,
-                    u_req.name as mentee_name,
-                    u_req.location as mentee_location,
-                    u_req.bio as mentee_bio,
+            const result = await executeParameterized(
+                `SELECT c.*,
+                    e.name as mentor_name, e.avatar_url as mentor_avatar,
+                    e.location as mentor_location, e.bio as mentor_bio,
+                    e.title as mentor_title, u_req.name as mentee_name,
+                    u_req.location as mentee_location, u_req.bio as mentee_bio,
                     e.user_id as mentor_user_id
-                FROM connections c
-                LEFT JOIN experts e ON c.expert_id = e.id
-                LEFT JOIN users u_req ON c.requester_id = u_req.id
-                WHERE c.requester_id = '${userId}'
-                   OR e.user_id = '${userId}'
-                ORDER BY c.updated_at DESC
-            `;
-            const result = await executeQuery(query);
+                 FROM connections c
+                 LEFT JOIN experts e ON c.expert_id = e.id
+                 LEFT JOIN users u_req ON c.requester_id = u_req.id
+                 WHERE c.requester_id = @uid OR e.user_id = @uid
+                 ORDER BY c.updated_at DESC`,
+                { uid: userId }
+            );
             return result.recordset;
         } catch (error) {
             console.error('Error getting connections with details:', error);
@@ -162,11 +152,10 @@ class Connection {
      */
     static async getMenteeCount(expertId) {
         try {
-            const result = await executeQuery(`
-                SELECT COUNT(*) as mentee_count
-                FROM connections
-                WHERE expert_id = '${expertId}' AND status = 'accepted'
-            `);
+            const result = await executeParameterized(
+                `SELECT COUNT(*) as mentee_count FROM connections WHERE expert_id = @eid AND status = 'accepted'`,
+                { eid: expertId }
+            );
             return result.recordset[0]?.mentee_count ?? 0;
         } catch (error) {
             console.error('Error getting mentee count:', error);

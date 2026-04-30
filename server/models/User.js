@@ -1,4 +1,4 @@
-import { executeQuery } from '../config/database.js';
+import { executeQuery, executeParameterized } from '../config/database.js';
 import bcrypt from 'bcryptjs';
 
 class User {
@@ -25,17 +25,19 @@ class User {
         try {
             const hashedPassword = await bcrypt.hash(userData.password, 12);
             const role = userData.role || 'mentee';
-            const query = `
-                INSERT INTO users (email, password_hash, name, role, is_mentor, is_mentee, is_active, created_at, updated_at)
-                OUTPUT INSERTED.*
-                VALUES ('${userData.email}', '${hashedPassword}',
-                        ${userData.name ? `'${userData.name.replace(/'/g, "''")}'` : 'NULL'},
-                        '${role}',
-                        ${role === 'mentor' || role === 'both' ? 1 : 0},
-                        ${role === 'mentee' || role === 'both' ? 1 : 0},
-                        1, GETDATE(), GETDATE())
-            `;
-            const result = await executeQuery(query);
+            const result = await executeParameterized(
+                `INSERT INTO users (email, password_hash, name, role, is_mentor, is_mentee, is_active, created_at, updated_at)
+                 OUTPUT INSERTED.*
+                 VALUES (@email, @hash, @name, @role, @isMentor, @isMentee, 1, GETDATE(), GETDATE())`,
+                {
+                    email:    userData.email,
+                    hash:     hashedPassword,
+                    name:     userData.name || null,
+                    role,
+                    isMentor: (role === 'mentor' || role === 'both') ? 1 : 0,
+                    isMentee: (role === 'mentee' || role === 'both') ? 1 : 0
+                }
+            );
             return new User(result.recordset[0]);
         } catch (error) {
             console.error('Error creating user:', error);
@@ -46,8 +48,10 @@ class User {
     static async findByEmail(email) {
         try {
             // Check ALL users (including inactive) to properly detect duplicates on registration
-            const query = `SELECT * FROM users WHERE email = '${email}'`;
-            const result = await executeQuery(query);
+            const result = await executeParameterized(
+                'SELECT * FROM users WHERE email = @email',
+                { email }
+            );
             return result.recordset.length > 0 ? new User(result.recordset[0]) : null;
         } catch (error) {
             console.error('Error finding user by email:', error);
@@ -57,8 +61,10 @@ class User {
 
     static async findById(userId) {
         try {
-            const query = `SELECT * FROM users WHERE id = '${userId}' AND is_active = 1`;
-            const result = await executeQuery(query);
+            const result = await executeParameterized(
+                'SELECT * FROM users WHERE id = @id AND is_active = 1',
+                { id: userId }
+            );
             return result.recordset.length > 0 ? new User(result.recordset[0]) : null;
         } catch (error) {
             console.error('Error finding user by ID:', error);
@@ -84,8 +90,10 @@ class User {
 
     static async updateLastLogin(userId) {
         try {
-            const query = `UPDATE users SET updated_at = GETDATE() WHERE id = '${userId}'`;
-            await executeQuery(query);
+            await executeParameterized(
+                'UPDATE users SET updated_at = GETDATE() WHERE id = @id',
+                { id: userId }
+            );
         } catch (error) {
             console.error('Error updating last login:', error);
             throw error;
@@ -134,12 +142,10 @@ class User {
 
     static async updateStatus(userId, isActive) {
         try {
-            const query = `
-                UPDATE users 
-                SET is_active = ${isActive ? 1 : 0}, updated_at = GETDATE() 
-                WHERE id = '${userId}'
-            `;
-            await executeQuery(query);
+            await executeParameterized(
+                'UPDATE users SET is_active = @active, updated_at = GETDATE() WHERE id = @id',
+                { active: isActive ? 1 : 0, id: userId }
+            );
         } catch (error) {
             console.error('Error updating user status:', error);
             throw error;

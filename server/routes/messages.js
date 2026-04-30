@@ -4,6 +4,12 @@ import Message from '../models/Message.js';
 import Connection from '../models/Connection.js';
 import auth from '../middleware/auth.js';
 import { body, validationResult } from 'express-validator';
+// io is initialised in server.js — lazy import avoids circular-dependency issues
+let _io = null;
+const getIO = async () => {
+    if (!_io) { const m = await import('../server.js'); _io = m.io; }
+    return _io;
+};
 
 const router = express.Router();
 
@@ -84,6 +90,12 @@ router.post('/', auth, [
         };
 
         const message = await Message.create(messageData);
+
+        // Emit real-time event to all participants in this connection room
+        try {
+            const socketIO = await getIO();
+            socketIO.to(`connection:${connection_id}`).emit('new_message', message);
+        } catch { /* non-fatal if socket not ready */ }
 
         res.status(201).json({
             success: true,

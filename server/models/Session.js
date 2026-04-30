@@ -1,4 +1,4 @@
-import { executeQuery } from '../config/database.js';
+import { executeQuery, executeParameterized } from '../config/database.js';
 
 class Session {
     constructor(data) {
@@ -17,17 +17,19 @@ class Session {
 
     static async create(sessionData) {
         try {
-            const query = `
-                INSERT INTO Sessions (connection_id, title, description, scheduled_at, duration_minutes, status, meeting_link, created_at, updated_at)
-                OUTPUT INSERTED.*
-                VALUES ('${sessionData.connection_id}', '${sessionData.title}', 
-                        ${sessionData.description ? `'${sessionData.description.replace(/'/g, "''")}'` : 'NULL'}, 
-                        '${sessionData.scheduled_at}', ${sessionData.duration_minutes || 60}, 'scheduled', 
-                        ${sessionData.meeting_link ? `'${sessionData.meeting_link}'` : 'NULL'}, 
-                        GETDATE(), GETDATE())
-            `;
-            
-            const result = await executeQuery(query);
+            const result = await executeParameterized(
+                `INSERT INTO Sessions (connection_id, title, description, scheduled_at, duration_minutes, status, meeting_link, created_at, updated_at)
+                 OUTPUT INSERTED.*
+                 VALUES (@cid, @title, @desc, @scheduledAt, @duration, 'scheduled', @link, GETDATE(), GETDATE())`,
+                {
+                    cid:         sessionData.connection_id,
+                    title:       sessionData.title,
+                    desc:        sessionData.description || null,
+                    scheduledAt: sessionData.scheduled_at,
+                    duration:    sessionData.duration_minutes || 60,
+                    link:        sessionData.meeting_link || null
+                }
+            );
             return new Session(result.recordset[0]);
         } catch (error) {
             console.error('Error creating session:', error);
@@ -37,9 +39,10 @@ class Session {
 
     static async findById(sessionId) {
         try {
-            const query = `SELECT * FROM Sessions WHERE session_id = '${sessionId}'`;
-            const result = await executeQuery(query);
-            
+            const result = await executeParameterized(
+                'SELECT * FROM Sessions WHERE session_id = @id',
+                { id: sessionId }
+            );
             return result.recordset.length > 0 ? new Session(result.recordset[0]) : null;
         } catch (error) {
             console.error('Error finding session by ID:', error);
@@ -49,21 +52,20 @@ class Session {
 
     static async getUserSessions(userId) {
         try {
-            const query = `
-                SELECT s.*, c.mentor_id, c.mentee_id,
-                       mentor_profile.name as mentor_name, 
-                       mentor_profile.profile_image_url as mentor_avatar,
-                       mentee_profile.name as mentee_name, 
-                       mentee_profile.profile_image_url as mentee_avatar
-                FROM Sessions s
-                INNER JOIN Connections c ON s.connection_id = c.connection_id
-                LEFT JOIN users mentor_profile ON c.expert_id = mentor_profile.id
-                LEFT JOIN users mentee_profile ON c.requester_id = mentee_profile.id
-                WHERE c.mentor_id = '${userId}' OR c.mentee_id = '${userId}'
-                ORDER BY s.scheduled_at ASC
-            `;
-            
-            const result = await executeQuery(query);
+            const result = await executeParameterized(
+                `SELECT s.*, c.mentor_id, c.mentee_id,
+                        mentor_profile.name as mentor_name,
+                        mentor_profile.profile_image_url as mentor_avatar,
+                        mentee_profile.name as mentee_name,
+                        mentee_profile.profile_image_url as mentee_avatar
+                 FROM Sessions s
+                 INNER JOIN Connections c ON s.connection_id = c.connection_id
+                 LEFT JOIN users mentor_profile ON c.expert_id = mentor_profile.id
+                 LEFT JOIN users mentee_profile ON c.requester_id = mentee_profile.id
+                 WHERE c.mentor_id = @uid OR c.mentee_id = @uid
+                 ORDER BY s.scheduled_at ASC`,
+                { uid: userId }
+            );
             return result.recordset.map(session => new Session(session));
         } catch (error) {
             console.error('Error getting user sessions:', error);

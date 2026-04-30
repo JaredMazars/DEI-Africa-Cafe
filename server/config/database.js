@@ -115,4 +115,37 @@ const executeQuery = async (query, params = {}) => {
     }
 };
 
-export { sql, getConnection, executeQuery };
+/**
+ * Execute a parameterized query using mssql's request.input() — prevents SQL injection.
+ * @param {string} query  - SQL with @paramName placeholders
+ * @param {Object} params - Plain object: { paramName: value, ... }
+ *                          Types are inferred: string→NVarChar, integer→Int, boolean→Bit, null→NVarChar NULL
+ */
+const executeParameterized = async (query, params = {}) => {
+    try {
+        const pool = await getConnection();
+        const request = pool.request();
+        for (const [name, value] of Object.entries(params)) {
+            if (value === null || value === undefined) {
+                request.input(name, sql.NVarChar, null);
+            } else if (typeof value === 'boolean') {
+                request.input(name, sql.Bit, value ? 1 : 0);
+            } else if (typeof value === 'number') {
+                if (Number.isInteger(value)) {
+                    request.input(name, sql.Int, value);
+                } else {
+                    request.input(name, sql.Float, value);
+                }
+            } else {
+                // Strings and UUIDs — NVarChar(MAX) covers all lengths safely
+                request.input(name, sql.NVarChar(sql.MAX), String(value));
+            }
+        }
+        return await request.query(query);
+    } catch (error) {
+        console.error('Parameterized query failed:', error);
+        throw error;
+    }
+};
+
+export { sql, getConnection, executeQuery, executeParameterized };
